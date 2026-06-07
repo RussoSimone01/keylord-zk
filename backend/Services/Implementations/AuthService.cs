@@ -17,6 +17,7 @@ namespace backend.Services.Implementations
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request)
         {
+            // Verify that username and email are unique
             if (await _userRepository.ExistsByUsernameAsync(request.Username))
             {
                 throw new Exception("Username already in use");
@@ -25,6 +26,7 @@ namespace backend.Services.Implementations
             {
                 throw new Exception("Email already in use");
             }
+            // Create the user
             User user = new()
             {
                 Username = request.Username,
@@ -34,7 +36,7 @@ namespace backend.Services.Implementations
                 KdfIterations = request.KdfIterations
             };
             await _userRepository.AddAsync(user);
-
+            // Generate Refresh and Access Tokens
             string rawRefreshToken = _tokenService.GenerateRefreshToken();
             RefreshToken refreshToken = new()
             {
@@ -53,8 +55,10 @@ namespace backend.Services.Implementations
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request)
         {
+            // Retrieve the user
             User user = await _userRepository.GetByUsernameAsync(request.Username)
                 ?? throw new Exception("User not found");
+            // Check if it is locked out
             if (user.LockedUntil.HasValue && user.LockedUntil > DateTime.UtcNow)
             {
                 if (user.LockedUntil == DateTime.MaxValue)
@@ -66,6 +70,7 @@ namespace backend.Services.Implementations
                     throw new Exception($"User account locked until {user.LockedUntil}");
                 }
             }
+            // Check password
             if (BCrypt.Net.BCrypt.Verify(request.AuthKey, user.AuthKeyHash))
             {
                 await _userRepository.ResetLockoutAsync(user.Id);
@@ -76,6 +81,7 @@ namespace backend.Services.Implementations
                 DateTime? lockedUntil = user.LockedUntil;
                 if (failedLoginAttempts % 3 == 0)
                 {
+                    // Lock out the user
                     lockedUntil = failedLoginAttempts switch
                     {
                         3 => DateTime.UtcNow.AddMinutes(15),
@@ -87,6 +93,7 @@ namespace backend.Services.Implementations
                 await _userRepository.UpdateLoginAttemptsAsync(user.Id, failedLoginAttempts, lockedUntil);
                 throw new Exception("Password do not match");
             }
+            // Generate Refresh and Access Tokens
             string rawRefreshToken = _tokenService.GenerateRefreshToken();
             RefreshToken refreshToken = new()
             {
@@ -105,18 +112,22 @@ namespace backend.Services.Implementations
 
         public async Task<AuthResponseDto> RefreshAsync(RefreshRequestDto request)
         {
+            // Retrieve the token
             string hash = _tokenService.HashRefreshToken(request.RefreshToken);
             RefreshToken? refreshToken = await _refreshTokenRepository.GetByTokenHashAsync(hash)
                 ?? throw new Exception("Invalid refresh token");
+            // Check validity
             if (refreshToken.ExpiresAt <= DateTime.UtcNow)
             {
                 throw new Exception("Refresh token expired");
             }
             if (refreshToken.RevokedAt.HasValue)
             {
+                // Stolen token
                 await _refreshTokenRepository.RevokeAllByUserAsync(refreshToken.UserId);
                 throw new Exception("Refresh token already revoked");
             }
+            // Generate new Refresh and Access Tokens
             await _refreshTokenRepository.RevokeAsync(refreshToken.Id);
             string rawRefreshToken = _tokenService.GenerateRefreshToken();
             RefreshToken newRefreshToken = new()
@@ -136,8 +147,10 @@ namespace backend.Services.Implementations
 
         public async Task<AuthResponseDto> ChangePasswordAsync(long userId, ChangePasswordRequestDto request)
         {
+            // Retrieve User
             User user = await _userRepository.GetByIdAsync(userId)
                 ?? throw new Exception("User not found");
+            // Check password
             if (!BCrypt.Net.BCrypt.Verify(request.OldAuthKey, user.AuthKeyHash))
             {
                 throw new Exception("Old password does not match");
@@ -145,8 +158,11 @@ namespace backend.Services.Implementations
             await using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
+                // Update password
                 await _userRepository.UpdatePasswordAsync(userId, BCrypt.Net.BCrypt.HashPassword(request.NewAuthKey), request.NewSalt);
+                // Revoke tokens
                 await _refreshTokenRepository.RevokeAllByUserAsync(userId);
+                // Replace credentials
                 await _credentialRepository.DeleteAllByUserAsync(userId);
                 await _credentialRepository.AddRangeAsync(
                     request.Credentials.Select(c => new Credential()
@@ -155,6 +171,7 @@ namespace backend.Services.Implementations
                         EncryptedData = c.EncryptedData
                     })
                 );
+                // Generate new Refresh and Access Tokens
                 string rawRefreshToken = _tokenService.GenerateRefreshToken();
                 RefreshToken refreshToken = new()
                 {
