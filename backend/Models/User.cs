@@ -8,6 +8,8 @@ namespace backend.Models
         public string AuthKeyHash { get; set; } = string.Empty;
         public string KdfSalt { get; set; } = string.Empty;
         public long KdfIterations { get; set; } = 600000;
+        public int FailedLoginAttempts { get; set; } = 0;
+        public DateTime? LockedUntil { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<Credential> Credentials { get; set; } = [];
