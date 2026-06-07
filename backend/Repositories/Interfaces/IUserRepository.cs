@@ -5,6 +5,7 @@ namespace backend.Repositories.Interfaces
     public interface IUserRepository
     {
         public Task AddAsync(User user);
+        public Task<User?> GetByIdAsync(long userId);
         public Task<User?> GetByUsernameAsync(string username);
         public Task<bool> ExistsByUsernameAsync(string username);
         public Task<bool> ExistsByEmailAsync(string email);

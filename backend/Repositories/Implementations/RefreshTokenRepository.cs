@@ -19,7 +19,7 @@ namespace backend.Repositories.Implementations
 
         public async Task<RefreshToken?> GetByTokenHashAsync(string hash)
         {
-            return await _db.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == hash);
+            return await _db.RefreshTokens.Include(t => t.User).SingleOrDefaultAsync(t => t.TokenHash == hash);
         }
 
         public async Task RevokeAsync(long tokenId)

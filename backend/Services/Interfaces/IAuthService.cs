@@ -7,6 +7,6 @@ namespace backend.Services.Interfaces
         public Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request);
         public Task<AuthResponseDto> LoginAsync(LoginRequestDto request);
         public Task<AuthResponseDto> RefreshAsync(RefreshRequestDto request);
-        public Task ChangePasswordAsync(ChangePasswordRequestDto request);
+        public Task<AuthResponseDto> ChangePasswordAsync(long userId, ChangePasswordRequestDto request);
     }
 }

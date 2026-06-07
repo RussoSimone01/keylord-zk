@@ -15,6 +15,16 @@ namespace backend.Repositories.Implementations
             await _db.SaveChangesAsync();
         }
 
+        public async Task<User?> GetByIdAsync(long userId)
+        {
+            return await _db.Users.FindAsync(userId);
+        }
+
+        public async Task<User?> GetByUsernameAsync(string username)
+        {
+            return await _db.Users.SingleOrDefaultAsync(u => u.Username == username);
+        }
+
         public async Task<bool> ExistsByUsernameAsync(string username)
         {
             return await _db.Users.AnyAsync(u => u.Username == username);
@@ -23,11 +33,6 @@ namespace backend.Repositories.Implementations
         public async Task<bool> ExistsByEmailAsync(string email)
         {
             return await _db.Users.AnyAsync(u => u.Email == email);
-        }
-
-        public async Task<User?> GetByUsernameAsync(string username)
-        {
-            return await _db.Users.SingleOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task UpdatePasswordAsync(long userId, string newAuthKeyHash, string newSalt)
