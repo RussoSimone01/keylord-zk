@@ -21,6 +21,11 @@ namespace backend.Repositories.Implementations
             await _db.SaveChangesAsync();
         }
 
+        public async Task<Credential?> GetByIdAsync(long credentialId)
+        {
+            return await _db.Credentials.SingleOrDefaultAsync(c => c.Id == credentialId);
+        }
+
         public async Task<IEnumerable<Credential>> GetAllByUserAsync(long userId)
         {
             return await _db.Credentials.Where(c => c.UserId == userId).ToListAsync();

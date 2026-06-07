@@ -6,6 +6,7 @@ namespace backend.Repositories.Interfaces
     {
         public Task AddAsync(Credential credential);
         public Task AddRangeAsync(IEnumerable<Credential> credentials);
+        public Task<Credential?> GetByIdAsync(long credentialId);
         public Task<IEnumerable<Credential>> GetAllByUserAsync(long userId);
         public Task UpdateAsync(long credentialId, string encryptedData);
         public Task DeleteAsync(long credentialId);
