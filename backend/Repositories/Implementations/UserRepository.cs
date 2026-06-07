@@ -15,9 +15,14 @@ namespace backend.Repositories.Implementations
             await _db.SaveChangesAsync();
         }
 
-        public async Task<bool> ExistsAsync(string username, string? email)
+        public async Task<bool> ExistsByUsernameAsync(string username)
         {
-            return await _db.Users.AnyAsync(u => u.Username == username || (!string.IsNullOrEmpty(email) && u.Email == email));
+            return await _db.Users.AnyAsync(u => u.Username == username);
+        }
+
+        public async Task<bool> ExistsByEmailAsync(string email)
+        {
+            return await _db.Users.AnyAsync(u => u.Email == email);
         }
 
         public async Task<User?> GetByUsernameAsync(string username)

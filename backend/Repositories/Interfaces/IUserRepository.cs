@@ -6,7 +6,8 @@ namespace backend.Repositories.Interfaces
     {
         public Task AddAsync(User user);
         public Task<User?> GetByUsernameAsync(string username);
-        public Task<bool> ExistsAsync(string username, string? email);
+        public Task<bool> ExistsByUsernameAsync(string username);
+        public Task<bool> ExistsByEmailAsync(string email);
         public Task UpdatePasswordAsync(long userId, string newAuthKeyHash, string newSalt);
         public Task UpdateEmailAsync(long userId, string newEmail);
         public Task UpdateLoginAttemptsAsync(long userId, int attempts, DateTime? lockedUntil);
