@@ -165,5 +165,16 @@ namespace backend.Services.Implementations
                 RefreshToken = rawRefreshToken
             };
         }
+
+        public async Task<SaltResponseDto> GetSaltAsync(string username)
+        {
+            User user = await _userRepository.GetByUsernameAsync(username)
+                ?? throw new Exception("User not found");
+            return new()
+            {
+                Salt = user.KdfSalt,
+                KdfIterations = user.KdfIterations
+            };
+        }
     }
 }
