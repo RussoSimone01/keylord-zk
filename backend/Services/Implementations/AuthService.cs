@@ -1,3 +1,4 @@
+using backend.Data;
 using backend.DTOs;
 using backend.Models;
 using backend.Repositories.Interfaces;
@@ -5,9 +6,10 @@ using backend.Services.Interfaces;
 
 namespace backend.Services.Implementations
 {
-    public class AuthService(IConfiguration configuration, IUserRepository userRepository, ITokenService tokenService, IRefreshTokenRepository refreshTokenRepository, ICredentialRepository credentialRepository) : IAuthService
+    public class AuthService(IConfiguration configuration, AppDbContext appDbContext, IUserRepository userRepository, ITokenService tokenService, IRefreshTokenRepository refreshTokenRepository, ICredentialRepository credentialRepository) : IAuthService
     {
         private readonly IConfiguration _config = configuration;
+        private readonly AppDbContext _db = appDbContext;
         private readonly IUserRepository _userRepository = userRepository;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IRefreshTokenRepository _refreshTokenRepository = refreshTokenRepository;
@@ -140,30 +142,40 @@ namespace backend.Services.Implementations
             {
                 throw new Exception("Old password does not match");
             }
-            await _userRepository.UpdatePasswordAsync(userId, BCrypt.Net.BCrypt.HashPassword(request.NewAuthKey), request.NewSalt);
-            await _refreshTokenRepository.RevokeAllByUserAsync(userId);
-            await _credentialRepository.DeleteAllByUserAsync(userId);
-            await _credentialRepository.AddRangeAsync(
-                request.Credentials.Select(c => new Credential()
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                await _userRepository.UpdatePasswordAsync(userId, BCrypt.Net.BCrypt.HashPassword(request.NewAuthKey), request.NewSalt);
+                await _refreshTokenRepository.RevokeAllByUserAsync(userId);
+                await _credentialRepository.DeleteAllByUserAsync(userId);
+                await _credentialRepository.AddRangeAsync(
+                    request.Credentials.Select(c => new Credential()
+                    {
+                        UserId = userId,
+                        EncryptedData = c.EncryptedData
+                    })
+                );
+                string rawRefreshToken = _tokenService.GenerateRefreshToken();
+                RefreshToken refreshToken = new()
                 {
-                    UserId = userId,
-                    EncryptedData = c.EncryptedData
-                })
-            );
-            string rawRefreshToken = _tokenService.GenerateRefreshToken();
-            RefreshToken refreshToken = new()
+                    UserId = user.Id,
+                    TokenHash = _tokenService.HashRefreshToken(rawRefreshToken),
+                    ExpiresAt = DateTime.UtcNow.AddDays(_config.GetValue<int>("Jwt:RefreshTokenExpiryDays"))
+                };
+                await _refreshTokenRepository.AddAsync(refreshToken);
+                string accessToken = _tokenService.GenerateAccessToken(user);
+                await transaction.CommitAsync();
+                return new()
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = rawRefreshToken
+                };
+            }
+            catch
             {
-                UserId = user.Id,
-                TokenHash = _tokenService.HashRefreshToken(rawRefreshToken),
-                ExpiresAt = DateTime.UtcNow.AddDays(_config.GetValue<int>("Jwt:RefreshTokenExpiryDays"))
-            };
-            await _refreshTokenRepository.AddAsync(refreshToken);
-            string accessToken = _tokenService.GenerateAccessToken(user);
-            return new()
-            {
-                AccessToken = accessToken,
-                RefreshToken = rawRefreshToken
-            };
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<SaltResponseDto> GetSaltAsync(string username)
