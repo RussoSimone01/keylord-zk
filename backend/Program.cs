@@ -1,4 +1,5 @@
 using backend.Data;
+using backend.Middleware;
 using backend.Repositories.Implementations;
 using backend.Repositories.Interfaces;
 using backend.Services.Implementations;
@@ -19,6 +20,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
