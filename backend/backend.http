@@ -1,6 +1,70 @@
 @backend_HostAddress = http://localhost:5056
+@authKey = 0000000000000000000000000000000000000000000000000000000000000001
+@salt = 0000000000000000000000000000000000000000000000000000000000000002
 
-GET {{backend_HostAddress}}/weatherforecast/
+### Register
+POST {{backend_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@test.com",
+  "authKey": "{{authKey}}",
+  "salt": "{{salt}}",
+  "kdfIterations": 600000
+}
+
+###
+
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6InRlc3R1c2VyIiwibmJmIjoxNzgxNjQxMDEzLCJleHAiOjE3ODE2NDE5MTMsImlhdCI6MTc4MTY0MTAxMywiaXNzIjoia2V5bG9yZC16ayIsImF1ZCI6ImtleWxvcmQtemstY2xpZW50In0.ATDFlnKvhZ7Tke__UHL2TtiYJRhGQMHIsC7RcyGM6eY
+
+### Get Salt
+GET {{backend_HostAddress}}/api/auth/salt/testuser
 Accept: application/json
 
 ###
+
+### Login
+POST {{backend_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "authKey": "{{authKey}}"
+}
+
+###
+
+### Create credential
+POST {{backend_HostAddress}}/api/vault
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "encryptedData": "aGVsbG8gd29ybGQ=:dGVzdGNpcGhlcnRleHQ="
+}
+
+### Get all credentials
+GET {{backend_HostAddress}}/api/vault
+Authorization: Bearer {{accessToken}}
+
+### Update credential
+PUT {{backend_HostAddress}}/api/vault/1
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "encryptedData": "dXBkYXRlZGl2MTI=:dXBkYXRlZGNpcGhlcnRleHQ="
+}
+
+### Delete credential
+DELETE {{backend_HostAddress}}/api/vault/1
+Authorization: Bearer {{accessToken}}
+
+### Refresh token
+POST {{backend_HostAddress}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "VsTPeZirWJh/vpmOb5PbVPNEAH/rPFriW5JyGQDuJpg="
+}
