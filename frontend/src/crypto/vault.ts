@@ -115,7 +115,7 @@ async function deriveMasterKey(
 	passwordKey: CryptoKey,
 	saltHex: string,
 ): Promise<CryptoKey> {
-	return crypto.subtle.deriveKey(
+	const bits = await crypto.subtle.deriveBits(
 		{
 			name: "PBKDF2",
 			salt: fromHex(saltHex),
@@ -123,10 +123,13 @@ async function deriveMasterKey(
 			hash: "SHA-256",
 		},
 		passwordKey,
-		{ name: "HKDF", length: KEY_BYTES * 8 }, // output usato come input HKDF
-		false,
-		["deriveKey", "deriveBits"],
+		KEY_BYTES * 8,
 	);
+
+	return crypto.subtle.importKey("raw", bits, "HKDF", false, [
+		"deriveKey",
+		"deriveBits",
+	]);
 }
 
 /**
