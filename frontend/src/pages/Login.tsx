@@ -47,17 +47,22 @@ function Login() {
 					type="text"
 					value={username}
 					onChange={(e) => setUsername(e.target.value)}
+					required
 				></input>
+				<br />
 				<label htmlFor="password">Password</label>
 				<input
 					id="password"
 					type="password"
 					value={password}
 					onChange={(e) => setPassword(e.target.value)}
+					required
 				></input>
+				<br />
 				<button id="loginButton" type="submit">
 					Login
 				</button>
+				<br />
 				{error && <span>{error}</span>}
 			</form>
 		</div>
