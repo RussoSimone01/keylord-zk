@@ -1,3 +1,8 @@
+export interface CredentialBase {
+	id?: number;
+	encryptedData: string;
+}
+
 export interface RegisterRequest {
 	username: string;
 	email?: string;
@@ -25,9 +30,8 @@ export interface CredentialRequest {
 	encryptedData: string;
 }
 
-export interface CredentialResponse {
+export interface CredentialResponse extends CredentialBase {
 	id: number;
-	encryptedData: string;
 }
 
 export interface ChangePasswordRequest {

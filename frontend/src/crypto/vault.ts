@@ -23,15 +23,14 @@ export interface DerivedKeys {
 }
 
 export interface PlainCredential {
+	id?: number;
 	site: string;
 	username: string;
 	password: string;
 }
 
-export interface EncryptedCredential {
-	/** Formato: "<ivBase64>:<ciphertextBase64>" */
-	encryptedData: string;
-}
+import type { CredentialBase } from "../types";
+export type EncryptedCredential = CredentialBase;
 
 // ---------------------------------------------------------------------------
 // Costanti
@@ -240,7 +239,10 @@ export async function decryptCredential(
 		ciphertext,
 	);
 
-	return JSON.parse(new TextDecoder().decode(plaintext)) as PlainCredential;
+	return {
+		id: encrypted.id,
+		...(JSON.parse(new TextDecoder().decode(plaintext)) as PlainCredential),
+	};
 }
 
 /**
