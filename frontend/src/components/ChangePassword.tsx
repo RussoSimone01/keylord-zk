@@ -117,7 +117,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 					required
 				></input>
 				<br />
-				<button id="signupButton" type="submit">
+				<button id="changePwdButton" type="submit">
 					Change Password
 				</button>
 				<br />

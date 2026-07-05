@@ -48,3 +48,7 @@ export async function verifyPassword(
 	);
 	return response.data.isValid;
 }
+
+export async function deleteAccount(): Promise<void> {
+	await client.delete("/auth/account");
+}
