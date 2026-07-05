@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getSalt, login } from "../api/auth";
 import { deriveKeys } from "../crypto/vault";
 import { useAuthStore } from "../store/authStore";
@@ -68,6 +68,8 @@ function Login() {
 				</button>
 				<br />
 				{error && <span>{error}</span>}
+				<br />
+				<Link to="/signup">Signup</Link>
 			</form>
 		</div>
 	);

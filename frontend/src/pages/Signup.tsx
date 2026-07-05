@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { deriveKeys, generateSalt } from "../crypto/vault";
 import { register } from "../api/auth";
@@ -108,6 +108,8 @@ function Signup() {
 				</button>
 				<br />
 				{error && <span>{error}</span>}
+				<br />
+				<Link to="/login">Login</Link>
 			</form>
 		</div>
 	);
