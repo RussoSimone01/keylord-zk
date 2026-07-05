@@ -20,7 +20,12 @@ function Login() {
 				username,
 				authKey,
 			});
-			authStore.setAuth(encryptionKey, accessToken, refreshToken);
+			authStore.setAuth(
+				username,
+				encryptionKey,
+				accessToken,
+				refreshToken,
+			);
 			navigate("/vault");
 		} catch (err) {
 			console.log(err);

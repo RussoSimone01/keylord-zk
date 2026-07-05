@@ -24,9 +24,11 @@ client.interceptors.response.use(
 				const { data } = await axios.post("/api/auth/refresh", {
 					refreshToken,
 				});
+				const username = useAuthStore.getState().username;
 				useAuthStore
 					.getState()
 					.setAuth(
+						username,
 						useAuthStore.getState().encryptionKey,
 						data.accessToken,
 						data.refreshToken,

@@ -1,11 +1,13 @@
 import { create } from "zustand";
 
 interface AuthStore {
+	username: string;
 	encryptionKey: CryptoKey | null;
 	accessToken: string;
 	refreshToken: string;
 
 	setAuth(
+		username: string,
 		encryptionKey: CryptoKey | null,
 		accessToken: string,
 		refreshToken: string,
@@ -14,14 +16,17 @@ interface AuthStore {
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
+	username: sessionStorage.getItem("username") ?? "",
 	encryptionKey: null,
 	accessToken: sessionStorage.getItem("accessToken") ?? "",
 	refreshToken: sessionStorage.getItem("refreshToken") ?? "",
 
-	setAuth: (encryptionKey, accessToken, refreshToken) => {
+	setAuth: (username, encryptionKey, accessToken, refreshToken) => {
+		sessionStorage.setItem("username", username);
 		sessionStorage.setItem("accessToken", accessToken);
 		sessionStorage.setItem("refreshToken", refreshToken);
 		set({
+			username,
 			encryptionKey,
 			accessToken,
 			refreshToken,
@@ -29,6 +34,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 	},
 
 	clearAuth: () => {
+		sessionStorage.removeItem("username");
 		sessionStorage.removeItem("accessToken");
 		sessionStorage.removeItem("refreshToken");
 		set({

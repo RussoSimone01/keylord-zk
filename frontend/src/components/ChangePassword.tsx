@@ -1,18 +1,20 @@
+import axios from "axios";
 import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { deriveKeys, generateSalt } from "../crypto/vault";
-import { register } from "../api/auth";
+import { changePassword, getSalt } from "../api/auth";
+import { deriveKeys, reencryptVault } from "../crypto/vault";
+import { getAll } from "../api/vault";
 
-function Signup() {
-	const [username, setUsername] = useState("");
-	const [email, setEmail] = useState("");
+interface ChangePasswordProps {
+	onBack: () => void;
+}
+
+function ChangePassword({ onBack }: ChangePasswordProps) {
+	const [oldPassword, setOldPassword] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [error, setError] = useState("");
 	const authStore = useAuthStore();
-	const navigate = useNavigate();
 
 	function checkPassword(password: string, confirmPassword: string) {
 		if (confirmPassword != "" && password != confirmPassword) {
@@ -28,22 +30,29 @@ function Signup() {
 				setError("Password do not match");
 				return;
 			}
-			const salt: string = generateSalt();
-			const { authKey, encryptionKey } = await deriveKeys(password, salt);
-			const { accessToken, refreshToken } = await register({
-				username,
-				email: email || undefined,
-				authKey,
-				salt,
-				kdfIterations: 600000,
+			const { salt } = await getSalt(authStore.username);
+			const { authKey: oldAuthKey, encryptionKey: oldEncryptionKey } =
+				await deriveKeys(oldPassword, salt);
+			const oldCredentials = await getAll();
+			const { newKeys, newSalt, reencryptedCredentials } =
+				await reencryptVault(
+					oldCredentials,
+					oldEncryptionKey,
+					password,
+				);
+			const { accessToken, refreshToken } = await changePassword({
+				oldAuthKey,
+				newAuthKey: newKeys.authKey,
+				newSalt,
+				credentials: reencryptedCredentials,
 			});
 			authStore.setAuth(
-				username,
-				encryptionKey,
+				authStore.username,
+				newKeys.encryptionKey,
 				accessToken,
 				refreshToken,
 			);
-			navigate("/vault");
+			onBack();
 		} catch (err) {
 			console.log(err);
 			if (axios.isAxiosError(err)) {
@@ -56,28 +65,25 @@ function Signup() {
 
 	return (
 		<div>
-			<h1>Signup Page</h1>
+			<button type="button" onClick={onBack}>
+				Back
+			</button>
+			<h2>Change Password</h2>
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();
 					handleSubmit();
 				}}
 			>
-				<label htmlFor="username">Username</label>
+				<label htmlFor="oldPassword">Old Password</label>
 				<input
-					id="username"
-					type="text"
-					value={username}
-					onChange={(e) => setUsername(e.target.value)}
+					id="oldPassword"
+					type="password"
+					value={oldPassword}
+					onChange={(e) => {
+						setOldPassword(e.target.value);
+					}}
 					required
-				></input>
-				<br />
-				<label htmlFor="email">Email</label>
-				<input
-					id="email"
-					type="text"
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
 				></input>
 				<br />
 				<label htmlFor="password">Password</label>
@@ -105,7 +111,7 @@ function Signup() {
 				></input>
 				<br />
 				<button id="signupButton" type="submit">
-					Signup
+					Change Password
 				</button>
 				<br />
 				{error && <span>{error}</span>}
@@ -114,4 +120,4 @@ function Signup() {
 	);
 }
 
-export default Signup;
+export default ChangePassword;
