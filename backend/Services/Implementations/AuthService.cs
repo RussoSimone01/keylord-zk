@@ -1,6 +1,7 @@
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
+using backend.Repositories.Implementations;
 using backend.Repositories.Interfaces;
 using backend.Services.Interfaces;
 
@@ -217,6 +218,14 @@ namespace backend.Services.Implementations
                 ?? throw new Exception("User not found");
             // Check password
             return BCrypt.Net.BCrypt.Verify(request.AuthKey, user.AuthKeyHash);
+        }
+
+        public async Task DeleteAccountAsync(long userId)
+        {
+            // Retrieve User
+            User user = await _userRepository.GetByIdAsync(userId)
+                ?? throw new Exception("User not found");
+            await _userRepository.DeleteAsync(userId);
         }
     }
 }

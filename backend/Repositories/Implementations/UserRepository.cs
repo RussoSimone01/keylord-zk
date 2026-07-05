@@ -73,5 +73,10 @@ namespace backend.Repositories.Implementations
                     .SetProperty(u => u.UpdatedAt, DateTime.UtcNow)
                 );
         }
+
+        public async Task DeleteAsync(long userId)
+        {
+            await _db.Users.Where(u => u.Id == userId).ExecuteDeleteAsync();
+        }
     }
 }

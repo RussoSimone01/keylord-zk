@@ -13,5 +13,6 @@ namespace backend.Repositories.Interfaces
         public Task UpdateEmailAsync(long userId, string newEmail);
         public Task UpdateLoginAttemptsAsync(long userId, int attempts, DateTime? lockedUntil);
         public Task ResetLockoutAsync(long userId);
+        public Task DeleteAsync(long userId);
     }
 }

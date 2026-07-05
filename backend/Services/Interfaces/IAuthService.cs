@@ -10,5 +10,6 @@ namespace backend.Services.Interfaces
         public Task<AuthResponseDto> ChangePasswordAsync(long userId, ChangePasswordRequestDto request);
         public Task<SaltResponseDto> GetSaltAsync(string username);
         public Task<bool> VerifyPasswordAsync(long userId, VerifyPasswordRequestDto request);
+        public Task DeleteAccountAsync(long userId);
     }
 }

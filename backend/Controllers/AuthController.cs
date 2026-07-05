@@ -51,5 +51,14 @@ namespace backend.Controllers
             bool isValid = await _authService.VerifyPasswordAsync(userId, request);
             return Ok(new { isValid });
         }
+
+        [Authorize]
+        [HttpDelete("account")]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            long userId = long.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            await _authService.DeleteAccountAsync(userId);
+            return NoContent();
+        }
     }
 }
