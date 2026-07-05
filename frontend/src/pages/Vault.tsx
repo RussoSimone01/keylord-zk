@@ -36,7 +36,6 @@ function Vault() {
 				);
 				setCredentials(plainCredentials);
 			} catch (err) {
-				console.log(err);
 				if (axios.isAxiosError(err)) {
 					setError(err.response?.data?.error ?? "An error occurred");
 				} else {
@@ -81,7 +80,6 @@ function Vault() {
 			setUsername("");
 			setPassword("");
 		} catch (err) {
-			console.log(err);
 			if (axios.isAxiosError(err)) {
 				setError(err.response?.data?.error ?? "An error occurred");
 			} else {

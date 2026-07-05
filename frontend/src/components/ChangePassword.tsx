@@ -62,7 +62,6 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 			);
 			onBack();
 		} catch (err) {
-			console.log(err);
 			if (axios.isAxiosError(err)) {
 				setError(err.response?.data?.error ?? "An error occurred");
 			} else {
