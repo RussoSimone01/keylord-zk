@@ -42,5 +42,14 @@ namespace backend.Controllers
             long userId = long.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             return Ok(await _authService.ChangePasswordAsync(userId, request));
         }
+
+        [Authorize]
+        [HttpPost("verify-password")]
+        public async Task<IActionResult> VerifyPassword(VerifyPasswordRequestDto request)
+        {
+            long userId = long.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            bool isValid = await _authService.VerifyPasswordAsync(userId, request);
+            return Ok(new { isValid });
+        }
     }
 }

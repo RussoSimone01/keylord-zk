@@ -44,3 +44,7 @@ export interface ChangePasswordRequest {
 export interface RefreshRequest {
 	refreshToken: string;
 }
+
+export interface VerifyPasswordRequest {
+	authKey: string;
+}

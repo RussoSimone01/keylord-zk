@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { changePassword, getSalt } from "../api/auth";
+import { changePassword, getSalt, verifyPassword } from "../api/auth";
 import { deriveKeys, reencryptVault } from "../crypto/vault";
 import { getAll } from "../api/vault";
 
@@ -30,9 +30,17 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 				setError("Password do not match");
 				return;
 			}
+			if (oldPassword === password) {
+				setError("New password must be different from the old one");
+				return;
+			}
 			const { salt } = await getSalt(authStore.username);
 			const { authKey: oldAuthKey, encryptionKey: oldEncryptionKey } =
 				await deriveKeys(oldPassword, salt);
+			if (!(await verifyPassword({ authKey: oldAuthKey }))) {
+				setError("Old password is incorrect");
+				return;
+			}
 			const oldCredentials = await getAll();
 			const { newKeys, newSalt, reencryptedCredentials } =
 				await reencryptVault(

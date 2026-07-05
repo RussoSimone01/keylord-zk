@@ -155,6 +155,10 @@ namespace backend.Services.Implementations
             {
                 throw new Exception("Old password does not match");
             }
+            if (BCrypt.Net.BCrypt.Verify(request.NewAuthKey, user.AuthKeyHash))
+            {
+                throw new Exception("New password must be different from the old one");
+            }
             await using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
@@ -204,6 +208,15 @@ namespace backend.Services.Implementations
                 Salt = user.KdfSalt,
                 KdfIterations = user.KdfIterations
             };
+        }
+
+        public async Task<bool> VerifyPasswordAsync(long userId, VerifyPasswordRequestDto request)
+        {
+            // Retrieve User
+            User user = await _userRepository.GetByIdAsync(userId)
+                ?? throw new Exception("User not found");
+            // Check password
+            return BCrypt.Net.BCrypt.Verify(request.AuthKey, user.AuthKeyHash);
         }
     }
 }

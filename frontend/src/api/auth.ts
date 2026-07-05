@@ -5,6 +5,7 @@ import type {
 	RefreshRequest,
 	RegisterRequest,
 	SaltResponse,
+	VerifyPasswordRequest,
 } from "../types";
 import client from "./client";
 
@@ -36,4 +37,14 @@ export async function changePassword(
 		data,
 	);
 	return response.data;
+}
+
+export async function verifyPassword(
+	data: VerifyPasswordRequest,
+): Promise<boolean> {
+	const response = await client.post<{ isValid: boolean }>(
+		"/auth/verify-password",
+		data,
+	);
+	return response.data.isValid;
 }
