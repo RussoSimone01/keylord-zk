@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { deriveKeys, generateSalt } from "../crypto/vault";
 import { register } from "../api/auth";
+import "../styles/auth.css";
 
 function Signup() {
 	const [username, setUsername] = useState("");
@@ -54,63 +55,75 @@ function Signup() {
 	}
 
 	return (
-		<div>
-			<h1>Signup Page</h1>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					handleSubmit();
-				}}
-			>
-				<label htmlFor="username">Username</label>
-				<input
-					id="username"
-					type="text"
-					value={username}
-					onChange={(e) => setUsername(e.target.value)}
-					required
-				></input>
-				<br />
-				<label htmlFor="email">Email</label>
-				<input
-					id="email"
-					type="text"
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-				></input>
-				<br />
-				<label htmlFor="password">Password</label>
-				<input
-					id="password"
-					type="password"
-					value={password}
-					onChange={(e) => {
-						setPassword(e.target.value);
-						checkPassword(e.target.value, confirmPassword);
+		<div className="auth-container">
+			<div className="auth-card">
+				<h1>Signup Page</h1>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						handleSubmit();
 					}}
-					required
-				></input>
-				<br />
-				<label htmlFor="confirmPassword">Confirm Password</label>
-				<input
-					id="confirmPassword"
-					type="password"
-					value={confirmPassword}
-					onChange={(e) => {
-						setConfirmPassword(e.target.value);
-						checkPassword(password, e.target.value);
-					}}
-					required
-				></input>
-				<br />
-				<button id="signupButton" type="submit">
-					Signup
-				</button>
-				<br />
-				{error && <span>{error}</span>}
-				<br />
-				<Link to="/login">Login</Link>
-			</form>
+				>
+					<div className="auth-field">
+						<label htmlFor="username">Username</label>
+						<input
+							id="username"
+							type="text"
+							value={username}
+							onChange={(e) => setUsername(e.target.value)}
+							required
+						></input>
+					</div>
+					<div className="auth-field">
+						<label htmlFor="email">Email</label>
+						<input
+							id="email"
+							type="text"
+							value={email}
+							onChange={(e) => setEmail(e.target.value)}
+						></input>
+					</div>
+					<div className="auth-field">
+						<label htmlFor="password">Password</label>
+						<input
+							id="password"
+							type="password"
+							value={password}
+							onChange={(e) => {
+								setPassword(e.target.value);
+								checkPassword(e.target.value, confirmPassword);
+							}}
+							required
+						></input>
+					</div>
+					<div className="auth-field">
+						<label htmlFor="confirmPassword">
+							Confirm Password
+						</label>
+						<input
+							id="confirmPassword"
+							type="password"
+							value={confirmPassword}
+							onChange={(e) => {
+								setConfirmPassword(e.target.value);
+								checkPassword(password, e.target.value);
+							}}
+							required
+						></input>
+					</div>
+					<button
+						className="auth-submit"
+						id="signupButton"
+						type="submit"
+					>
+						Signup
+					</button>
+					{error && <span className="auth-error">{error}</span>}
+				</form>
+				<div className="auth-link">
+					<Link to="/login">Login</Link>
+				</div>
+			</div>
 		</div>
 	);
 }

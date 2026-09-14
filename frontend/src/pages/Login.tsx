@@ -4,6 +4,7 @@ import { getSalt, login } from "../api/auth";
 import { deriveKeys } from "../crypto/vault";
 import { useAuthStore } from "../store/authStore";
 import axios from "axios";
+import "../styles/auth.css";
 
 function Login() {
 	const [username, setUsername] = useState("");
@@ -37,40 +38,44 @@ function Login() {
 	}
 
 	return (
-		<div>
-			<h1>Login page</h1>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					handleSubmit();
-				}}
-			>
-				<label htmlFor="username">Username</label>
-				<input
-					id="username"
-					type="text"
-					value={username}
-					onChange={(e) => setUsername(e.target.value)}
-					required
-				></input>
-				<br />
-				<label htmlFor="password">Password</label>
-				<input
-					id="password"
-					type="password"
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
-					required
-				></input>
-				<br />
-				<button id="loginButton" type="submit">
-					Login
-				</button>
-				<br />
-				{error && <span>{error}</span>}
-				<br />
-				<Link to="/signup">Signup</Link>
-			</form>
+		<div className="auth-container">
+			<div className="auth-card">
+				<h1>Log in</h1>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						handleSubmit();
+					}}
+				>
+					<div className="auth-field">
+						<label htmlFor="username">Username</label>
+						<input
+							id="username"
+							type="text"
+							value={username}
+							onChange={(e) => setUsername(e.target.value)}
+							required
+						/>
+					</div>
+					<div className="auth-field">
+						<label htmlFor="password">Password</label>
+						<input
+							id="password"
+							type="password"
+							value={password}
+							onChange={(e) => setPassword(e.target.value)}
+							required
+						/>
+					</div>
+					<button className="auth-submit" type="submit">
+						Log in
+					</button>
+					{error && <span className="auth-error">{error}</span>}
+				</form>
+				<div className="auth-link">
+					Don't have an account? <Link to="/signup">Sign up</Link>
+				</div>
+			</div>
 		</div>
 	);
 }
