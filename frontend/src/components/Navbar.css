@@ -13,7 +13,8 @@
     align-items: center;
 }
 
-.navbar-links a {
+.navbar-links a,
+.navbar-links a:visited {
     color: var(--text-secondary);
     text-decoration: none;
     font-weight: 500;
@@ -21,6 +22,10 @@
 
 .navbar-links a:hover {
     color: var(--text);
+}
+
+.navbar-links a.active {
+    color: var(--accent);
 }
 
 .navbar-actions {

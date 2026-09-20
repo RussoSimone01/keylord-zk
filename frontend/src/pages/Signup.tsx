@@ -131,7 +131,7 @@ function Signup() {
 					{error && <span className="auth-error">{error}</span>}
 				</form>
 				<div className="auth-link">
-					<Link to="/login">Login</Link>
+					Already have an account? <Link to="/login">Login</Link>
 				</div>
 			</div>
 		</div>

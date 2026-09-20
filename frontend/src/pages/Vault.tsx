@@ -9,6 +9,7 @@ import { useAuthStore } from "../store/authStore";
 import axios from "axios";
 import "./Vault.css";
 import Spinner from "../components/Spinner.tsx";
+import { Eye, EyeOff, Copy, Check, Pencil, Trash2 } from "lucide-react";
 
 function Vault() {
 	const [credentials, setCredentials] = useState<PlainCredential[]>([]);
@@ -208,8 +209,13 @@ function Vault() {
 								<button
 									type="button"
 									onClick={() => togglePassword()}
+									title={showPassword ? "Hide" : "Show"}
 								>
-									{showPassword ? "Hide" : "Show"}
+									{showPassword ? (
+										<EyeOff size={16} />
+									) : (
+										<Eye size={16} />
+									)}
 								</button>
 							</div>
 						</div>
@@ -226,7 +232,7 @@ function Vault() {
 
 			<input
 				type="text"
-				placeholder="Search by site or username..."
+				placeholder="Filter by site or username..."
 				value={searchQuery}
 				onChange={(e) => setSearchQuery(e.target.value)}
 				className="vault-search"
@@ -256,11 +262,19 @@ function Vault() {
 												`${credential.id}-username`,
 											)
 										}
+										title={
+											copiedField ===
+											`${credential.id}-username`
+												? "Copied!"
+												: "Copy"
+										}
 									>
 										{copiedField ===
-										`${credential.id}-username`
-											? "Copied!"
-											: "Copy"}
+										`${credential.id}-username` ? (
+											<Check size={16} />
+										) : (
+											<Copy size={16} />
+										)}
 									</button>
 								</div>
 							</td>
@@ -280,10 +294,19 @@ function Vault() {
 										onClick={() =>
 											toggleTablePassword(credential.id!)
 										}
+										title={
+											visiblePasswords.has(credential.id!)
+												? "Hide"
+												: "Show"
+										}
 									>
-										{visiblePasswords.has(credential.id!)
-											? "Hide"
-											: "Show"}
+										{visiblePasswords.has(
+											credential.id!,
+										) ? (
+											<EyeOff size={16} />
+										) : (
+											<Eye size={16} />
+										)}
 									</button>
 									<button
 										type="button"
@@ -293,11 +316,19 @@ function Vault() {
 												`${credential.id}-password`,
 											)
 										}
+										title={
+											copiedField ===
+											`${credential.id}-password`
+												? "Copied!"
+												: "Copy"
+										}
 									>
 										{copiedField ===
-										`${credential.id}-password`
-											? "Copied!"
-											: "Copy"}
+										`${credential.id}-password` ? (
+											<Check size={16} />
+										) : (
+											<Copy size={16} />
+										)}
 									</button>
 								</div>
 							</td>
@@ -309,8 +340,9 @@ function Vault() {
 											e.preventDefault();
 											handleEdit(credential.id!);
 										}}
+										title="Edit"
 									>
-										Edit
+										<Pencil size={16} />
 									</button>
 									<button
 										className="danger"
@@ -319,8 +351,9 @@ function Vault() {
 											e.preventDefault();
 											handleDelete(credential.id!);
 										}}
+										title="Delete"
 									>
-										Delete
+										<Trash2 size={16} />
 									</button>
 								</div>
 							</td>
