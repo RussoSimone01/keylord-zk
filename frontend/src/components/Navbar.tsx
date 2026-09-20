@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
+import "./Navbar.css";
 
 function Navbar() {
 	const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -14,13 +15,23 @@ function Navbar() {
 	}
 
 	return (
-		<div>
-			<button type="button" onClick={toggleTheme}>
+		<div className="navbar">
+			<button
+				className="navbar-actions"
+				type="button"
+				onClick={toggleTheme}
+			>
 				{theme === "dark" ? "☀️" : "🌙"}
 			</button>
-			<Link to="/vault">Vault</Link>
+			<Link className="navbar-links" to="/vault">
+				Vault
+			</Link>
 			<Link to="/settings">Settings</Link>
-			<button type="button" onClick={handleClick}>
+			<button
+				className="navbar-actions"
+				type="button"
+				onClick={handleClick}
+			>
 				Logout
 			</button>
 		</div>
