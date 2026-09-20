@@ -4,6 +4,8 @@ import { useAuthStore } from "../store/authStore";
 import { changePassword, getSalt, verifyPassword } from "../api/auth";
 import { deriveKeys, reencryptVault } from "../crypto/vault";
 import { getAll } from "../api/vault";
+import "../styles/auth.css";
+import "../pages/Settings.css";
 
 interface ChangePasswordProps {
 	onBack: () => void;
@@ -72,57 +74,72 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 
 	return (
 		<div>
-			<button type="button" onClick={onBack}>
-				Back
-			</button>
-			<h2>Change Password</h2>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					handleSubmit();
-				}}
-			>
-				<label htmlFor="oldPassword">Old Password</label>
-				<input
-					id="oldPassword"
-					type="password"
-					value={oldPassword}
-					onChange={(e) => {
-						setOldPassword(e.target.value);
-					}}
-					required
-				></input>
-				<br />
-				<label htmlFor="password">Password</label>
-				<input
-					id="password"
-					type="password"
-					value={password}
-					onChange={(e) => {
-						setPassword(e.target.value);
-						checkPassword(e.target.value, confirmPassword);
-					}}
-					required
-				></input>
-				<br />
-				<label htmlFor="confirmPassword">Confirm Password</label>
-				<input
-					id="confirmPassword"
-					type="password"
-					value={confirmPassword}
-					onChange={(e) => {
-						setConfirmPassword(e.target.value);
-						checkPassword(password, e.target.value);
-					}}
-					required
-				></input>
-				<br />
-				<button id="changePwdButton" type="submit">
-					Change Password
+			<div className="auth-card">
+				<button
+					className="settings-back"
+					type="button"
+					onClick={onBack}
+				>
+					← Back
 				</button>
-				<br />
-				{error && <span>{error}</span>}
-			</form>
+				<h1>Change Password</h1>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						handleSubmit();
+					}}
+				>
+					<div className="auth-field">
+						<label htmlFor="oldPassword">Old Password</label>
+						<input
+							id="oldPassword"
+							type="password"
+							value={oldPassword}
+							onChange={(e) => {
+								setOldPassword(e.target.value);
+							}}
+							required
+						></input>
+					</div>
+					<div className="auth-field">
+						<label htmlFor="password">Password</label>
+						<input
+							id="password"
+							type="password"
+							value={password}
+							onChange={(e) => {
+								setPassword(e.target.value);
+								checkPassword(e.target.value, confirmPassword);
+							}}
+							required
+						></input>
+					</div>
+					<div className="auth-field">
+						<label htmlFor="confirmPassword">
+							Confirm Password
+						</label>
+						<input
+							id="confirmPassword"
+							type="password"
+							value={confirmPassword}
+							onChange={(e) => {
+								setConfirmPassword(e.target.value);
+								checkPassword(password, e.target.value);
+							}}
+							required
+						></input>
+					</div>
+					<button
+						id="changePwdButton"
+						type="submit"
+						className="auth-submit"
+					>
+						Change Password
+					</button>
+					<br />
+					{error && <span className="auth-error">{error}</span>}
+				</form>
+			</div>
 		</div>
 	);
 }

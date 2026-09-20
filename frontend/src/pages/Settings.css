@@ -1,0 +1,51 @@
+.settings-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.settings-container h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.settings-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.settings-menu button {
+    text-align: left;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.settings-menu button:hover {
+    border-color: var(--accent);
+}
+
+.settings-back {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.settings-back:hover {
+    color: var(--text);
+    background: transparent;
+}
+
+.settings-warning {
+    background: rgba(232, 93, 93, 0.1);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+}

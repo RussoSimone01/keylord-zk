@@ -4,6 +4,7 @@ import { deleteAccount, getSalt, verifyPassword } from "../api/auth";
 import { useAuthStore } from "../store/authStore";
 import { deriveKeys } from "../crypto/vault";
 import { useNavigate } from "react-router-dom";
+import "../pages/Settings.css";
 
 interface DeleteAccountProps {
 	onBack: () => void;
@@ -37,47 +38,56 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 
 	return (
 		<div>
-			<button type="button" onClick={onBack}>
-				Back
-			</button>
-			<h2>Delete Account</h2>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					handleSubmit();
-				}}
-			>
-				<b>WARNING: this action cannot be undone</b>
-				<br />
-				<label htmlFor="password">Confirm with Password</label>
-				<input
-					id="password"
-					type="password"
-					value={password}
-					onChange={(e) => {
-						setPassword(e.target.value);
-					}}
-					required
-				></input>
-				<br />
+			<div className="auth-card">
 				<button
-					id="deleteButton"
-					type="submit"
-					onClick={(e) => {
-						if (
-							!confirm(
-								"Are you sure you want to completely delete the account and its related data?",
-							)
-						) {
-							e.preventDefault();
-						}
+					className="settings-back"
+					type="button"
+					onClick={onBack}
+				>
+					← Back
+				</button>
+				<h1>Delete Account</h1>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						handleSubmit();
 					}}
 				>
-					Delete Account
-				</button>
-				<br />
-				{error && <span>{error}</span>}
-			</form>
+					<div className="settings-warning">
+						<b>WARNING: this action cannot be undone</b>
+					</div>
+					<div className="auth-field">
+						<label htmlFor="password">Confirm with Password</label>
+						<input
+							id="password"
+							type="password"
+							value={password}
+							onChange={(e) => {
+								setPassword(e.target.value);
+							}}
+							required
+						></input>
+					</div>
+					<button
+						id="deleteButton"
+						type="submit"
+						className="auth-submit"
+						onClick={(e) => {
+							if (
+								!confirm(
+									"Are you sure you want to completely delete the account and its related data?",
+								)
+							) {
+								e.preventDefault();
+							}
+						}}
+					>
+						Delete Account
+					</button>
+					<br />
+					{error && <span className="auth-error">{error}</span>}
+				</form>
+			</div>
 		</div>
 	);
 }

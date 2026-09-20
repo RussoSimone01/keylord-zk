@@ -2,6 +2,7 @@ import { useState } from "react";
 import SettingsMenu from "../components/SettingsMenu";
 import ChangePassword from "../components/ChangePassword";
 import DeleteAccount from "../components/DeleteAccount";
+import "./Settings.css";
 
 function Settings() {
 	const [activeSection, setActiveSection] = useState<
@@ -9,8 +10,7 @@ function Settings() {
 	>(null);
 
 	return (
-		<div>
-			<h1>Settings page</h1>
+		<div className="settings-container">
 			{activeSection == null && (
 				<SettingsMenu onSelect={setActiveSection} />
 			)}
