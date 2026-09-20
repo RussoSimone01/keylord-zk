@@ -5,6 +5,7 @@ import { useAuthStore } from "../store/authStore";
 import { deriveKeys } from "../crypto/vault";
 import { useNavigate } from "react-router-dom";
 import "../pages/Settings.css";
+import Spinner from "./Spinner";
 
 interface DeleteAccountProps {
 	onBack: () => void;
@@ -15,8 +16,10 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 	const [error, setError] = useState("");
 	const authStore = useAuthStore();
 	const navigate = useNavigate();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	async function handleSubmit() {
+		setIsSubmitting(true);
 		try {
 			const { salt } = await getSalt(authStore.username);
 			const { authKey } = await deriveKeys(password, salt);
@@ -33,7 +36,13 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 			} else {
 				setError("An error occurred");
 			}
+		} finally {
+			setIsSubmitting(false);
 		}
+	}
+
+	if (isSubmitting) {
+		return <Spinner />;
 	}
 
 	return (
@@ -72,6 +81,7 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 						id="deleteButton"
 						type="submit"
 						className="auth-submit"
+						disabled={isSubmitting}
 						onClick={(e) => {
 							if (
 								!confirm(
@@ -84,7 +94,6 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 					>
 						Delete Account
 					</button>
-					<br />
 					{error && <span className="auth-error">{error}</span>}
 				</form>
 			</div>

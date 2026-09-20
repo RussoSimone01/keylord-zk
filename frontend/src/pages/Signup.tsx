@@ -5,6 +5,7 @@ import axios from "axios";
 import { deriveKeys, generateSalt } from "../crypto/vault";
 import { register } from "../api/auth";
 import "../styles/auth.css";
+import Spinner from "../components/Spinner";
 
 function Signup() {
 	const [username, setUsername] = useState("");
@@ -14,6 +15,7 @@ function Signup() {
 	const [error, setError] = useState("");
 	const authStore = useAuthStore();
 	const navigate = useNavigate();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	function checkPassword(password: string, confirmPassword: string) {
 		if (confirmPassword != "" && password != confirmPassword) {
@@ -24,6 +26,7 @@ function Signup() {
 	}
 
 	async function handleSubmit() {
+		setIsSubmitting(true);
 		try {
 			if (password != confirmPassword) {
 				setError("Password do not match");
@@ -51,7 +54,13 @@ function Signup() {
 			} else {
 				setError("An error occurred");
 			}
+		} finally {
+			setIsSubmitting(false);
 		}
+	}
+
+	if (isSubmitting) {
+		return <Spinner />;
 	}
 
 	return (
@@ -115,6 +124,7 @@ function Signup() {
 						className="auth-submit"
 						id="signupButton"
 						type="submit"
+						disabled={isSubmitting}
 					>
 						Signup
 					</button>

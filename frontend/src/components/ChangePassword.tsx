@@ -6,6 +6,7 @@ import { deriveKeys, reencryptVault } from "../crypto/vault";
 import { getAll } from "../api/vault";
 import "../styles/auth.css";
 import "../pages/Settings.css";
+import Spinner from "./Spinner";
 
 interface ChangePasswordProps {
 	onBack: () => void;
@@ -17,6 +18,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [error, setError] = useState("");
 	const authStore = useAuthStore();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	function checkPassword(password: string, confirmPassword: string) {
 		if (confirmPassword != "" && password != confirmPassword) {
@@ -27,6 +29,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 	}
 
 	async function handleSubmit() {
+		setIsSubmitting(true);
 		try {
 			if (password != confirmPassword) {
 				setError("Password do not match");
@@ -69,7 +72,13 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 			} else {
 				setError("An error occurred");
 			}
+		} finally {
+			setIsSubmitting(false);
 		}
+	}
+
+	if (isSubmitting) {
+		return <Spinner />;
 	}
 
 	return (
@@ -133,10 +142,10 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 						id="changePwdButton"
 						type="submit"
 						className="auth-submit"
+						disabled={isSubmitting}
 					>
 						Change Password
 					</button>
-					<br />
 					{error && <span className="auth-error">{error}</span>}
 				</form>
 			</div>

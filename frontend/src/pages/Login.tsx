@@ -5,6 +5,7 @@ import { deriveKeys } from "../crypto/vault";
 import { useAuthStore } from "../store/authStore";
 import axios from "axios";
 import "../styles/auth.css";
+import Spinner from "../components/Spinner";
 
 function Login() {
 	const [username, setUsername] = useState("");
@@ -12,8 +13,10 @@ function Login() {
 	const [error, setError] = useState("");
 	const authStore = useAuthStore();
 	const navigate = useNavigate();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	async function handleSubmit() {
+		setIsSubmitting(true);
 		try {
 			const { salt } = await getSalt(username);
 			const { authKey, encryptionKey } = await deriveKeys(password, salt);
@@ -34,7 +37,13 @@ function Login() {
 			} else {
 				setError("An error occurred");
 			}
+		} finally {
+			setIsSubmitting(false);
 		}
+	}
+
+	if (isSubmitting) {
+		return <Spinner />;
 	}
 
 	return (
@@ -67,7 +76,11 @@ function Login() {
 							required
 						/>
 					</div>
-					<button className="auth-submit" type="submit">
+					<button
+						className="auth-submit"
+						type="submit"
+						disabled={isSubmitting}
+					>
 						Log in
 					</button>
 					{error && <span className="auth-error">{error}</span>}

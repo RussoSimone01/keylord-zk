@@ -8,6 +8,7 @@ import { create, deleteCredential, getAll, update } from "../api/vault";
 import { useAuthStore } from "../store/authStore";
 import axios from "axios";
 import "./Vault.css";
+import Spinner from "../components/Spinner.tsx";
 
 function Vault() {
 	const [credentials, setCredentials] = useState<PlainCredential[]>([]);
@@ -146,7 +147,7 @@ function Vault() {
 	}
 
 	if (isLoading) {
-		return <div>Loading...</div>;
+		return <Spinner />;
 	}
 
 	return (
