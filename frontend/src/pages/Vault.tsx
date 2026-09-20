@@ -7,6 +7,7 @@ import {
 import { create, deleteCredential, getAll, update } from "../api/vault";
 import { useAuthStore } from "../store/authStore";
 import axios from "axios";
+import "./Vault.css";
 
 function Vault() {
 	const [credentials, setCredentials] = useState<PlainCredential[]>([]);
@@ -21,6 +22,7 @@ function Vault() {
 		new Set(),
 	);
 	const encryptionKey = useAuthStore((state) => state.encryptionKey);
+	const [copiedField, setCopiedField] = useState<string | null>(null);
 
 	useEffect(() => {
 		async function loadCredentials() {
@@ -51,6 +53,7 @@ function Vault() {
 	async function handleSubmit() {
 		try {
 			if (encryptionKey === null) {
+				setError("Session expired, please log in again");
 				return;
 			}
 			const { encryptedData } = await encryptCredential(
@@ -136,15 +139,21 @@ function Vault() {
 		});
 	}
 
+	async function copyToClipboard(text: string, fieldId: string) {
+		await navigator.clipboard.writeText(text);
+		setCopiedField(fieldId);
+		setTimeout(() => setCopiedField(null), 2000);
+	}
+
 	if (isLoading) {
 		return <div>Loading...</div>;
 	}
 
 	return (
-		<div>
-			<h1>Vault page</h1>
-			<div style={{ margin: "10px" }}>
-				<h2>New credential</h2>
+		<div className="vault-container">
+			<h1>Vault</h1>
+			<div className="vault-form-card">
+				<h2>{id == null ? "New credential" : "Edit credential"}</h2>
 				<form
 					onSubmit={(e) => {
 						e.preventDefault();
@@ -155,100 +164,149 @@ function Vault() {
 						handleReset();
 					}}
 				>
-					<label htmlFor="site">Site</label>
-					<input
-						id="site"
-						type="text"
-						value={site}
-						onChange={(e) => setSite(e.target.value)}
-						required
-					></input>
-					<br />
-					<label htmlFor="username">Username</label>
-					<input
-						id="username"
-						type="text"
-						value={username}
-						onChange={(e) => setUsername(e.target.value)}
-						required
-					></input>
-					<br />
-					<label htmlFor="password">Password</label>
-					<input
-						id="password"
-						type={showPassword ? "text" : "password"}
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-						required
-					></input>
-					<button type="button" onClick={() => togglePassword()}>
-						{showPassword ? "Hide" : "Show"}
-					</button>
-					<br />
-					<button id="resetButton" type="reset">
-						Reset
-					</button>
-					<button id="saveButton" type="submit">
-						Save
-					</button>
-					<br />
-					{error && <span>{error}</span>}
+					<div className="vault-form-row">
+						<div className="vault-field">
+							<label htmlFor="site">Site</label>
+							<input
+								id="site"
+								type="text"
+								value={site}
+								onChange={(e) => setSite(e.target.value)}
+								required
+							/>
+						</div>
+						<div className="vault-field">
+							<label htmlFor="username">Username</label>
+							<input
+								id="username"
+								type="text"
+								value={username}
+								onChange={(e) => setUsername(e.target.value)}
+								required
+							/>
+						</div>
+						<div className="vault-field">
+							<label htmlFor="password">Password</label>
+							<div className="vault-password-field">
+								<input
+									id="password"
+									type={showPassword ? "text" : "password"}
+									value={password}
+									onChange={(e) =>
+										setPassword(e.target.value)
+									}
+									required
+								/>
+								<button
+									type="button"
+									onClick={() => togglePassword()}
+								>
+									{showPassword ? "Hide" : "Show"}
+								</button>
+							</div>
+						</div>
+					</div>
+					<div className="vault-form-actions">
+						<button className="primary" type="submit">
+							Save
+						</button>
+						<button type="reset">Reset</button>
+					</div>
+					{error && <span className="auth-error">{error}</span>}
 				</form>
 			</div>
-			<table>
+
+			<table className="vault-table">
 				<thead>
 					<tr>
-						<td>Site</td>
-						<td>Username</td>
-						<td>Password</td>
-						<td></td>
+						<th>Site</th>
+						<th>Username</th>
+						<th>Password</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
 					{credentials.map((credential) => (
 						<tr key={credential.id}>
 							<td>{credential.site}</td>
-							<td>{credential.username}</td>
 							<td>
-								<input
-									type={
-										visiblePasswords.has(credential.id!)
-											? "text"
-											: "password"
-									}
-									value={credential.password}
-									readOnly
-								></input>
-								<button
-									type="button"
-									onClick={() =>
-										toggleTablePassword(credential.id!)
-									}
-								>
-									{visiblePasswords.has(credential.id!)
-										? "Hide"
-										: "Show"}
-								</button>
+								<div className="vault-table-field-cell">
+									{credential.username}
+									<button
+										type="button"
+										onClick={() =>
+											copyToClipboard(
+												credential.username,
+												`${credential.id}-username`,
+											)
+										}
+									>
+										{copiedField ===
+										`${credential.id}-username`
+											? "Copied!"
+											: "Copy"}
+									</button>
+								</div>
 							</td>
 							<td>
-								<button
-									type="button"
-									onClick={(e) => {
-										e.preventDefault();
-										handleEdit(credential.id!);
-									}}
-								>
-									Edit
-								</button>
-								<button
-									type="button"
-									onClick={(e) => {
-										e.preventDefault();
-										handleDelete(credential.id!);
-									}}
-								>
-									Delete
-								</button>
+								<div className="vault-table-field-cell">
+									<input
+										type={
+											visiblePasswords.has(credential.id!)
+												? "text"
+												: "password"
+										}
+										value={credential.password}
+										readOnly
+									/>
+									<button
+										type="button"
+										onClick={() =>
+											toggleTablePassword(credential.id!)
+										}
+									>
+										{visiblePasswords.has(credential.id!)
+											? "Hide"
+											: "Show"}
+									</button>
+									<button
+										type="button"
+										onClick={() =>
+											copyToClipboard(
+												credential.password,
+												`${credential.id}-password`,
+											)
+										}
+									>
+										{copiedField ===
+										`${credential.id}-password`
+											? "Copied!"
+											: "Copy"}
+									</button>
+								</div>
+							</td>
+							<td>
+								<div className="vault-row-actions">
+									<button
+										type="button"
+										onClick={(e) => {
+											e.preventDefault();
+											handleEdit(credential.id!);
+										}}
+									>
+										Edit
+									</button>
+									<button
+										className="danger"
+										type="button"
+										onClick={(e) => {
+											e.preventDefault();
+											handleDelete(credential.id!);
+										}}
+									>
+										Delete
+									</button>
+								</div>
 							</td>
 						</tr>
 					))}
