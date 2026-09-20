@@ -24,6 +24,7 @@ function Vault() {
 	);
 	const encryptionKey = useAuthStore((state) => state.encryptionKey);
 	const [copiedField, setCopiedField] = useState<string | null>(null);
+	const [searchQuery, setSearchQuery] = useState("");
 
 	useEffect(() => {
 		async function loadCredentials() {
@@ -150,6 +151,12 @@ function Vault() {
 		return <Spinner />;
 	}
 
+	const filteredCredentials = credentials.filter(
+		(c) =>
+			c.site.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			c.username.toLowerCase().includes(searchQuery.toLowerCase()),
+	);
+
 	return (
 		<div className="vault-container">
 			<h1>Vault</h1>
@@ -217,6 +224,14 @@ function Vault() {
 				</form>
 			</div>
 
+			<input
+				type="text"
+				placeholder="Search by site or username..."
+				value={searchQuery}
+				onChange={(e) => setSearchQuery(e.target.value)}
+				className="vault-search"
+			/>
+
 			<table className="vault-table">
 				<thead>
 					<tr>
@@ -227,7 +242,7 @@ function Vault() {
 					</tr>
 				</thead>
 				<tbody>
-					{credentials.map((credential) => (
+					{filteredCredentials.map((credential) => (
 						<tr key={credential.id}>
 							<td>{credential.site}</td>
 							<td>
