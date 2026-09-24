@@ -11,9 +11,6 @@ Password manager con architettura **Zero Knowledge**: il server non ha mai acces
 alle password degli utenti. Tutta la crittografia avviene nel browser tramite
 WebCrypto API — il server gestisce solo blob cifrati opachi.
 
-Progetto personale sviluppato per imparare React, mettendo in pratica un backend
-.NET già consolidato con un frontend costruito da zero.
-
 ---
 
 ## Indice
@@ -72,7 +69,7 @@ salvate.
 
 **Database & Hosting**
 
-- PostgreSQL su [Neon](https://neon.tech) (free tier)
+- PostgreSQL
 
 ## Struttura del progetto
 
@@ -104,20 +101,11 @@ keylord-zk/
 
 - [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Node.js 20+](https://nodejs.org/)
-- Un account [Neon](https://neon.tech) (gratuito) per il database PostgreSQL
+- Database PostgreSQL
 - `dotnet-ef` come tool globale:
     ```bash
     dotnet tool install --global dotnet-ef
     ```
-
-### Database (Neon)
-
-1. Crea un account su [neon.tech](https://neon.tech)
-2. Crea un nuovo progetto — ottieni una connection string del tipo:
-    ```
-    postgresql://user:password@xxx.neon.tech/neondb?sslmode=require
-    ```
-3. Convertila nel formato key-value richiesto da Npgsql (vedi sotto)
 
 ### Backend
 
@@ -131,7 +119,7 @@ Crea `appsettings.Development.json` a partire da `appsettings.json`, compilando 
 ```json
 {
 	"ConnectionStrings": {
-		"Default": "Host=xxx.neon.tech;Database=neondb;Username=...;Password=...;SSL Mode=Require"
+		"Default": "<stringa di connessione al database>"
 	},
 	"Jwt": {
 		"Secret": "<stringa casuale di almeno 32 caratteri>",
@@ -191,8 +179,6 @@ L'app sarà disponibile su `http://localhost:5173`.
 - Eliminazione account con conferma esplicita
 - Refresh token con rotazione e rilevamento furto
 - Lockout progressivo dopo tentativi di login falliti
-- Tema chiaro/scuro
-- Layout responsive
 
 ## Sicurezza
 
@@ -203,7 +189,6 @@ L'app sarà disponibile su `http://localhost:5173`.
 - **Rate limiting** su login, registrazione e recupero salt
 - **Lockout progressivo**: 15 min → 1 ora → 24 ore → permanente, ogni 3 tentativi falliti
 - **Rotazione refresh token** con revoca automatica di tutte le sessioni in caso di riuso di un token già revocato
-- **Transazioni atomiche** sul cambio password (aggiornamento credenziali + token in un'unica operazione)
 
 ## Roadmap
 
@@ -215,7 +200,3 @@ L'app sarà disponibile su `http://localhost:5173`.
 - [ ] Organizzazione delle credenziali in cartelle
 - [ ] Condivisione delle credenziali tramite gruppi
 - [ ] Gestione scadenza credenziali con reminder via email
-
----
-
-Progetto sviluppato a scopo di apprendimento personale.
