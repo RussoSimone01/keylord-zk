@@ -1,48 +1,265 @@
+/* Design tokens from the Keylord design system. Colors switch with [data-theme] on <html>; everything else is shared. */
+
 :root {
-    --bg: #0F1419;
-    --surface: #1A2129;
-    --border: #2A3541;
-    --text: #E8EDF2;
-    --text-secondary: #8B98A5;
-    --accent: #4A9EFF;
-    --accent-hover: #6BAEFF;
-    --danger: #E85D5D;
-    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-mono: "SF Mono", Consolas, monospace;
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-6: 24px;
+	--space-8: 32px;
+	--space-12: 48px;
+	--radius-xs: 2px;
+	--radius-sm: 4px;
+	--radius-md: 8px;
+	--radius-full: 999px;
+	--font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	--font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
 }
 
-[data-theme="light"] {
-    --bg: #F5F7FA;
-    --surface: #FFFFFF;
-    --border: #DDE3EA;
-    --text: #1A2129;
-    --text-secondary: #5A6472;
-    --accent: #2B7FE0;
-    --accent-hover: #1A6BC7;
-    --danger: #D14343;
+/* Terminal */
+:root,
+[data-theme="terminal"] {
+	color-scheme: dark;
+	--bg: #0b0d0c;
+	--surface: #131715;
+	--surface-raised: #1b201d;
+	--border: #29312d;
+	--border-strong: #6b7a72;
+	--text: #e4ebe7;
+	--text-secondary: #94a39b;
+	--accent: #3ddc97;
+	--accent-hover: #6ae6b0;
+	--accent-soft: #3ddc971f;
+	--on-accent: #03140c;
+	--focus: #3ddc97;
+	--danger: #ff7070;
+	--danger-soft: #ff70701f;
+	--warning: #f2c14e;
+	--warning-soft: #f2c14e1f;
+	--success: #3ddc97;
+	--success-soft: #3ddc971f;
+	--info: #7cb8ff;
+	--info-soft: #7cb8ff1f;
+	--overlay: #000000b3;
+	--shadow-overlay: 0 16px 40px rgba(0,0,0,0.6);
+}
+
+/* Paper */
+[data-theme="paper"] {
+	color-scheme: light;
+	--bg: #f3f5f4;
+	--surface: #ffffff;
+	--surface-raised: #ffffff;
+	--border: #d6ddd9;
+	--border-strong: #7d8b84;
+	--text: #101513;
+	--text-secondary: #4d5a53;
+	--accent: #0b7a52;
+	--accent-hover: #086241;
+	--accent-soft: #0b7a521a;
+	--on-accent: #ffffff;
+	--focus: #0b7a52;
+	--danger: #b3261e;
+	--danger-soft: #b3261e14;
+	--warning: #8a5a00;
+	--warning-soft: #c7870014;
+	--success: #0b7a52;
+	--success-soft: #0b7a521a;
+	--info: #1f5fb8;
+	--info-soft: #1f5fb814;
+	--overlay: #10151373;
+	--shadow-overlay: 0 12px 32px rgba(16,21,19,0.16);
+}
+
+/* Amber */
+[data-theme="amber"] {
+	color-scheme: dark;
+	--bg: #0d0a06;
+	--surface: #16120c;
+	--surface-raised: #1f1911;
+	--border: #352b1d;
+	--border-strong: #86714f;
+	--text: #f3e7d3;
+	--text-secondary: #b39c7b;
+	--accent: #ffb347;
+	--accent-hover: #ffc670;
+	--accent-soft: #ffb3471f;
+	--on-accent: #1c1103;
+	--focus: #ffb347;
+	--danger: #ff7a66;
+	--danger-soft: #ff7a661f;
+	--warning: #ffd966;
+	--warning-soft: #ffd9661f;
+	--success: #9bd67a;
+	--success-soft: #9bd67a1f;
+	--info: #8fc1ff;
+	--info-soft: #8fc1ff1f;
+	--overlay: #000000b3;
+	--shadow-overlay: 0 16px 40px rgba(0,0,0,0.6);
+}
+
+/* Midnight (original dark) */
+[data-theme="midnight"] {
+	color-scheme: dark;
+	--bg: #0f1419;
+	--surface: #1a2129;
+	--surface-raised: #1f2730;
+	--border: #2a3541;
+	--border-strong: #6a7a8c;
+	--text: #e8edf2;
+	--text-secondary: #8b98a5;
+	--accent: #4a9eff;
+	--accent-hover: #6baeff;
+	--accent-soft: #4a9eff1f;
+	--on-accent: #06111f;
+	--focus: #6baeff;
+	--danger: #e85d5d;
+	--danger-soft: #e85d5d1a;
+	--warning: #f0b54a;
+	--warning-soft: #f0b54a1f;
+	--success: #4cc38a;
+	--success-soft: #4cc38a1f;
+	--info: #4a9eff;
+	--info-soft: #4a9eff1f;
+	--overlay: #000000b3;
+	--shadow-overlay: 0 16px 40px rgba(0,0,0,0.5);
+}
+
+/* Daylight (original light) */
+[data-theme="daylight"] {
+	color-scheme: light;
+	--bg: #f5f7fa;
+	--surface: #ffffff;
+	--surface-raised: #ffffff;
+	--border: #dde3ea;
+	--border-strong: #7d8997;
+	--text: #1a2129;
+	--text-secondary: #5a6472;
+	--accent: #2b7fe0;
+	--accent-hover: #1a6bc7;
+	--accent-soft: #2b7fe01a;
+	--on-accent: #ffffff;
+	--focus: #1a6bc7;
+	--danger: #d14343;
+	--danger-soft: #d1434314;
+	--warning: #8a5a00;
+	--warning-soft: #c7870014;
+	--success: #1d7a4f;
+	--success-soft: #1d7a4f14;
+	--info: #1a6bc7;
+	--info-soft: #1a6bc714;
+	--overlay: #1a212973;
+	--shadow-overlay: 0 12px 32px rgba(26,33,41,0.16);
 }
 
 * {
-    box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-sans);
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font: 400 15px/22px var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+}
+
+h1 {
+	font-size: 24px;
+	line-height: 32px;
+	font-weight: 600;
+}
+
+h2 {
+	font-size: 18px;
+	line-height: 26px;
+	font-weight: 600;
+}
+
+a {
+	color: var(--accent);
 }
 
 button {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 0.5rem 1rem;
-    font-family: var(--font-sans);
-    cursor: pointer;
+	background: var(--surface);
+	color: var(--text);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	padding: var(--space-2) var(--space-4);
+	font: 500 14px/20px var(--font-sans);
+	cursor: pointer;
+	transition: background-color 0.12s, border-color 0.12s, color 0.12s;
 }
 
-button:hover {
-    background: var(--border);
+button:hover:not(:disabled) {
+	background: var(--surface-raised);
+}
+
+button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+
+/* Primary action: one per view. */
+button.primary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	background: var(--accent);
+	color: var(--on-accent);
+	border-color: transparent;
+	font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+	background: var(--accent-hover);
+}
+
+/* Borderless square button for row actions: reveal, copy, edit, delete, generate. */
+button.icon-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	background: transparent;
+	border-color: transparent;
+	color: var(--text-secondary);
+}
+
+button.icon-button:hover:not(:disabled) {
+	background: var(--surface-raised);
+	color: var(--text);
+}
+
+button.icon-button[aria-pressed="true"] {
+	color: var(--accent);
+}
+
+button.icon-button.danger:hover:not(:disabled) {
+	background: var(--danger-soft);
+	color: var(--danger);
+}
+
+button.icon-button.success,
+button.icon-button.success:hover:not(:disabled) {
+	background: var(--success-soft);
+	color: var(--success);
+}
+
+/* Secrets and technical values use the mono face so 0/O and l/1 stay distinct. */
+.mono,
+input[type="password"] {
+	font-family: var(--font-mono);
+	letter-spacing: 0.02em;
 }

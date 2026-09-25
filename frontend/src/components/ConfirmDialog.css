@@ -1,0 +1,117 @@
+.confirm-dialog {
+	width: calc(100% - 2 * var(--space-4));
+	max-width: 440px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	color: var(--text);
+	overflow: visible;
+}
+
+/* ::backdrop may not inherit custom properties in older browsers, hence the fallback. */
+.confirm-dialog::backdrop {
+	background: rgba(0, 0, 0, 0.7);
+	background: var(--overlay, rgba(0, 0, 0, 0.7));
+}
+
+.confirm-dialog-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	padding: var(--space-6);
+	background: var(--surface);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-overlay);
+}
+
+.confirm-dialog-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.confirm-dialog-head h2 {
+	margin: 0;
+}
+
+.confirm-dialog-glyph {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-sm);
+}
+
+.confirm-dialog-glyph.danger {
+	background: var(--danger-soft);
+	color: var(--danger);
+}
+
+.confirm-dialog-glyph.info {
+	background: var(--info-soft);
+	color: var(--info);
+}
+
+.confirm-dialog-body {
+	color: var(--text-secondary);
+}
+
+.confirm-dialog-body p {
+	margin: 0;
+}
+
+.confirm-dialog-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.confirm-dialog-field label {
+	font: 500 11px/16px var(--font-mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+
+.confirm-dialog-field label .mono {
+	color: var(--danger);
+}
+
+.confirm-dialog-field input {
+	height: 40px;
+	padding: 0 var(--space-3);
+	background: var(--bg);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font-size: 15px;
+}
+
+.confirm-dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+}
+
+.confirm-dialog-cancel {
+	background: transparent;
+	border-color: transparent;
+	color: var(--text-secondary);
+}
+
+.confirm-dialog-cancel:hover:not(:disabled) {
+	color: var(--text);
+}
+
+.confirm-dialog-danger {
+	background: transparent;
+	color: var(--danger);
+	border-color: var(--danger);
+	font-weight: 600;
+}
+
+.confirm-dialog-danger:hover:not(:disabled) {
+	background: var(--danger-soft);
+}

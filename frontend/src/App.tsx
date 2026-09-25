@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Vault from "./pages/Vault";
 import Settings from "./pages/Settings";
+import Generator from "./pages/Generator";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
@@ -16,6 +17,7 @@ function App() {
 				</Route>
 				<Route element={<ProtectedRoute />}>
 					<Route path="/vault" element={<Vault />} />
+					<Route path="/generator" element={<Generator />} />
 					<Route path="/settings" element={<Settings />} />
 				</Route>
 				<Route path="/" element={<Navigate to="/login" replace />} />

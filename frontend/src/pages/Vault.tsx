@@ -4,28 +4,33 @@ import {
 	encryptCredential,
 	type PlainCredential,
 } from "../crypto/vault.ts";
+import { estimateStrength, generatePassword } from "../crypto/password";
 import { create, deleteCredential, getAll, update } from "../api/vault";
 import { useAuthStore } from "../store/authStore";
 import axios from "axios";
 import "./Vault.css";
+import "../components/VaultItem.css";
 import Spinner from "../components/Spinner.tsx";
-import { Eye, EyeOff, Copy, Check, Pencil, Trash2 } from "lucide-react";
+import SearchField from "../components/SearchField";
+import StrengthMeter from "../components/StrengthMeter";
+import VaultItem from "../components/VaultItem";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { Dices, Eye, EyeOff, KeyRound, Plus } from "lucide-react";
 
 function Vault() {
 	const [credentials, setCredentials] = useState<PlainCredential[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState("");
+	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [id, setId] = useState<number | null>(null);
 	const [site, setSite] = useState("");
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	const [visiblePasswords, setVisiblePasswords] = useState<Set<number>>(
-		new Set(),
-	);
 	const encryptionKey = useAuthStore((state) => state.encryptionKey);
-	const [copiedField, setCopiedField] = useState<string | null>(null);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [pendingDelete, setPendingDelete] = useState<PlainCredential | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	useEffect(() => {
 		async function loadCredentials() {
@@ -41,17 +46,21 @@ function Vault() {
 				);
 				setCredentials(plainCredentials);
 			} catch (err) {
-				if (axios.isAxiosError(err)) {
-					setError(err.response?.data?.error ?? "An error occurred");
-				} else {
-					setError("An error occurred");
-				}
+				setError(errorMessage(err));
 			} finally {
 				setIsLoading(false);
 			}
 		}
+
 		loadCredentials();
 	}, [encryptionKey]);
+
+	function errorMessage(err: unknown) {
+		if (axios.isAxiosError(err)) {
+			return err.response?.data?.error ?? "An error occurred";
+		}
+		return "An error occurred";
+	}
 
 	async function handleSubmit() {
 		try {
@@ -60,307 +69,267 @@ function Vault() {
 				return;
 			}
 			const { encryptedData } = await encryptCredential(
-				{ site: site, username: username, password: password },
+				{ site, username, password },
 				encryptionKey,
 			);
 			if (id == null) {
-				const { id } = await create({ encryptedData });
+				const { id: newId } = await create({ encryptedData });
 				setCredentials([
 					...credentials,
-					{ id, site, username, password },
+					{ id: newId, site, username, password },
 				]);
 			} else {
 				await update(id, { encryptedData });
-				const credential = credentials.find((c) => c.id === id);
-				if (credential == null) {
-					return;
-				}
 				setCredentials(
 					credentials.map((c) =>
 						c.id === id ? { ...c, site, username, password } : c,
 					),
 				);
 			}
-			setId(null);
-			setSite("");
-			setUsername("");
-			setPassword("");
+			closeForm();
 		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.error ?? "An error occurred");
-			} else {
-				setError("An error occurred");
-			}
+			setError(errorMessage(err));
 		}
 	}
 
-	function handleReset() {
+	function openNewForm() {
+		closeForm();
+		setIsFormOpen(true);
+	}
+
+	function closeForm() {
+		setIsFormOpen(false);
 		setId(null);
 		setSite("");
 		setUsername("");
 		setPassword("");
+		setShowPassword(false);
+		setError("");
 	}
 
-	function handleEdit(id: number) {
-		setId(id);
-		const credential = credentials.find((c) => c.id === id);
-		if (credential == null) {
-			return;
-		}
+	function handleEdit(credential: PlainCredential) {
+		setId(credential.id ?? null);
 		setSite(credential.site);
 		setUsername(credential.username);
 		setPassword(credential.password);
+		setShowPassword(false);
+		setIsFormOpen(true);
+		window.scrollTo({ top: 0, behavior: "smooth" });
 	}
 
-	async function handleDelete(id: number) {
+	// Opens the confirmation dialog; the API call happens in confirmDelete.
+	function handleDelete(credential: PlainCredential) {
+		setPendingDelete(credential);
+	}
+
+	async function confirmDelete() {
+		const credential = pendingDelete;
+		if (credential?.id == null) {
+			setPendingDelete(null);
+			return;
+		}
+		setIsDeleting(true);
 		try {
-			await deleteCredential(id);
-			setCredentials(credentials.filter((c) => c.id != id));
-		} catch (err) {
-			console.log(err);
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.error ?? "An error occurred");
-			} else {
-				setError("An error occurred");
+			await deleteCredential(credential.id);
+			setCredentials(credentials.filter((c) => c.id !== credential.id));
+			if (id === credential.id) {
+				closeForm();
 			}
+		} catch (err) {
+			setError(errorMessage(err));
+		} finally {
+			setIsDeleting(false);
+			setPendingDelete(null);
 		}
 	}
 
-	function togglePassword() {
-		setShowPassword(!showPassword);
-	}
-
-	function toggleTablePassword(id: number) {
-		setVisiblePasswords((prev) => {
-			const next = new Set(prev);
-			if (next.has(id)) {
-				next.delete(id);
-			} else {
-				next.add(id);
-			}
-			return next;
-		});
-	}
-
-	async function copyToClipboard(text: string, fieldId: string) {
-		await navigator.clipboard.writeText(text);
-		setCopiedField(fieldId);
-		setTimeout(() => setCopiedField(null), 2000);
+	// Fills the password field with a 20-character random password and shows it.
+	function handleGenerate() {
+		setPassword(generatePassword(20));
+		setShowPassword(true);
 	}
 
 	if (isLoading) {
 		return <Spinner />;
 	}
 
-	const filteredCredentials = credentials.filter(
-		(c) =>
-			c.site.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			c.username.toLowerCase().includes(searchQuery.toLowerCase()),
-	);
+	const query = searchQuery.trim().toLowerCase();
+	const filteredCredentials = credentials
+		.filter(
+			(c) =>
+				c.site.toLowerCase().includes(query) ||
+				c.username.toLowerCase().includes(query),
+		)
+		.sort((a, b) => a.site.localeCompare(b.site));
 
 	return (
 		<div className="vault-container">
-			<h1>Vault</h1>
-			<div className="vault-form-card">
-				<h2>{id == null ? "New credential" : "Edit credential"}</h2>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						handleSubmit();
-					}}
-					onReset={(e) => {
-						e.preventDefault();
-						handleReset();
-					}}
-				>
-					<div className="vault-form-row">
-						<div className="vault-field">
-							<label htmlFor="site">Site</label>
-							<input
-								id="site"
-								type="text"
-								value={site}
-								onChange={(e) => setSite(e.target.value)}
-								required
-							/>
-						</div>
-						<div className="vault-field">
-							<label htmlFor="username">Username</label>
-							<input
-								id="username"
-								type="text"
-								value={username}
-								onChange={(e) => setUsername(e.target.value)}
-								required
-							/>
-						</div>
-						<div className="vault-field">
-							<label htmlFor="password">Password</label>
-							<div className="vault-password-field">
-								<input
-									id="password"
-									type={showPassword ? "text" : "password"}
-									value={password}
-									onChange={(e) =>
-										setPassword(e.target.value)
-									}
-									required
-								/>
-								<button
-									type="button"
-									onClick={() => togglePassword()}
-									title={showPassword ? "Hide" : "Show"}
-								>
-									{showPassword ? (
-										<EyeOff size={16} />
-									) : (
-										<Eye size={16} />
-									)}
-								</button>
-							</div>
-						</div>
-					</div>
-					<div className="vault-form-actions">
-						<button className="primary" type="submit">
-							Save
-						</button>
-						<button type="reset">Reset</button>
-					</div>
-					{error && <span className="auth-error">{error}</span>}
-				</form>
+			<div className="vault-header">
+				<h1>Vault</h1>
+				{!isFormOpen && (
+					<button className="primary" type="button" onClick={openNewForm}>
+						<Plus size={16} /> New credential
+					</button>
+				)}
 			</div>
 
-			<input
-				type="text"
-				placeholder="Filter by site or username..."
-				value={searchQuery}
-				onChange={(e) => setSearchQuery(e.target.value)}
-				className="vault-search"
-			/>
-
-			<table className="vault-table">
-				<thead>
-					<tr>
-						<th>Site</th>
-						<th>Username</th>
-						<th>Password</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					{filteredCredentials.map((credential) => (
-						<tr key={credential.id}>
-							<td>{credential.site}</td>
-							<td>
-								<div className="vault-table-field-cell">
-									{credential.username}
-									<button
-										type="button"
-										onClick={() =>
-											copyToClipboard(
-												credential.username,
-												`${credential.id}-username`,
-											)
-										}
-										title={
-											copiedField ===
-											`${credential.id}-username`
-												? "Copied!"
-												: "Copy"
-										}
-									>
-										{copiedField ===
-										`${credential.id}-username` ? (
-											<Check size={16} />
-										) : (
-											<Copy size={16} />
-										)}
-									</button>
-								</div>
-							</td>
-							<td>
-								<div className="vault-table-field-cell">
+			{isFormOpen && (
+				<div className="vault-form-card">
+					<h2>{id == null ? "New credential" : "Edit credential"}</h2>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							handleSubmit();
+						}}
+						onReset={(e) => {
+							e.preventDefault();
+							closeForm();
+						}}
+					>
+						<div className="vault-form-row">
+							<div className="vault-field">
+								<label htmlFor="site">Site</label>
+								<input
+									id="site"
+									type="text"
+									value={site}
+									onChange={(e) => setSite(e.target.value)}
+									placeholder="github.com"
+									autoFocus
+									required
+								/>
+							</div>
+							<div className="vault-field">
+								<label htmlFor="username">Username</label>
+								<input
+									id="username"
+									type="text"
+									value={username}
+									onChange={(e) => setUsername(e.target.value)}
+									autoComplete="off"
+									required
+								/>
+							</div>
+							<div className="vault-field">
+								<label htmlFor="password">Password</label>
+								<div className="vault-password-field">
 									<input
-										type={
-											visiblePasswords.has(credential.id!)
-												? "text"
-												: "password"
-										}
-										value={credential.password}
-										readOnly
+										id="password"
+										type={showPassword ? "text" : "password"}
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										autoComplete="new-password"
+										spellCheck={false}
+										required
 									/>
 									<button
 										type="button"
-										onClick={() =>
-											toggleTablePassword(credential.id!)
-										}
-										title={
-											visiblePasswords.has(credential.id!)
-												? "Hide"
-												: "Show"
-										}
+										className="icon-button"
+										onClick={handleGenerate}
+										title="Generate password"
+										aria-label="Generate password"
 									>
-										{visiblePasswords.has(
-											credential.id!,
-										) ? (
-											<EyeOff size={16} />
-										) : (
-											<Eye size={16} />
-										)}
+										<Dices size={16} />
 									</button>
 									<button
 										type="button"
-										onClick={() =>
-											copyToClipboard(
-												credential.password,
-												`${credential.id}-password`,
-											)
-										}
-										title={
-											copiedField ===
-											`${credential.id}-password`
-												? "Copied!"
-												: "Copy"
-										}
+										className="icon-button"
+										aria-pressed={showPassword}
+										onClick={() => setShowPassword(!showPassword)}
+										title={showPassword ? "Hide" : "Show"}
+										aria-label={showPassword ? "Hide password" : "Show password"}
 									>
-										{copiedField ===
-										`${credential.id}-password` ? (
-											<Check size={16} />
-										) : (
-											<Copy size={16} />
-										)}
+										{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
 									</button>
 								</div>
-							</td>
-							<td>
-								<div className="vault-row-actions">
-									<button
-										type="button"
-										onClick={(e) => {
-											e.preventDefault();
-											handleEdit(credential.id!);
-										}}
-										title="Edit"
-									>
-										<Pencil size={16} />
-									</button>
-									<button
-										className="danger"
-										type="button"
-										onClick={(e) => {
-											e.preventDefault();
-											handleDelete(credential.id!);
-										}}
-										title="Delete"
-									>
-										<Trash2 size={16} />
-									</button>
-								</div>
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
+								{password !== "" && (
+									<StrengthMeter score={estimateStrength(password)} />
+								)}
+							</div>
+						</div>
+						<div className="vault-form-actions">
+							<button className="primary" type="submit">
+								Save
+							</button>
+							<button type="reset">Cancel</button>
+						</div>
+						{error && <span className="auth-error">{error}</span>}
+					</form>
+				</div>
+			)}
+
+			{!isFormOpen && error && <span className="auth-error">{error}</span>}
+
+			{credentials.length === 0 ? (
+				<div className="vault-empty">
+					<div className="vault-empty-glyph" aria-hidden="true">
+						<KeyRound size={22} />
+					</div>
+					<div className="vault-empty-title">Your vault is empty</div>
+					<p>
+						Everything you save is encrypted on this device before it
+						reaches the server.
+					</p>
+					{!isFormOpen && (
+						<button className="primary" type="button" onClick={openNewForm}>
+							<Plus size={16} /> Add your first credential
+						</button>
+					)}
+				</div>
+			) : (
+				<>
+					<SearchField
+						value={searchQuery}
+						onChange={setSearchQuery}
+						placeholder="Search by site or username"
+						count={filteredCredentials.length}
+					/>
+					{filteredCredentials.length === 0 ? (
+						<div className="vault-empty">
+							<div className="vault-empty-title">
+								No matches for “{searchQuery.trim()}”
+							</div>
+							<button type="button" onClick={() => setSearchQuery("")}>
+								Clear search
+							</button>
+						</div>
+					) : (
+						<ul className="vault-list">
+							<li className="vault-list-head" aria-hidden="true">
+								<span>
+									{filteredCredentials.length}{" "}
+									{filteredCredentials.length === 1 ? "credential" : "credentials"}
+								</span>
+								<span>A–Z</span>
+							</li>
+							{filteredCredentials.map((credential) => (
+								<VaultItem
+									key={credential.id}
+									credential={credential}
+									selected={credential.id === id}
+									onEdit={() => handleEdit(credential)}
+									onDelete={() => handleDelete(credential)}
+								/>
+							))}
+						</ul>
+					)}
+				</>
+			)}
+
+			<ConfirmDialog
+				open={pendingDelete != null}
+				title={`Delete ${pendingDelete?.site ?? "credential"}?`}
+				confirmLabel="Delete"
+				busy={isDeleting}
+				onConfirm={confirmDelete}
+				onCancel={() => setPendingDelete(null)}
+			>
+				<p>
+					The saved login for{" "}
+					<span className="mono">{pendingDelete?.username}</span> will be
+					removed from your vault. This cannot be undone.
+				</p>
+			</ConfirmDialog>
 		</div>
 	);
 }

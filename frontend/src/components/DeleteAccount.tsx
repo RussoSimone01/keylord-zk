@@ -6,6 +6,7 @@ import { deriveKeys } from "../crypto/vault";
 import { useNavigate } from "react-router-dom";
 import "../pages/Settings.css";
 import Spinner from "./Spinner";
+import ConfirmDialog from "./ConfirmDialog";
 
 interface DeleteAccountProps {
 	onBack: () => void;
@@ -17,6 +18,7 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 	const authStore = useAuthStore();
 	const navigate = useNavigate();
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
 	async function handleSubmit() {
 		setIsSubmitting(true);
@@ -59,7 +61,7 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 				<form
 					onSubmit={(e) => {
 						e.preventDefault();
-						handleSubmit();
+						setIsConfirmOpen(true);
 					}}
 				>
 					<div className="settings-warning">
@@ -80,23 +82,31 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 					<button
 						id="deleteButton"
 						type="submit"
-						className="auth-submit"
+						className="auth-submit danger"
 						disabled={isSubmitting}
-						onClick={(e) => {
-							if (
-								!confirm(
-									"Are you sure you want to completely delete the account and its related data?",
-								)
-							) {
-								e.preventDefault();
-							}
-						}}
 					>
 						Delete Account
 					</button>
 					{error && <span className="auth-error">{error}</span>}
 				</form>
 			</div>
+			<ConfirmDialog
+				open={isConfirmOpen}
+				title="Delete your account?"
+				confirmLabel="Delete forever"
+				requireText="DELETE"
+				onConfirm={() => {
+					setIsConfirmOpen(false);
+					handleSubmit();
+				}}
+				onCancel={() => setIsConfirmOpen(false)}
+			>
+				<p>
+					Your account, your vault and every saved credential will be
+					erased from the server. Without your master password nobody can
+					recover them.
+				</p>
+			</ConfirmDialog>
 		</div>
 	);
 }

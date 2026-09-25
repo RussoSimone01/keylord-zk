@@ -1,30 +1,26 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { useThemeStore } from "../store/themeStore";
+import ThemeSwitcher from "./ThemeSwitcher";
 import "./Navbar.css";
-import { Sun, Moon, LogOut } from "lucide-react";
+import { Lock } from "lucide-react";
 
 function Navbar() {
 	const clearAuth = useAuthStore((state) => state.clearAuth);
 	const navigate = useNavigate();
-	const theme = useThemeStore((state) => state.theme);
-	const toggleTheme = useThemeStore((state) => state.toggleTheme);
 
-	function handleClick() {
+	// Locking clears the in-memory encryption key and tokens, then returns to login.
+	function handleLock() {
 		clearAuth();
 		navigate("/login");
 	}
 
 	return (
-		<div className="navbar">
-			<button
-				className="navbar-actions"
-				type="button"
-				onClick={toggleTheme}
-			>
-				{theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-			</button>
-			<div className="navbar-links">
+		<header className="navbar">
+			<div className="navbar-wordmark" aria-label="keylord">
+				k<span className="navbar-wordmark-rest">eylord</span>
+				<span className="navbar-caret">_</span>
+			</div>
+			<nav className="navbar-links" aria-label="Main">
 				<NavLink
 					className={({ isActive }) => (isActive ? "active" : "")}
 					to="/vault"
@@ -33,19 +29,31 @@ function Navbar() {
 				</NavLink>
 				<NavLink
 					className={({ isActive }) => (isActive ? "active" : "")}
+					to="/generator"
+				>
+					Generator
+				</NavLink>
+				<NavLink
+					className={({ isActive }) => (isActive ? "active" : "")}
 					to="/settings"
 				>
 					Settings
 				</NavLink>
+			</nav>
+			<div className="navbar-actions">
+				<ThemeSwitcher compact />
+				<button
+					className="navbar-lock"
+					type="button"
+					onClick={handleLock}
+					aria-label="Lock vault"
+					title="Lock vault"
+				>
+					<Lock size={16} />
+					<span className="navbar-lock-label">Lock</span>
+				</button>
 			</div>
-			<button
-				className="navbar-actions"
-				type="button"
-				onClick={handleClick}
-			>
-				<LogOut size={16} /> Logout
-			</button>
-		</div>
+		</header>
 	);
 }
 

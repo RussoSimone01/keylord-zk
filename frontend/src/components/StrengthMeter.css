@@ -1,0 +1,50 @@
+.strength-meter {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.strength-bar {
+	flex: 1;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: var(--space-1);
+}
+
+.strength-bar span {
+	height: 4px;
+	border-radius: var(--radius-xs);
+	background: var(--border);
+}
+
+.strength-word {
+	min-width: 88px;
+	text-align: right;
+	font: 500 11px/16px var(--font-mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.strength-meter.danger .on {
+	background: var(--danger);
+}
+
+.strength-meter.danger .strength-word {
+	color: var(--danger);
+}
+
+.strength-meter.warning .on {
+	background: var(--warning);
+}
+
+.strength-meter.warning .strength-word {
+	color: var(--warning);
+}
+
+.strength-meter.success .on {
+	background: var(--success);
+}
+
+.strength-meter.success .strength-word {
+	color: var(--success);
+}
