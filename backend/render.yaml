@@ -1,0 +1,14 @@
+services:
+    - type: web
+      name: keylord-zk-api
+      runtime: docker
+      dockerfilePath: ./Dockerfile
+      dockerContext: .
+      plan: free
+      envVars:
+          - key: ASPNETCORE_ENVIRONMENT
+            value: Production
+          - key: ConnectionStrings__Default
+            sync: false # set manually from render dashboard
+          - key: Jwt__Secret
+            sync: false # set manually from render dashboard
