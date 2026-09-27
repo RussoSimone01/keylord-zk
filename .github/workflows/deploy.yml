@@ -32,10 +32,14 @@ jobs:
                   cache: "npm"
 
             - name: Install dependencies
+              working-directory: ./frontend
               run: npm ci
 
             - name: Build project
+              working-directory: ./frontend
               run: npm run build
+              env:
+                  VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
             - name: Setup Pages
               uses: actions/configure-pages@v4
@@ -44,9 +48,9 @@ jobs:
               uses: actions/upload-pages-artifact@v3
               with:
                   # Output folder
-                  # Vite projects => 'dist'.
-                  # Create React App => 'build'.
-                  path: "./dist"
+                  # Vite projects => 'dist'
+                  # Create React App => 'build'
+                  path: "./frontend/dist"
 
             - name: Deploy to GitHub Pages
               id: deployment
