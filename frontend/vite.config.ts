@@ -9,4 +9,5 @@ export default defineConfig({
 			"/api": "http://localhost:5056",
 		},
 	},
+	base: "/keylord-zk/",
 });
