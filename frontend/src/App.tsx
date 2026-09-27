@@ -9,7 +9,7 @@ import PublicRoute from "./components/PublicRoute";
 
 function App() {
 	return (
-		<BrowserRouter>
+		<BrowserRouter basename="/keylord-zk/">
 			<Routes>
 				<Route element={<PublicRoute />}>
 					<Route path="/login" element={<Login />} />
