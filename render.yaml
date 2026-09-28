@@ -4,6 +4,7 @@ services:
       name: keylord-zk-api
       runtime: docker
       plan: free
+      healthCheckPath: /health
       # dockerfilePath and dockerContext are relative to rootDir
       rootDir: backend
       dockerfilePath: ./dockerfile
