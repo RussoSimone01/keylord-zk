@@ -41,7 +41,7 @@ Content-Type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "encryptedData": "aGVsbG8gd29ybGQ=:dGVzdGNpcGhlcnRleHQ="
+  "encryptedData": "AAAAAAAAAAAAAAAA:ZXhhbXBsZS1jaXBoZXJ0ZXh0LXdpdGgtZ2NtLXRhZyE="
 }
 
 ### Get all credentials
@@ -54,12 +54,21 @@ Content-Type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "encryptedData": "dXBkYXRlZGl2MTI=:dXBkYXRlZGNpcGhlcnRleHQ="
+  "encryptedData": "AAAAAAAAAAAAAAAA:dXBkYXRlZC1jaXBoZXJ0ZXh0LXdpdGgtZ2NtLXRhZyE="
 }
 
 ### Delete credential
 DELETE {{backend_HostAddress}}/api/vault/1
 Authorization: Bearer {{accessToken}}
+
+### Delete account
+DELETE {{backend_HostAddress}}/api/auth/account
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "authKey": "{{authKey}}"
+}
 
 ### Refresh token
 POST {{backend_HostAddress}}/api/auth/refresh
