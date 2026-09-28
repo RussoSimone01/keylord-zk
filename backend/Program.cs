@@ -110,7 +110,7 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
                 }
                 IUserRepository userRepository = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
                 ITokenService tokenService = context.HttpContext.RequestServices.GetRequiredService<ITokenService>();
-                string? kdfSalt = await userRepository.GetKdfSaltAsync(userId);
+                string? kdfSalt = await userRepository.GetKdfSaltAsync(userId, context.HttpContext.RequestAborted);
                 if (kdfSalt is null || tokenService.ComputeKeyStamp(kdfSalt) != keyStamp)
                 {
                     context.Fail("Token no longer valid");
@@ -179,11 +179,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Check status used by Render
-app.MapGet("/health", async (AppDbContext db) =>
+app.MapGet("/health", async (AppDbContext db, CancellationToken ct) =>
 {
     try
     {
-        await db.Database.CanConnectAsync();
+        await db.Database.CanConnectAsync(ct);
         return Results.Ok(new { status = "healthy" });
     }
     catch
