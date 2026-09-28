@@ -1,0 +1,26 @@
+# Render Blueprint: must stay in the repository root
+services:
+    - type: web
+      name: keylord-zk-api
+      runtime: docker
+      plan: free
+      # dockerfilePath and dockerContext are relative to rootDir
+      rootDir: backend
+      dockerfilePath: ./dockerfile
+      dockerContext: .
+      # Frontend-only changes do not redeploy the API
+      buildFilter:
+          paths:
+              - backend/**
+      envVars:
+          - key: ASPNETCORE_ENVIRONMENT
+            value: Production
+          # The app is reachable only through Render's proxy: its forwarded headers are trusted
+          - key: ReverseProxy__Enabled
+            value: "true"
+          - key: ConnectionStrings__Default
+            sync: false # set manually from render dashboard
+          - key: Jwt__Secret
+            sync: false # set manually from render dashboard
+          - key: Cors__AllowedOrigin
+            sync: false # set manually from render dashboard, e.g. https://<user>.github.io

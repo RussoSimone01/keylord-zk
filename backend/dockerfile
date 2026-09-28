@@ -13,5 +13,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:$PORT
-ENTRYPOINT ["dotnet", "backend.dll"]
+# Unprivileged user predefined in the .NET images
+USER $APP_UID
+EXPOSE 8080
+
+# Port resolved at container start: PORT when provided by the platform (Render), 8080 otherwise
+ENTRYPOINT ["sh", "-c", "ASPNETCORE_HTTP_PORTS=${PORT:-8080} exec dotnet backend.dll"]

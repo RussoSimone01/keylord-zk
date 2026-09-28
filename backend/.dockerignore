@@ -1,0 +1,15 @@
+# Build output and IDE files: rebuilt inside the image
+**/bin
+**/obj
+**/.vs
+**/*.user
+
+# Local configuration and secrets
+**/appsettings.Development.json
+**/.env
+
+# Not needed by the build
+*.http
+dockerfile
+.dockerignore
+.gitignore
