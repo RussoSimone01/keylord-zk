@@ -1,6 +1,7 @@
 import type {
 	AuthResponse,
 	ChangePasswordRequest,
+	DeleteAccountRequest,
 	LoginRequest,
 	RefreshRequest,
 	RegisterRequest,
@@ -22,6 +23,15 @@ export async function login(data: LoginRequest): Promise<AuthResponse> {
 export async function getSalt(username: string): Promise<SaltResponse> {
 	const response = await client.get<SaltResponse>(`/auth/salt/${username}`);
 	return response.data;
+}
+
+// Ends the session on the server; failures are ignored, the local session is cleared anyway
+export async function logout(refreshToken: string): Promise<void> {
+	try {
+		await client.post("/auth/logout", { refreshToken });
+	} catch {
+		// The token expires on its own and is purged by the server
+	}
 }
 
 export async function refresh(data: RefreshRequest): Promise<AuthResponse> {
@@ -49,6 +59,6 @@ export async function verifyPassword(
 	return response.data.isValid;
 }
 
-export async function deleteAccount(): Promise<void> {
-	await client.delete("/auth/account");
+export async function deleteAccount(data: DeleteAccountRequest): Promise<void> {
+	await client.delete("/auth/account", { data });
 }

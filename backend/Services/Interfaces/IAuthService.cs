@@ -2,14 +2,15 @@ using backend.DTOs;
 
 namespace backend.Services.Interfaces
 {
-    public interface IAuthService
-    {
-        public Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request);
-        public Task<AuthResponseDto> LoginAsync(LoginRequestDto request);
-        public Task<AuthResponseDto> RefreshAsync(RefreshRequestDto request);
-        public Task<AuthResponseDto> ChangePasswordAsync(long userId, ChangePasswordRequestDto request);
-        public Task<SaltResponseDto> GetSaltAsync(string username);
-        public Task<bool> VerifyPasswordAsync(long userId, VerifyPasswordRequestDto request);
-        public Task DeleteAccountAsync(long userId);
-    }
+	public interface IAuthService
+	{
+		public Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request);
+		public Task<AuthResponseDto> LoginAsync(LoginRequestDto request);
+		public Task<AuthResponseDto> RefreshAsync(RefreshRequestDto request);
+		public Task<AuthResponseDto> ChangePasswordAsync(long userId, ChangePasswordRequestDto request);
+		public Task<SaltResponseDto> GetSaltAsync(string username);
+		public Task<bool> VerifyPasswordAsync(long userId, VerifyPasswordRequestDto request);
+		public Task DeleteAccountAsync(long userId, DeleteAccountRequestDto request);
+		public Task LogoutAsync(RefreshRequestDto request);
+	}
 }

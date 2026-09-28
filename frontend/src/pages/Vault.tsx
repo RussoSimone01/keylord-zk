@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import {
 	decryptVault,
 	encryptCredential,
+	type EncryptedCredential,
 	type PlainCredential,
 } from "../crypto/vault.ts";
 import { estimateStrength, generatePassword } from "../crypto/password";
 import { create, deleteCredential, getAll, update } from "../api/vault";
 import { useAuthStore } from "../store/authStore";
-import axios from "axios";
+import { getErrorMessage } from "../api/errors";
 import "./Vault.css";
 import "../components/VaultItem.css";
 import Spinner from "../components/Spinner.tsx";
@@ -15,7 +16,7 @@ import SearchField from "../components/SearchField";
 import StrengthMeter from "../components/StrengthMeter";
 import VaultItem from "../components/VaultItem";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { Dices, Eye, EyeOff, KeyRound, Plus } from "lucide-react";
+import { Dices, Eye, EyeOff, KeyRound, Plus, Trash2 } from "lucide-react";
 
 function Vault() {
 	const [credentials, setCredentials] = useState<PlainCredential[]>([]);
@@ -31,6 +32,11 @@ function Vault() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [pendingDelete, setPendingDelete] = useState<PlainCredential | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
+	// Credentials that cannot be decrypted: listed separately so the rest of the vault stays usable
+	const [unreadable, setUnreadable] = useState<EncryptedCredential[]>([]);
+	const [pendingUnreadableDelete, setPendingUnreadableDelete] = useState<
+		number | null
+	>(null);
 
 	useEffect(() => {
 		async function loadCredentials() {
@@ -40,13 +46,11 @@ function Vault() {
 				if (encryptionKey === null) {
 					return;
 				}
-				const plainCredentials = await decryptVault(
-					encryptedCredentials,
-					encryptionKey,
-				);
-				setCredentials(plainCredentials);
+				const vault = await decryptVault(encryptedCredentials, encryptionKey);
+				setCredentials(vault.credentials);
+				setUnreadable(vault.unreadable);
 			} catch (err) {
-				setError(errorMessage(err));
+				setError(getErrorMessage(err));
 			} finally {
 				setIsLoading(false);
 			}
@@ -54,13 +58,6 @@ function Vault() {
 
 		loadCredentials();
 	}, [encryptionKey]);
-
-	function errorMessage(err: unknown) {
-		if (axios.isAxiosError(err)) {
-			return err.response?.data?.error ?? "An error occurred";
-		}
-		return "An error occurred";
-	}
 
 	async function handleSubmit() {
 		try {
@@ -88,7 +85,7 @@ function Vault() {
 			}
 			closeForm();
 		} catch (err) {
-			setError(errorMessage(err));
+			setError(getErrorMessage(err));
 		}
 	}
 
@@ -136,10 +133,27 @@ function Vault() {
 				closeForm();
 			}
 		} catch (err) {
-			setError(errorMessage(err));
+			setError(getErrorMessage(err));
 		} finally {
 			setIsDeleting(false);
 			setPendingDelete(null);
+		}
+	}
+
+	async function confirmUnreadableDelete() {
+		const credentialId = pendingUnreadableDelete;
+		if (credentialId == null) {
+			return;
+		}
+		setIsDeleting(true);
+		try {
+			await deleteCredential(credentialId);
+			setUnreadable(unreadable.filter((c) => c.id !== credentialId));
+		} catch (err) {
+			setError(getErrorMessage(err));
+		} finally {
+			setIsDeleting(false);
+			setPendingUnreadableDelete(null);
 		}
 	}
 
@@ -260,22 +274,54 @@ function Vault() {
 
 			{!isFormOpen && error && <span className="auth-error">{error}</span>}
 
-			{credentials.length === 0 ? (
-				<div className="vault-empty">
-					<div className="vault-empty-glyph" aria-hidden="true">
-						<KeyRound size={22} />
-					</div>
-					<div className="vault-empty-title">Your vault is empty</div>
+			{unreadable.length > 0 && (
+				<div className="vault-unreadable" role="alert">
 					<p>
-						Everything you save is encrypted on this device before it
-						reaches the server.
+						{unreadable.length === 1
+							? "1 credential cannot be decrypted"
+							: `${unreadable.length} credentials cannot be decrypted`}
+						: the data is damaged or was encrypted with a different key. It
+						cannot be recovered, and it must be deleted before changing the
+						master password.
 					</p>
-					{!isFormOpen && (
-						<button className="primary" type="button" onClick={openNewForm}>
-							<Plus size={16} /> Add your first credential
-						</button>
-					)}
+					<ul>
+						{unreadable.map((c) => (
+							<li key={c.id}>
+								<span className="mono">Credential #{c.id}</span>
+								<button
+									type="button"
+									className="icon-button"
+									onClick={() => setPendingUnreadableDelete(c.id ?? null)}
+									title="Delete"
+									aria-label={`Delete credential #${c.id}`}
+								>
+									<Trash2 size={16} />
+								</button>
+							</li>
+						))}
+					</ul>
 				</div>
+			)}
+
+			{credentials.length === 0 ? (
+				// With only unreadable credentials there is nothing to list, and the vault is not empty either
+				unreadable.length === 0 && (
+					<div className="vault-empty">
+						<div className="vault-empty-glyph" aria-hidden="true">
+							<KeyRound size={22} />
+						</div>
+						<div className="vault-empty-title">Your vault is empty</div>
+						<p>
+							Everything you save is encrypted on this device before it reaches
+							the server.
+						</p>
+						{!isFormOpen && (
+							<button className="primary" type="button" onClick={openNewForm}>
+								<Plus size={16} /> Add your first credential
+							</button>
+						)}
+					</div>
+				)
 			) : (
 				<>
 					<SearchField
@@ -315,6 +361,20 @@ function Vault() {
 					)}
 				</>
 			)}
+
+			<ConfirmDialog
+				open={pendingUnreadableDelete != null}
+				title={`Delete credential #${pendingUnreadableDelete ?? ""}?`}
+				confirmLabel="Delete"
+				busy={isDeleting}
+				onConfirm={confirmUnreadableDelete}
+				onCancel={() => setPendingUnreadableDelete(null)}
+			>
+				<p>
+					Its content cannot be decrypted and will be removed from your vault.
+					This cannot be undone.
+				</p>
+			</ConfirmDialog>
 
 			<ConfirmDialog
 				open={pendingDelete != null}

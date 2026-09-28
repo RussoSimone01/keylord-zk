@@ -3,23 +3,28 @@ import { Link, useNavigate } from "react-router-dom";
 import { getSalt, login } from "../api/auth";
 import { deriveKeys } from "../crypto/vault";
 import { useAuthStore } from "../store/authStore";
-import axios from "axios";
+import { getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
 
 function Login() {
-	const [username, setUsername] = useState("");
+	const authStore = useAuthStore();
+	// Prefilled after a reload or a lock: unlocking then only needs the master password
+	const [username, setUsername] = useState(authStore.username);
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
-	const authStore = useAuthStore();
 	const navigate = useNavigate();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	async function handleSubmit() {
 		setIsSubmitting(true);
 		try {
-			const { salt } = await getSalt(username);
-			const { authKey, encryptionKey } = await deriveKeys(password, salt);
+			const { salt, kdfIterations } = await getSalt(username);
+			const { authKey, encryptionKey } = await deriveKeys(
+				password,
+				salt,
+				kdfIterations,
+			);
 			const { accessToken, refreshToken } = await login({
 				username,
 				authKey,
@@ -32,11 +37,7 @@ function Login() {
 			);
 			navigate("/vault");
 		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.error ?? "An error occurred");
-			} else {
-				setError("An error occurred");
-			}
+			setError(getErrorMessage(err));
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -63,6 +64,7 @@ function Login() {
 							type="text"
 							value={username}
 							onChange={(e) => setUsername(e.target.value)}
+							autoFocus={username === ""}
 							required
 						/>
 					</div>
@@ -73,6 +75,7 @@ function Login() {
 							type="password"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
+							autoFocus={username !== ""}
 							required
 						/>
 					</div>

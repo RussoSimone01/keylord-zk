@@ -1,9 +1,9 @@
-import axios from "axios";
 import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { changePassword, getSalt, verifyPassword } from "../api/auth";
 import { deriveKeys, reencryptVault } from "../crypto/vault";
 import { getAll } from "../api/vault";
+import { getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
 import "../pages/Settings.css";
 import Spinner from "./Spinner";
@@ -39,15 +39,15 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 				setError("New password must be different from the old one");
 				return;
 			}
-			const { salt } = await getSalt(authStore.username);
+			const { salt, kdfIterations } = await getSalt(authStore.username);
 			const { authKey: oldAuthKey, encryptionKey: oldEncryptionKey } =
-				await deriveKeys(oldPassword, salt);
+				await deriveKeys(oldPassword, salt, kdfIterations);
 			if (!(await verifyPassword({ authKey: oldAuthKey }))) {
 				setError("Old password is incorrect");
 				return;
 			}
 			const oldCredentials = await getAll();
-			const { newKeys, newSalt, reencryptedCredentials } =
+			const { newKeys, newSalt, newKdfIterations, reencryptedCredentials } =
 				await reencryptVault(
 					oldCredentials,
 					oldEncryptionKey,
@@ -57,6 +57,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 				oldAuthKey,
 				newAuthKey: newKeys.authKey,
 				newSalt,
+				newKdfIterations,
 				credentials: reencryptedCredentials,
 			});
 			authStore.setAuth(
@@ -67,11 +68,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 			);
 			onBack();
 		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.error ?? "An error occurred");
-			} else {
-				setError("An error occurred");
-			}
+			setError(getErrorMessage(err));
 		} finally {
 			setIsSubmitting(false);
 		}

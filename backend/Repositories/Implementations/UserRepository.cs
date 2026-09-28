@@ -5,78 +5,131 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Repositories.Implementations
 {
-    public class UserRepository(AppDbContext appDbContext) : IUserRepository
-    {
-        private readonly AppDbContext _db = appDbContext;
+	// Reads are not tracked: every update goes through ExecuteUpdate.
+	// Username and email comparisons are case-insensitive, backed by unique indexes on LOWER(...) (see migration CaseInsensitiveUniqueness).
+	public class UserRepository(AppDbContext appDbContext) : IUserRepository
+	{
+		private readonly AppDbContext _db = appDbContext;
 
-        public async Task AddAsync(User user)
-        {
-            await _db.Users.AddAsync(user);
-            await _db.SaveChangesAsync();
-        }
+		public async Task AddAsync(User user)
+		{
+			await _db.Users.AddAsync(user);
+			await _db.SaveChangesAsync();
+		}
 
-        public async Task<User?> GetByIdAsync(long userId)
-        {
-            return await _db.Users.FindAsync(userId);
-        }
+		public async Task<User?> GetByIdAsync(long userId)
+		{
+			return await _db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Id == userId);
+		}
 
-        public async Task<User?> GetByUsernameAsync(string username)
-        {
-            return await _db.Users.SingleOrDefaultAsync(u => u.Username == username);
-        }
+		public async Task<User?> GetByUsernameAsync(string username)
+		{
+			string normalized = username.ToLowerInvariant();
+			return await _db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Username.ToLower() == normalized);
+		}
 
-        public async Task<bool> ExistsByUsernameAsync(string username)
-        {
-            return await _db.Users.AnyAsync(u => u.Username == username);
-        }
+		public async Task<string?> GetKdfSaltAsync(long userId)
+		{
+			return await _db.Users.Where(u => u.Id == userId).Select(u => u.KdfSalt).SingleOrDefaultAsync();
+		}
 
-        public async Task<bool> ExistsByEmailAsync(string email)
-        {
-            return await _db.Users.AnyAsync(u => u.Email == email);
-        }
+		public async Task<DateTime?> GetLockedUntilAsync(long userId)
+		{
+			return await _db.Users.Where(u => u.Id == userId).Select(u => u.LockedUntil).SingleOrDefaultAsync();
+		}
 
-        public async Task UpdatePasswordAsync(long userId, string newAuthKeyHash, string newSalt)
-        {
-            await _db.Users.Where(u => u.Id == userId)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(u => u.AuthKeyHash, newAuthKeyHash)
-                    .SetProperty(u => u.KdfSalt, newSalt)
-                    .SetProperty(u => u.UpdatedAt, DateTime.UtcNow)
-                );
-        }
+		public async Task<bool> ExistsByUsernameAsync(string username)
+		{
+			string normalized = username.ToLowerInvariant();
+			return await _db.Users.AnyAsync(u => u.Username.ToLower() == normalized);
+		}
 
-        public async Task UpdateEmailAsync(long userId, string newEmail)
-        {
-            await _db.Users.Where(u => u.Id == userId)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(u => u.Email, newEmail)
-                    .SetProperty(u => u.UpdatedAt, DateTime.UtcNow)
-                );
-        }
+		public async Task<bool> ExistsByEmailAsync(string email)
+		{
+			string normalized = email.ToLowerInvariant();
+			return await _db.Users.AnyAsync(u => u.Email != null && u.Email.ToLower() == normalized);
+		}
 
-        public async Task UpdateLoginAttemptsAsync(long userId, int attempts, DateTime? lockedUntil)
-        {
-            await _db.Users.Where(u => u.Id == userId)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(u => u.FailedLoginAttempts, attempts)
-                    .SetProperty(u => u.LockedUntil, lockedUntil)
-                    .SetProperty(u => u.UpdatedAt, DateTime.UtcNow)
-                );
-        }
+		/// <summary>
+		/// Locks the user row until the end of the current transaction.
+		/// Inserts into tables referencing the user wait as well, since the foreign key check takes a conflicting lock on the row.
+		/// </summary>
+		public async Task LockForUpdateAsync(long userId)
+		{
+			await _db.Database.ExecuteSqlAsync($"""SELECT 1 FROM "Users" WHERE "Id" = {userId} FOR UPDATE""");
+		}
 
-        public async Task ResetLockoutAsync(long userId)
-        {
-            await _db.Users.Where(u => u.Id == userId)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(u => u.FailedLoginAttempts, 0)
-                    .SetProperty(u => u.LockedUntil, (DateTime?)null)
-                    .SetProperty(u => u.UpdatedAt, DateTime.UtcNow)
-                );
-        }
+		/// <summary>
+		/// Takes a shared lock on the user row until the end of the current transaction.
+		/// It conflicts only with LockForUpdateAsync (password change), not with updates of non-key columns such as the lockout counters.
+		/// </summary>
+		public async Task LockForKeyShareAsync(long userId)
+		{
+			await _db.Database.ExecuteSqlAsync($"""SELECT 1 FROM "Users" WHERE "Id" = {userId} FOR KEY SHARE""");
+		}
 
-        public async Task DeleteAsync(long userId)
-        {
-            await _db.Users.Where(u => u.Id == userId).ExecuteDeleteAsync();
-        }
-    }
+		public async Task UpdatePasswordAsync(long userId, string newAuthKeyHash, string newSalt, long newKdfIterations)
+		{
+			await _db.Users.Where(u => u.Id == userId)
+				.ExecuteUpdateAsync(s => s
+					.SetProperty(u => u.AuthKeyHash, newAuthKeyHash)
+					.SetProperty(u => u.KdfSalt, newSalt)
+					.SetProperty(u => u.KdfIterations, newKdfIterations)
+					.SetProperty(u => u.UpdatedAt, DateTime.UtcNow)
+				);
+		}
+
+		public async Task UpdateEmailAsync(long userId, string newEmail)
+		{
+			await _db.Users.Where(u => u.Id == userId)
+				.ExecuteUpdateAsync(s => s
+					.SetProperty(u => u.Email, newEmail)
+					.SetProperty(u => u.UpdatedAt, DateTime.UtcNow)
+				);
+		}
+
+		/// <summary>
+		/// Counts an authentication attempt and, when it reaches a multiple of the schedule, locks the account.
+		/// Returns false if the account is currently locked (nothing is updated).
+		/// A single UPDATE: the row lock serializes concurrent attempts and PostgreSQL re-evaluates the WHERE after waiting,
+		/// so attempts arriving after a lock has been set are rejected.
+		/// </summary>
+		public async Task<bool> TryRegisterAttemptAsync(long userId, DateTime now, LockoutSchedule schedule)
+		{
+			int attemptsPerLock = schedule.AttemptsPerLock;
+			DateTime? firstLockUntil = now + schedule.FirstLock;
+			DateTime? secondLockUntil = now + schedule.SecondLock;
+			DateTime? subsequentLockUntil = now + schedule.SubsequentLocks;
+			// SET expressions read the values before the update, hence the explicit "+ 1"
+			int updated = await _db.Users
+				.Where(u => u.Id == userId && (u.LockedUntil == null || u.LockedUntil <= now))
+				.ExecuteUpdateAsync(s => s
+					.SetProperty(u => u.FailedLoginAttempts, u => u.FailedLoginAttempts + 1)
+					.SetProperty(u => u.LockedUntil, u => (u.FailedLoginAttempts + 1) % attemptsPerLock != 0
+						? u.LockedUntil
+						: u.FailedLoginAttempts + 1 == attemptsPerLock
+							? firstLockUntil
+							: u.FailedLoginAttempts + 1 == attemptsPerLock * 2
+								? secondLockUntil
+								: subsequentLockUntil)
+					.SetProperty(u => u.UpdatedAt, now)
+				);
+			return updated == 1;
+		}
+
+		public async Task ResetLockoutAsync(long userId)
+		{
+			await _db.Users.Where(u => u.Id == userId)
+				.ExecuteUpdateAsync(s => s
+					.SetProperty(u => u.FailedLoginAttempts, 0)
+					.SetProperty(u => u.LockedUntil, (DateTime?)null)
+					.SetProperty(u => u.UpdatedAt, DateTime.UtcNow)
+				);
+		}
+
+		public async Task DeleteAsync(long userId)
+		{
+			await _db.Users.Where(u => u.Id == userId).ExecuteDeleteAsync();
+		}
+	}
 }

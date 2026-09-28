@@ -29,14 +29,22 @@ export interface PlainCredential {
 	password: string;
 }
 
-import type { CredentialBase } from "../types";
+import type { CredentialBase, ReencryptedCredential } from "../types";
+import { UserFacingError } from "../api/errors";
 export type EncryptedCredential = CredentialBase;
 
 // ---------------------------------------------------------------------------
 // Costanti
 // ---------------------------------------------------------------------------
 
-const KDF_ITERATIONS = 600_000;
+/** Iterazioni PBKDF2 usate per le nuove chiavi (registrazione e cambio password) */
+export const KDF_ITERATIONS = 600_000;
+/**
+ * Intervallo accettato per le iterazioni indicate dal server, uguale a quello del backend.
+ * Un server malevolo potrebbe indicarne poche per rendere l'authKey attaccabile offline.
+ */
+const KDF_MIN_ITERATIONS = 600_000;
+const KDF_MAX_ITERATIONS = 2_000_000;
 const SALT_BYTES = 32;
 const IV_BYTES = 12;
 const KEY_BYTES = 32; // 256 bit
@@ -113,12 +121,13 @@ async function importPasswordKey(password: string): Promise<CryptoKey> {
 async function deriveMasterKey(
 	passwordKey: CryptoKey,
 	saltHex: string,
+	iterations: number,
 ): Promise<CryptoKey> {
 	const bits = await crypto.subtle.deriveBits(
 		{
 			name: "PBKDF2",
 			salt: fromHex(saltHex),
-			iterations: KDF_ITERATIONS,
+			iterations,
 			hash: "SHA-256",
 		},
 		passwordKey,
@@ -162,13 +171,25 @@ async function hkdfDerive(
  * Chiamato al login e alla registrazione.
  * @param password   Master password dell'utente (mai salvata)
  * @param saltHex    Salt hex recuperato dal server (o appena generato)
+ * @param iterations Iterazioni PBKDF2 memorizzate per l'utente (default per le chiavi nuove)
+ * @throws Se le iterazioni sono fuori dall'intervallo accettato
  */
 export async function deriveKeys(
 	password: string,
 	saltHex: string,
+	iterations: number = KDF_ITERATIONS,
 ): Promise<DerivedKeys> {
+	if (
+		!Number.isInteger(iterations) ||
+		iterations < KDF_MIN_ITERATIONS ||
+		iterations > KDF_MAX_ITERATIONS
+	) {
+		throw new UserFacingError(
+			"Unsupported key derivation parameters received from the server",
+		);
+	}
 	const passwordKey = await importPasswordKey(password);
-	const masterKey = await deriveMasterKey(passwordKey, saltHex);
+	const masterKey = await deriveMasterKey(passwordKey, saltHex, iterations);
 
 	// authKey: estraibile come raw bytes → convertiamo in hex per inviarla al server
 	const authCryptoKey = await hkdfDerive(masterKey, "auth", [
@@ -239,23 +260,48 @@ export async function decryptCredential(
 		ciphertext,
 	);
 
+	// L'id del server prevale su un eventuale id cifrato nel payload da versioni precedenti
 	return {
-		id: encrypted.id,
 		...(JSON.parse(new TextDecoder().decode(plaintext)) as PlainCredential),
+		id: encrypted.id,
 	};
+}
+
+export interface DecryptedVault {
+	credentials: PlainCredential[];
+	/** Credenziali che non si decifrano (dati corrotti o chiave diversa), restituite così come sono */
+	unreadable: EncryptedCredential[];
 }
 
 /**
  * Decifra un array di credenziali cifrate in parallelo.
- * Utile al login quando si scarica l'intero vault.
+ * Una credenziale illeggibile non blocca le altre: finisce in `unreadable`.
  */
 export async function decryptVault(
 	encryptedCredentials: EncryptedCredential[],
 	encryptionKey: CryptoKey,
-): Promise<PlainCredential[]> {
-	return Promise.all(
+): Promise<DecryptedVault> {
+	const results = await Promise.allSettled(
 		encryptedCredentials.map((ec) => decryptCredential(ec, encryptionKey)),
 	);
+	const vault: DecryptedVault = { credentials: [], unreadable: [] };
+	results.forEach((result, i) => {
+		if (result.status === "fulfilled") {
+			vault.credentials.push(result.value);
+		} else {
+			vault.unreadable.push(encryptedCredentials[i]);
+		}
+	});
+	return vault;
+}
+
+/** SHA-256 in hex minuscolo della stringa cifrata, calcolato come fa il server */
+async function digestEncryptedData(encryptedData: string): Promise<string> {
+	const hash = await crypto.subtle.digest(
+		"SHA-256",
+		new TextEncoder().encode(encryptedData),
+	);
+	return toHex(hash);
 }
 
 // ---------------------------------------------------------------------------
@@ -269,6 +315,12 @@ export async function decryptVault(
  *   2. Genera nuovo salt + nuove chiavi
  *   3. Ricifra tutto con la nuova chiave
  *
+ * Gli id restano invariati: il server sostituisce il contenuto delle credenziali esistenti
+ * e rifiuta la richiesta se il vault è cambiato nel frattempo. Per accorgersi anche delle modifiche,
+ * ogni credenziale porta il digest del contenuto da cui è stata ricifrata.
+ *
+ * @throws UserFacingError se qualche credenziale non si decifra: non potrebbe essere ricifrata
+ *
  * @returns Le credenziali ricifrate + le nuove chiavi (authKey + encryptionKey)
  */
 export async function reencryptVault(
@@ -278,24 +330,45 @@ export async function reencryptVault(
 ): Promise<{
 	newKeys: DerivedKeys;
 	newSalt: string;
-	reencryptedCredentials: EncryptedCredential[];
+	newKdfIterations: number;
+	reencryptedCredentials: ReencryptedCredential[];
 }> {
 	// 1. Decifra con la vecchia chiave
-	const plainCredentials = await decryptVault(
+	const { credentials: plainCredentials, unreadable } = await decryptVault(
 		encryptedCredentials,
 		oldEncryptionKey,
 	);
-
-	// 2. Genera nuovo salt e nuove chiavi
-	const newSalt = generateSalt();
-	const newKeys = await deriveKeys(newPassword, newSalt);
-
-	// 3. Ricifra con la nuova chiave
-	const reencryptedCredentials = await Promise.all(
-		plainCredentials.map((c) =>
-			encryptCredential(c, newKeys.encryptionKey),
+	if (unreadable.length > 0) {
+		throw new UserFacingError(
+			`${unreadable.length} ${unreadable.length === 1 ? "credential cannot" : "credentials cannot"} be decrypted: delete ${unreadable.length === 1 ? "it" : "them"} from the vault before changing the password`,
+		);
+	}
+	const digestById = new Map<number | undefined, string>(
+		await Promise.all(
+			encryptedCredentials.map(
+				async (c) => [c.id, await digestEncryptedData(c.encryptedData)] as const,
+			),
 		),
 	);
 
-	return { newKeys, newSalt, reencryptedCredentials };
+	// 2. Genera nuovo salt e nuove chiavi, con le iterazioni correnti (eventuali aumenti si applicano qui)
+	const newSalt = generateSalt();
+	const newKdfIterations = KDF_ITERATIONS;
+	const newKeys = await deriveKeys(newPassword, newSalt, newKdfIterations);
+
+	// 3. Ricifra con la nuova chiave; l'id viaggia in chiaro accanto al payload, non dentro
+	const reencryptedCredentials = await Promise.all(
+		plainCredentials.map(async ({ id, ...plain }) => {
+			if (id === undefined) {
+				throw new Error("Credenziale senza id");
+			}
+			const { encryptedData } = await encryptCredential(
+				plain,
+				newKeys.encryptionKey,
+			);
+			return { id, previousDigest: digestById.get(id)!, encryptedData };
+		}),
+	);
+
+	return { newKeys, newSalt, newKdfIterations, reencryptedCredentials };
 }
