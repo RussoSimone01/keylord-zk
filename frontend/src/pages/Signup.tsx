@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { deriveKeys, generateSalt } from "../crypto/vault";
+import { getErrorMessage } from "../api/errors";
+import { deriveKeys, generateSalt, KDF_ITERATIONS } from "../crypto/vault";
 import { register } from "../api/auth";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
@@ -33,13 +33,17 @@ function Signup() {
 				return;
 			}
 			const salt: string = generateSalt();
-			const { authKey, encryptionKey } = await deriveKeys(password, salt);
+			const { authKey, encryptionKey } = await deriveKeys(
+				password,
+				salt,
+				KDF_ITERATIONS,
+			);
 			const { accessToken, refreshToken } = await register({
 				username,
 				email: email || undefined,
 				authKey,
 				salt,
-				kdfIterations: 600000,
+				kdfIterations: KDF_ITERATIONS,
 			});
 			authStore.setAuth(
 				username,
@@ -49,11 +53,7 @@ function Signup() {
 			);
 			navigate("/vault");
 		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.error ?? "An error occurred");
-			} else {
-				setError("An error occurred");
-			}
+			setError(getErrorMessage(err));
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -80,6 +80,9 @@ function Signup() {
 							type="text"
 							value={username}
 							onChange={(e) => setUsername(e.target.value)}
+							maxLength={50}
+							pattern="[A-Za-z0-9._\-]+"
+							title="Letters, digits, dots, hyphens and underscores"
 							required
 						></input>
 					</div>
@@ -126,12 +129,12 @@ function Signup() {
 						type="submit"
 						disabled={isSubmitting}
 					>
-						Signup
+						Sign up
 					</button>
 					{error && <span className="auth-error">{error}</span>}
 				</form>
 				<div className="auth-link">
-					Already have an account? <Link to="/login">Login</Link>
+					Already have an account? <Link to="/login">Log in</Link>
 				</div>
 			</div>
 		</div>
