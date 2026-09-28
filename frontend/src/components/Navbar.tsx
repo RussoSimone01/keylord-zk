@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import { logout } from "../api/auth";
 import ThemeSwitcher from "./ThemeSwitcher";
 import "./Navbar.css";
 import { Lock } from "lucide-react";
@@ -8,8 +9,12 @@ function Navbar() {
 	const clearAuth = useAuthStore((state) => state.clearAuth);
 	const navigate = useNavigate();
 
-	// Locking clears the in-memory encryption key and tokens, then returns to login.
+	// Locking ends the session on the server, clears the in-memory encryption key and tokens, then returns to login.
 	function handleLock() {
+		const { refreshToken } = useAuthStore.getState();
+		if (refreshToken) {
+			void logout(refreshToken);
+		}
 		clearAuth();
 		navigate("/login");
 	}
@@ -50,7 +55,7 @@ function Navbar() {
 					title="Lock vault"
 				>
 					<Lock size={16} />
-					<span className="navbar-lock-label">Lock</span>
+					<span className="navbar-lock-label">Log out</span>
 				</button>
 			</div>
 		</header>

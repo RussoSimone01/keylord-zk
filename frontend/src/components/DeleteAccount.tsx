@@ -1,6 +1,6 @@
-import axios from "axios";
 import { useState } from "react";
-import { deleteAccount, getSalt, verifyPassword } from "../api/auth";
+import { deleteAccount, getSalt } from "../api/auth";
+import { getErrorMessage } from "../api/errors";
 import { useAuthStore } from "../store/authStore";
 import { deriveKeys } from "../crypto/vault";
 import { useNavigate } from "react-router-dom";
@@ -23,21 +23,14 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
 	async function handleSubmit() {
 		setIsSubmitting(true);
 		try {
-			const { salt } = await getSalt(authStore.username);
-			const { authKey } = await deriveKeys(password, salt);
-			if (!(await verifyPassword({ authKey }))) {
-				setError("Password is incorrect");
-				return;
-			}
-			await deleteAccount();
-			authStore.clearAuth();
+			const { salt, kdfIterations } = await getSalt(authStore.username);
+			const { authKey } = await deriveKeys(password, salt, kdfIterations);
+			// The server verifies the password itself and rejects the request if it is wrong
+			await deleteAccount({ authKey });
+			authStore.clearAuth(true);
 			navigate("/login");
 		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.error ?? "An error occurred");
-			} else {
-				setError("An error occurred");
-			}
+			setError(getErrorMessage(err));
 		} finally {
 			setIsSubmitting(false);
 		}
