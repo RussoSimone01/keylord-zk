@@ -8,92 +8,83 @@ import "../styles/auth.css";
 import Spinner from "../components/Spinner";
 
 function Login() {
-	const authStore = useAuthStore();
-	// Prefilled after a reload or a lock: unlocking then only needs the master password
-	const [username, setUsername] = useState(authStore.username);
-	const [password, setPassword] = useState("");
-	const [error, setError] = useState("");
-	const navigate = useNavigate();
-	const [isSubmitting, setIsSubmitting] = useState(false);
+  const authStore = useAuthStore();
+  // Prefilled after a reload or a lock: unlocking then only needs the master password
+  const [username, setUsername] = useState(authStore.username);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-	async function handleSubmit() {
-		setIsSubmitting(true);
-		try {
-			const { salt, kdfIterations } = await getSalt(username);
-			const { authKey, encryptionKey } = await deriveKeys(
-				password,
-				salt,
-				kdfIterations,
-			);
-			const { accessToken, refreshToken } = await login({
-				username,
-				authKey,
-			});
-			authStore.setAuth(
-				username,
-				encryptionKey,
-				accessToken,
-				refreshToken,
-			);
-			navigate("/vault");
-		} catch (err) {
-			setError(getErrorMessage(err));
-		} finally {
-			setIsSubmitting(false);
-		}
-	}
+  async function handleSubmit() {
+    setIsSubmitting(true);
+    try {
+      const { salt, kdfIterations } = await getSalt(username);
+      const { authKey, encryptionKey } = await deriveKeys(
+        password,
+        salt,
+        kdfIterations,
+      );
+      const { accessToken, refreshToken } = await login({
+        username,
+        authKey,
+      });
+      authStore.setAuth(username, encryptionKey, accessToken, refreshToken);
+      navigate("/vault");
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
-	if (isSubmitting) {
-		return <Spinner />;
-	}
+  if (isSubmitting) {
+    return <Spinner />;
+  }
 
-	return (
-		<div className="auth-container">
-			<div className="auth-card">
-				<h1>Log in</h1>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						handleSubmit();
-					}}
-				>
-					<div className="auth-field">
-						<label htmlFor="username">Username</label>
-						<input
-							id="username"
-							type="text"
-							value={username}
-							onChange={(e) => setUsername(e.target.value)}
-							autoFocus={username === ""}
-							required
-						/>
-					</div>
-					<div className="auth-field">
-						<label htmlFor="password">Password</label>
-						<input
-							id="password"
-							type="password"
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							autoFocus={username !== ""}
-							required
-						/>
-					</div>
-					<button
-						className="auth-submit"
-						type="submit"
-						disabled={isSubmitting}
-					>
-						Log in
-					</button>
-					{error && <span className="auth-error">{error}</span>}
-				</form>
-				<div className="auth-link">
-					Don't have an account? <Link to="/signup">Sign up</Link>
-				</div>
-			</div>
-		</div>
-	);
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1>Log in</h1>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
+          <div className="auth-field">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoFocus={username === ""}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoFocus={username !== ""}
+              required
+            />
+          </div>
+          <button className="auth-submit" type="submit" disabled={isSubmitting}>
+            Log in
+          </button>
+          {error && <span className="auth-error">{error}</span>}
+        </form>
+        <div className="auth-link">
+          Don't have an account? <Link to="/signup">Sign up</Link>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default Login;

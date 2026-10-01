@@ -1,165 +1,165 @@
 .vault-container {
-	max-width: 900px;
-	margin: 0 auto;
-	padding: var(--space-8) var(--space-6);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
 }
 
 .vault-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-4);
-	margin-bottom: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .vault-header h1 {
-	margin: 0;
+  margin: 0;
 }
 
 .vault-form-card {
-	background: var(--surface);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-md);
-	padding: var(--space-6);
-	margin-bottom: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
 }
 
 .vault-form-card h2 {
-	margin: 0 0 var(--space-4);
+  margin: 0 0 var(--space-4);
 }
 
 .vault-form-row {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-4);
-	margin-bottom: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .vault-field {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-2);
-	width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
 }
 
 .vault-field label {
-	font: 500 11px/16px var(--font-mono);
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--text-secondary);
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 .vault-field input {
-	width: 100%;
-	height: 38px;
-	padding: 0 var(--space-3);
-	background: var(--bg);
-	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-sm);
-	color: var(--text);
-	font-size: 15px;
+  width: 100%;
+  height: 38px;
+  padding: 0 var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 15px;
 }
 
 .vault-field input::placeholder {
-	color: var(--text-secondary);
+  color: var(--text-secondary);
 }
 
 .vault-field input:focus {
-	outline: 2px solid var(--focus);
-	outline-offset: 2px;
-	border-color: var(--focus);
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-color: var(--focus);
 }
 
 /* Username and password values are secrets: set them in mono. */
 .vault-field input#username,
 .vault-field input#password {
-	font-family: var(--font-mono);
+  font-family: var(--font-mono);
 }
 
 .vault-password-field {
-	display: flex;
-	align-items: center;
-	gap: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .vault-password-field input {
-	flex: 1;
-	margin-right: var(--space-1);
+  flex: 1;
+  margin-right: var(--space-1);
 }
 
 .vault-form-actions {
-	display: flex;
-	gap: var(--space-3);
+  display: flex;
+  gap: var(--space-3);
 }
 
 .vault-container .search-field {
-	margin-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .vault-empty {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: var(--space-2);
-	padding: var(--space-12) var(--space-6);
-	text-align: center;
-	background: var(--surface);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
 .vault-empty-glyph {
-	display: grid;
-	place-items: center;
-	width: 48px;
-	height: 48px;
-	margin-bottom: var(--space-2);
-	border: 1px dashed var(--border-strong);
-	border-radius: var(--radius-md);
-	color: var(--accent);
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--accent);
 }
 
 .vault-empty-title {
-	font: 600 18px/26px var(--font-sans);
+  font: 600 18px/26px var(--font-sans);
 }
 
 .vault-empty p {
-	max-width: 360px;
-	margin: 0 0 var(--space-3);
-	color: var(--text-secondary);
+  max-width: 360px;
+  margin: 0 0 var(--space-3);
+  color: var(--text-secondary);
 }
 
 @media (max-width: 560px) {
-	.vault-container {
-		padding: var(--space-6) var(--space-4);
-	}
+  .vault-container {
+    padding: var(--space-6) var(--space-4);
+  }
 }
 
 .vault-unreadable {
-	background: var(--danger-soft);
-	border: 1px solid var(--danger);
-	color: var(--danger);
-	padding: var(--space-3) var(--space-4);
-	border-radius: var(--radius-sm);
-	font-size: 14px;
-	margin-bottom: var(--space-6);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  margin-bottom: var(--space-6);
 }
 
 .vault-unreadable p {
-	margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-2);
 }
 
 .vault-unreadable ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-2) var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
 }
 
 .vault-unreadable li {
-	display: flex;
-	align-items: center;
-	gap: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
 }

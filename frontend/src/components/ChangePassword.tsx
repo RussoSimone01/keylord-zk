@@ -9,145 +9,135 @@ import "../pages/Settings.css";
 import Spinner from "./Spinner";
 
 interface ChangePasswordProps {
-	onBack: () => void;
+  onBack: () => void;
 }
 
 function ChangePassword({ onBack }: ChangePasswordProps) {
-	const [oldPassword, setOldPassword] = useState("");
-	const [password, setPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
-	const [error, setError] = useState("");
-	const authStore = useAuthStore();
-	const [isSubmitting, setIsSubmitting] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const authStore = useAuthStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-	function checkPassword(password: string, confirmPassword: string) {
-		if (confirmPassword != "" && password != confirmPassword) {
-			setError("Password do not match");
-		} else {
-			setError("");
-		}
-	}
+  function checkPassword(password: string, confirmPassword: string) {
+    if (confirmPassword != "" && password != confirmPassword) {
+      setError("Password do not match");
+    } else {
+      setError("");
+    }
+  }
 
-	async function handleSubmit() {
-		setIsSubmitting(true);
-		try {
-			if (password != confirmPassword) {
-				setError("Password do not match");
-				return;
-			}
-			if (oldPassword === password) {
-				setError("New password must be different from the old one");
-				return;
-			}
-			const { salt, kdfIterations } = await getSalt(authStore.username);
-			const { authKey: oldAuthKey, encryptionKey: oldEncryptionKey } =
-				await deriveKeys(oldPassword, salt, kdfIterations);
-			if (!(await verifyPassword({ authKey: oldAuthKey }))) {
-				setError("Old password is incorrect");
-				return;
-			}
-			const oldCredentials = await getAll();
-			const { newKeys, newSalt, newKdfIterations, reencryptedCredentials } =
-				await reencryptVault(
-					oldCredentials,
-					oldEncryptionKey,
-					password,
-				);
-			const { accessToken, refreshToken } = await changePassword({
-				oldAuthKey,
-				newAuthKey: newKeys.authKey,
-				newSalt,
-				newKdfIterations,
-				credentials: reencryptedCredentials,
-			});
-			authStore.setAuth(
-				authStore.username,
-				newKeys.encryptionKey,
-				accessToken,
-				refreshToken,
-			);
-			onBack();
-		} catch (err) {
-			setError(getErrorMessage(err));
-		} finally {
-			setIsSubmitting(false);
-		}
-	}
+  async function handleSubmit() {
+    setIsSubmitting(true);
+    try {
+      if (password != confirmPassword) {
+        setError("Password do not match");
+        return;
+      }
+      if (oldPassword === password) {
+        setError("New password must be different from the old one");
+        return;
+      }
+      const { salt, kdfIterations } = await getSalt(authStore.username);
+      const { authKey: oldAuthKey, encryptionKey: oldEncryptionKey } =
+        await deriveKeys(oldPassword, salt, kdfIterations);
+      if (!(await verifyPassword({ authKey: oldAuthKey }))) {
+        setError("Old password is incorrect");
+        return;
+      }
+      const oldCredentials = await getAll();
+      const { newKeys, newSalt, newKdfIterations, reencryptedCredentials } =
+        await reencryptVault(oldCredentials, oldEncryptionKey, password);
+      const { accessToken, refreshToken } = await changePassword({
+        oldAuthKey,
+        newAuthKey: newKeys.authKey,
+        newSalt,
+        newKdfIterations,
+        credentials: reencryptedCredentials,
+      });
+      authStore.setAuth(
+        authStore.username,
+        newKeys.encryptionKey,
+        accessToken,
+        refreshToken,
+      );
+      onBack();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
-	if (isSubmitting) {
-		return <Spinner />;
-	}
+  if (isSubmitting) {
+    return <Spinner />;
+  }
 
-	return (
-		<div>
-			<div className="auth-card">
-				<button
-					className="settings-back"
-					type="button"
-					onClick={onBack}
-				>
-					← Back
-				</button>
-				<h1>Change Password</h1>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						handleSubmit();
-					}}
-				>
-					<div className="auth-field">
-						<label htmlFor="oldPassword">Old Password</label>
-						<input
-							id="oldPassword"
-							type="password"
-							value={oldPassword}
-							onChange={(e) => {
-								setOldPassword(e.target.value);
-							}}
-							required
-						></input>
-					</div>
-					<div className="auth-field">
-						<label htmlFor="password">Password</label>
-						<input
-							id="password"
-							type="password"
-							value={password}
-							onChange={(e) => {
-								setPassword(e.target.value);
-								checkPassword(e.target.value, confirmPassword);
-							}}
-							required
-						></input>
-					</div>
-					<div className="auth-field">
-						<label htmlFor="confirmPassword">
-							Confirm Password
-						</label>
-						<input
-							id="confirmPassword"
-							type="password"
-							value={confirmPassword}
-							onChange={(e) => {
-								setConfirmPassword(e.target.value);
-								checkPassword(password, e.target.value);
-							}}
-							required
-						></input>
-					</div>
-					<button
-						id="changePwdButton"
-						type="submit"
-						className="auth-submit"
-						disabled={isSubmitting}
-					>
-						Change Password
-					</button>
-					{error && <span className="auth-error">{error}</span>}
-				</form>
-			</div>
-		</div>
-	);
+  return (
+    <div>
+      <div className="auth-card">
+        <button className="settings-back" type="button" onClick={onBack}>
+          ← Back
+        </button>
+        <h1>Change Password</h1>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
+          <div className="auth-field">
+            <label htmlFor="oldPassword">Old Password</label>
+            <input
+              id="oldPassword"
+              type="password"
+              value={oldPassword}
+              onChange={(e) => {
+                setOldPassword(e.target.value);
+              }}
+              required
+            ></input>
+          </div>
+          <div className="auth-field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                checkPassword(e.target.value, confirmPassword);
+              }}
+              required
+            ></input>
+          </div>
+          <div className="auth-field">
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                checkPassword(password, e.target.value);
+              }}
+              required
+            ></input>
+          </div>
+          <button
+            id="changePwdButton"
+            type="submit"
+            className="auth-submit"
+            disabled={isSubmitting}
+          >
+            Change Password
+          </button>
+          {error && <span className="auth-error">{error}</span>}
+        </form>
+      </div>
+    </div>
+  );
 }
 
 export default ChangePassword;

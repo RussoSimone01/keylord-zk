@@ -16,17 +16,17 @@
 // ---------------------------------------------------------------------------
 
 export interface DerivedKeys {
-	/** Hex string — inviata al server come "password" per autenticarsi */
-	authKey: string;
-	/** CryptoKey — usata per cifrare/decifrare, mai lascia il browser */
-	encryptionKey: CryptoKey;
+  /** Hex string — inviata al server come "password" per autenticarsi */
+  authKey: string;
+  /** CryptoKey — usata per cifrare/decifrare, mai lascia il browser */
+  encryptionKey: CryptoKey;
 }
 
 export interface PlainCredential {
-	id?: number;
-	site: string;
-	username: string;
-	password: string;
+  id?: number;
+  site: string;
+  username: string;
+  password: string;
 }
 
 import type { CredentialBase, ReencryptedCredential } from "../types";
@@ -55,31 +55,31 @@ const KEY_BYTES = 32; // 256 bit
 
 /** Converte un Uint8Array in stringa hex */
 function toHex(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
-	const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
-	return Array.from(bytes)
-		.map((b) => b.toString(16).padStart(2, "0"))
-		.join("");
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /** Converte una stringa hex in Uint8Array */
 function fromHex(hex: string): Uint8Array<ArrayBuffer> {
-	if (hex.length % 2 !== 0) throw new Error("hex string length must be even");
-	const out = new Uint8Array(hex.length / 2);
-	for (let i = 0; i < hex.length; i += 2) {
-		out[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-	}
-	return out;
+  if (hex.length % 2 !== 0) throw new Error("hex string length must be even");
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    out[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  }
+  return out;
 }
 
 /** Converte un Uint8Array in Base64 */
 function toBase64(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
-	const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
-	return btoa(String.fromCharCode(...bytes));
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  return btoa(String.fromCharCode(...bytes));
 }
 
 /** Converte una stringa Base64 in Uint8Array */
 function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
-	return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 }
 
 // ---------------------------------------------------------------------------
@@ -92,8 +92,8 @@ function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
  * Restituisce una stringa hex da salvare nel DB (campo kdf_salt).
  */
 export function generateSalt(): string {
-	const buf = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
-	return toHex(buf);
+  const buf = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
+  return toHex(buf);
 }
 
 // ---------------------------------------------------------------------------
@@ -104,14 +104,14 @@ export function generateSalt(): string {
  * Importa la master password come materiale grezzo per PBKDF2.
  */
 async function importPasswordKey(password: string): Promise<CryptoKey> {
-	const enc = new TextEncoder();
-	return crypto.subtle.importKey(
-		"raw",
-		enc.encode(password),
-		"PBKDF2",
-		false, // non estraibile
-		["deriveKey", "deriveBits"],
-	);
+  const enc = new TextEncoder();
+  return crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    "PBKDF2",
+    false, // non estraibile
+    ["deriveKey", "deriveBits"],
+  );
 }
 
 /**
@@ -119,25 +119,25 @@ async function importPasswordKey(password: string): Promise<CryptoKey> {
  * La masterKey non viene mai usata direttamente — serve solo come input a HKDF.
  */
 async function deriveMasterKey(
-	passwordKey: CryptoKey,
-	saltHex: string,
-	iterations: number,
+  passwordKey: CryptoKey,
+  saltHex: string,
+  iterations: number,
 ): Promise<CryptoKey> {
-	const bits = await crypto.subtle.deriveBits(
-		{
-			name: "PBKDF2",
-			salt: fromHex(saltHex),
-			iterations,
-			hash: "SHA-256",
-		},
-		passwordKey,
-		KEY_BYTES * 8,
-	);
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: fromHex(saltHex),
+      iterations,
+      hash: "SHA-256",
+    },
+    passwordKey,
+    KEY_BYTES * 8,
+  );
 
-	return crypto.subtle.importKey("raw", bits, "HKDF", false, [
-		"deriveKey",
-		"deriveBits",
-	]);
+  return crypto.subtle.importKey("raw", bits, "HKDF", false, [
+    "deriveKey",
+    "deriveBits",
+  ]);
 }
 
 /**
@@ -146,23 +146,23 @@ async function deriveMasterKey(
  * @param usage KeyUsage della chiave risultante
  */
 async function hkdfDerive(
-	masterKey: CryptoKey,
-	info: string,
-	usage: KeyUsage[],
+  masterKey: CryptoKey,
+  info: string,
+  usage: KeyUsage[],
 ): Promise<CryptoKey> {
-	const enc = new TextEncoder();
-	return crypto.subtle.deriveKey(
-		{
-			name: "HKDF",
-			hash: "SHA-256",
-			salt: new Uint8Array(KEY_BYTES), // salt zero per HKDF (il salt crittografico è già in PBKDF2)
-			info: enc.encode(info),
-		},
-		masterKey,
-		{ name: "AES-GCM", length: KEY_BYTES * 8 },
-		info === "auth", // authKey estraibile (dobbiamo leggere i byte per inviarla)
-		usage,
-	);
+  const enc = new TextEncoder();
+  return crypto.subtle.deriveKey(
+    {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(KEY_BYTES), // salt zero per HKDF (il salt crittografico è già in PBKDF2)
+      info: enc.encode(info),
+    },
+    masterKey,
+    { name: "AES-GCM", length: KEY_BYTES * 8 },
+    info === "auth", // authKey estraibile (dobbiamo leggere i byte per inviarla)
+    usage,
+  );
 }
 
 /**
@@ -175,37 +175,37 @@ async function hkdfDerive(
  * @throws Se le iterazioni sono fuori dall'intervallo accettato
  */
 export async function deriveKeys(
-	password: string,
-	saltHex: string,
-	iterations: number = KDF_ITERATIONS,
+  password: string,
+  saltHex: string,
+  iterations: number = KDF_ITERATIONS,
 ): Promise<DerivedKeys> {
-	if (
-		!Number.isInteger(iterations) ||
-		iterations < KDF_MIN_ITERATIONS ||
-		iterations > KDF_MAX_ITERATIONS
-	) {
-		throw new UserFacingError(
-			"Unsupported key derivation parameters received from the server",
-		);
-	}
-	const passwordKey = await importPasswordKey(password);
-	const masterKey = await deriveMasterKey(passwordKey, saltHex, iterations);
+  if (
+    !Number.isInteger(iterations) ||
+    iterations < KDF_MIN_ITERATIONS ||
+    iterations > KDF_MAX_ITERATIONS
+  ) {
+    throw new UserFacingError(
+      "Unsupported key derivation parameters received from the server",
+    );
+  }
+  const passwordKey = await importPasswordKey(password);
+  const masterKey = await deriveMasterKey(passwordKey, saltHex, iterations);
 
-	// authKey: estraibile come raw bytes → convertiamo in hex per inviarla al server
-	const authCryptoKey = await hkdfDerive(masterKey, "auth", [
-		"encrypt",
-		"decrypt",
-	]);
-	const authRaw = await crypto.subtle.exportKey("raw", authCryptoKey);
-	const authKey = toHex(authRaw);
+  // authKey: estraibile come raw bytes → convertiamo in hex per inviarla al server
+  const authCryptoKey = await hkdfDerive(masterKey, "auth", [
+    "encrypt",
+    "decrypt",
+  ]);
+  const authRaw = await crypto.subtle.exportKey("raw", authCryptoKey);
+  const authKey = toHex(authRaw);
 
-	// encryptionKey: non estraibile, rimane in memoria come CryptoKey opaca
-	const encryptionKey = await hkdfDerive(masterKey, "encrypt", [
-		"encrypt",
-		"decrypt",
-	]);
+  // encryptionKey: non estraibile, rimane in memoria come CryptoKey opaca
+  const encryptionKey = await hkdfDerive(masterKey, "encrypt", [
+    "encrypt",
+    "decrypt",
+  ]);
 
-	return { authKey, encryptionKey };
+  return { authKey, encryptionKey };
 }
 
 // ---------------------------------------------------------------------------
@@ -219,21 +219,21 @@ export async function deriveKeys(
  * @returns EncryptedCredential con formato "ivBase64:ciphertextBase64"
  */
 export async function encryptCredential(
-	credential: PlainCredential,
-	encryptionKey: CryptoKey,
+  credential: PlainCredential,
+  encryptionKey: CryptoKey,
 ): Promise<EncryptedCredential> {
-	const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
-	const plaintext = new TextEncoder().encode(JSON.stringify(credential));
+  const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
+  const plaintext = new TextEncoder().encode(JSON.stringify(credential));
 
-	const ciphertext = await crypto.subtle.encrypt(
-		{ name: "AES-GCM", iv },
-		encryptionKey,
-		plaintext,
-	);
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    encryptionKey,
+    plaintext,
+  );
 
-	return {
-		encryptedData: `${toBase64(iv)}:${toBase64(ciphertext)}`,
-	};
+  return {
+    encryptedData: `${toBase64(iv)}:${toBase64(ciphertext)}`,
+  };
 }
 
 /**
@@ -243,34 +243,34 @@ export async function encryptCredential(
  * @throws Se la chiave è sbagliata o i dati sono corrotti (AES-GCM authentication fail)
  */
 export async function decryptCredential(
-	encrypted: EncryptedCredential,
-	encryptionKey: CryptoKey,
+  encrypted: EncryptedCredential,
+  encryptionKey: CryptoKey,
 ): Promise<PlainCredential> {
-	const [ivB64, ciphertextB64] = encrypted.encryptedData.split(":");
-	if (!ivB64 || !ciphertextB64) {
-		throw new Error("Formato encryptedData non valido");
-	}
+  const [ivB64, ciphertextB64] = encrypted.encryptedData.split(":");
+  if (!ivB64 || !ciphertextB64) {
+    throw new Error("Formato encryptedData non valido");
+  }
 
-	const iv = fromBase64(ivB64);
-	const ciphertext = fromBase64(ciphertextB64);
+  const iv = fromBase64(ivB64);
+  const ciphertext = fromBase64(ciphertextB64);
 
-	const plaintext = await crypto.subtle.decrypt(
-		{ name: "AES-GCM", iv },
-		encryptionKey,
-		ciphertext,
-	);
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    encryptionKey,
+    ciphertext,
+  );
 
-	// L'id del server prevale su un eventuale id cifrato nel payload da versioni precedenti
-	return {
-		...(JSON.parse(new TextDecoder().decode(plaintext)) as PlainCredential),
-		id: encrypted.id,
-	};
+  // L'id del server prevale su un eventuale id cifrato nel payload da versioni precedenti
+  return {
+    ...(JSON.parse(new TextDecoder().decode(plaintext)) as PlainCredential),
+    id: encrypted.id,
+  };
 }
 
 export interface DecryptedVault {
-	credentials: PlainCredential[];
-	/** Credenziali che non si decifrano (dati corrotti o chiave diversa), restituite così come sono */
-	unreadable: EncryptedCredential[];
+  credentials: PlainCredential[];
+  /** Credenziali che non si decifrano (dati corrotti o chiave diversa), restituite così come sono */
+  unreadable: EncryptedCredential[];
 }
 
 /**
@@ -278,30 +278,30 @@ export interface DecryptedVault {
  * Una credenziale illeggibile non blocca le altre: finisce in `unreadable`.
  */
 export async function decryptVault(
-	encryptedCredentials: EncryptedCredential[],
-	encryptionKey: CryptoKey,
+  encryptedCredentials: EncryptedCredential[],
+  encryptionKey: CryptoKey,
 ): Promise<DecryptedVault> {
-	const results = await Promise.allSettled(
-		encryptedCredentials.map((ec) => decryptCredential(ec, encryptionKey)),
-	);
-	const vault: DecryptedVault = { credentials: [], unreadable: [] };
-	results.forEach((result, i) => {
-		if (result.status === "fulfilled") {
-			vault.credentials.push(result.value);
-		} else {
-			vault.unreadable.push(encryptedCredentials[i]);
-		}
-	});
-	return vault;
+  const results = await Promise.allSettled(
+    encryptedCredentials.map((ec) => decryptCredential(ec, encryptionKey)),
+  );
+  const vault: DecryptedVault = { credentials: [], unreadable: [] };
+  results.forEach((result, i) => {
+    if (result.status === "fulfilled") {
+      vault.credentials.push(result.value);
+    } else {
+      vault.unreadable.push(encryptedCredentials[i]);
+    }
+  });
+  return vault;
 }
 
 /** SHA-256 in hex minuscolo della stringa cifrata, calcolato come fa il server */
 async function digestEncryptedData(encryptedData: string): Promise<string> {
-	const hash = await crypto.subtle.digest(
-		"SHA-256",
-		new TextEncoder().encode(encryptedData),
-	);
-	return toHex(hash);
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(encryptedData),
+  );
+  return toHex(hash);
 }
 
 // ---------------------------------------------------------------------------
@@ -324,51 +324,52 @@ async function digestEncryptedData(encryptedData: string): Promise<string> {
  * @returns Le credenziali ricifrate + le nuove chiavi (authKey + encryptionKey)
  */
 export async function reencryptVault(
-	encryptedCredentials: EncryptedCredential[],
-	oldEncryptionKey: CryptoKey,
-	newPassword: string,
+  encryptedCredentials: EncryptedCredential[],
+  oldEncryptionKey: CryptoKey,
+  newPassword: string,
 ): Promise<{
-	newKeys: DerivedKeys;
-	newSalt: string;
-	newKdfIterations: number;
-	reencryptedCredentials: ReencryptedCredential[];
+  newKeys: DerivedKeys;
+  newSalt: string;
+  newKdfIterations: number;
+  reencryptedCredentials: ReencryptedCredential[];
 }> {
-	// 1. Decifra con la vecchia chiave
-	const { credentials: plainCredentials, unreadable } = await decryptVault(
-		encryptedCredentials,
-		oldEncryptionKey,
-	);
-	if (unreadable.length > 0) {
-		throw new UserFacingError(
-			`${unreadable.length} ${unreadable.length === 1 ? "credential cannot" : "credentials cannot"} be decrypted: delete ${unreadable.length === 1 ? "it" : "them"} from the vault before changing the password`,
-		);
-	}
-	const digestById = new Map<number | undefined, string>(
-		await Promise.all(
-			encryptedCredentials.map(
-				async (c) => [c.id, await digestEncryptedData(c.encryptedData)] as const,
-			),
-		),
-	);
+  // 1. Decifra con la vecchia chiave
+  const { credentials: plainCredentials, unreadable } = await decryptVault(
+    encryptedCredentials,
+    oldEncryptionKey,
+  );
+  if (unreadable.length > 0) {
+    throw new UserFacingError(
+      `${unreadable.length} ${unreadable.length === 1 ? "credential cannot" : "credentials cannot"} be decrypted: delete ${unreadable.length === 1 ? "it" : "them"} from the vault before changing the password`,
+    );
+  }
+  const digestById = new Map<number | undefined, string>(
+    await Promise.all(
+      encryptedCredentials.map(
+        async (c) =>
+          [c.id, await digestEncryptedData(c.encryptedData)] as const,
+      ),
+    ),
+  );
 
-	// 2. Genera nuovo salt e nuove chiavi, con le iterazioni correnti (eventuali aumenti si applicano qui)
-	const newSalt = generateSalt();
-	const newKdfIterations = KDF_ITERATIONS;
-	const newKeys = await deriveKeys(newPassword, newSalt, newKdfIterations);
+  // 2. Genera nuovo salt e nuove chiavi, con le iterazioni correnti (eventuali aumenti si applicano qui)
+  const newSalt = generateSalt();
+  const newKdfIterations = KDF_ITERATIONS;
+  const newKeys = await deriveKeys(newPassword, newSalt, newKdfIterations);
 
-	// 3. Ricifra con la nuova chiave; l'id viaggia in chiaro accanto al payload, non dentro
-	const reencryptedCredentials = await Promise.all(
-		plainCredentials.map(async ({ id, ...plain }) => {
-			if (id === undefined) {
-				throw new Error("Credenziale senza id");
-			}
-			const { encryptedData } = await encryptCredential(
-				plain,
-				newKeys.encryptionKey,
-			);
-			return { id, previousDigest: digestById.get(id)!, encryptedData };
-		}),
-	);
+  // 3. Ricifra con la nuova chiave; l'id viaggia in chiaro accanto al payload, non dentro
+  const reencryptedCredentials = await Promise.all(
+    plainCredentials.map(async ({ id, ...plain }) => {
+      if (id === undefined) {
+        throw new Error("Credenziale senza id");
+      }
+      const { encryptedData } = await encryptCredential(
+        plain,
+        newKeys.encryptionKey,
+      );
+      return { id, previousDigest: digestById.get(id)!, encryptedData };
+    }),
+  );
 
-	return { newKeys, newSalt, newKdfIterations, reencryptedCredentials };
+  return { newKeys, newSalt, newKdfIterations, reencryptedCredentials };
 }

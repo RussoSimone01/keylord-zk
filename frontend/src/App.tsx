@@ -8,23 +8,23 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
 function App() {
-	return (
-		<BrowserRouter basename="/keylord-zk/">
-			<Routes>
-				<Route element={<PublicRoute />}>
-					<Route path="/login" element={<Login />} />
-					<Route path="/signup" element={<Signup />} />
-				</Route>
-				<Route element={<ProtectedRoute />}>
-					<Route path="/vault" element={<Vault />} />
-					<Route path="/generator" element={<Generator />} />
-					<Route path="/settings" element={<Settings />} />
-				</Route>
-				<Route path="/" element={<Navigate to="/login" replace />} />
-				<Route path="*" element={<Navigate to="/login" replace />} />
-			</Routes>
-		</BrowserRouter>
-	);
+  return (
+    <BrowserRouter basename="/keylord-zk/">
+      <Routes>
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+        </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/vault" element={<Vault />} />
+          <Route path="/generator" element={<Generator />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
