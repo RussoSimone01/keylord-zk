@@ -104,7 +104,12 @@
     "deleteUnreadableTitle": "Delete credential #{{id}}?",
     "deleteUnreadableBody": "Its content cannot be decrypted and will be removed from your vault. This cannot be undone.",
     "deleteTitle": "Delete {{site}}?",
-    "deleteBody": "The saved login for <mono>{{username}}</mono> will be removed from your vault. This cannot be undone."
+    "deleteBody": "The saved login for <mono>{{username}}</mono> will be removed from your vault. This cannot be undone.",
+    "closePanel": "Close",
+    "discardTitle": "Discard unsaved changes?",
+    "discardBody": "The changes you made to this credential will be lost.",
+    "discard": "Discard",
+    "keepEditing": "Keep editing"
   },
   "vaultItem": {
     "copyUsername": "Copy username",

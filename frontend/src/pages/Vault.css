@@ -4,6 +4,18 @@
   padding: var(--space-8) var(--space-6);
 }
 
+.vault-container.with-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  align-items: start;
+  gap: var(--space-6);
+  max-width: 1320px;
+}
+
+.vault-main {
+  min-width: 0;
+}
+
 .vault-header {
   display: flex;
   align-items: center;
@@ -14,25 +26,6 @@
 
 .vault-header h1 {
   margin: 0;
-}
-
-.vault-form-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-6);
-  margin-bottom: var(--space-6);
-}
-
-.vault-form-card h2 {
-  margin: 0 0 var(--space-4);
-}
-
-.vault-form-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
 }
 
 .vault-field {
@@ -85,11 +78,6 @@
 .vault-password-field input {
   flex: 1;
   margin-right: var(--space-1);
-}
-
-.vault-form-actions {
-  display: flex;
-  gap: var(--space-3);
 }
 
 .vault-container .search-field {

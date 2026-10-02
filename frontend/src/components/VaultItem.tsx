@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 interface VaultItemProps {
   credential: PlainCredential;
   selected?: boolean;
+  flash?: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -24,12 +25,18 @@ function monogram(site: string) {
 function VaultItem({
   credential,
   selected = false,
+  flash = false,
   onEdit,
   onDelete,
 }: VaultItemProps) {
   const { t } = useTranslation();
   return (
-    <li className={selected ? "vault-item selected" : "vault-item"}>
+    <li
+      className={["vault-item", selected && "selected", flash && "flash"]
+        .filter(Boolean)
+        .join(" ")}
+      data-credential-id={credential.id}
+    >
       <span className="vault-monogram" aria-hidden="true">
         {monogram(credential.site)}
       </span>

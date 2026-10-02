@@ -104,7 +104,12 @@
     "deleteUnreadableTitle": "Eliminare la credenziale #{{id}}?",
     "deleteUnreadableBody": "Il suo contenuto non si può decifrare e verrà rimosso dal vault. L'operazione non si può annullare.",
     "deleteTitle": "Eliminare {{site}}?",
-    "deleteBody": "L'accesso salvato per <mono>{{username}}</mono> verrà rimosso dal vault. L'operazione non si può annullare."
+    "deleteBody": "L'accesso salvato per <mono>{{username}}</mono> verrà rimosso dal vault. L'operazione non si può annullare.",
+    "closePanel": "Chiudi",
+    "discardTitle": "Scartare le modifiche non salvate?",
+    "discardBody": "Le modifiche fatte a questa credenziale andranno perse.",
+    "discard": "Scarta",
+    "keepEditing": "Continua a modificare"
   },
   "vaultItem": {
     "copyUsername": "Copia nome utente",
