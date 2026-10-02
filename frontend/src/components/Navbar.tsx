@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { logout } from "../api/auth";
-import ThemeSwitcher from "./ThemeSwitcher";
+import ThemeMenu from "./ThemeMenu";
 import "./Navbar.css";
 import { Lock } from "lucide-react";
 
@@ -46,7 +46,7 @@ function Navbar() {
         </NavLink>
       </nav>
       <div className="navbar-actions">
-        <ThemeSwitcher compact />
+				<ThemeMenu />
         <button
           className="navbar-lock"
           type="button"

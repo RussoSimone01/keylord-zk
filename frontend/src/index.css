@@ -99,6 +99,33 @@
   --shadow-overlay: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
+/* Violet */
+[data-theme="violet"] {
+	color-scheme: dark;
+	--bg: #0e0b14;
+	--surface: #16121f;
+	--surface-raised: #1e1929;
+	--border: #2d263b;
+	--border-strong: #776a8e;
+	--text: #ece7f5;
+	--text-secondary: #a398b6;
+	--accent: #b18cff;
+	--accent-hover: #c5a9ff;
+	--accent-soft: #b18cff1f;
+	--on-accent: #170b2e;
+	--focus: #b18cff;
+	--danger: #ff7a85;
+	--danger-soft: #ff7a851f;
+	--warning: #f2c14e;
+	--warning-soft: #f2c14e1f;
+	--success: #5fd9a4;
+	--success-soft: #5fd9a41f;
+	--info: #7cb8ff;
+	--info-soft: #7cb8ff1f;
+	--overlay: #000000b3;
+	--shadow-overlay: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
 /* Midnight (original dark) */
 [data-theme="midnight"] {
   color-scheme: dark;

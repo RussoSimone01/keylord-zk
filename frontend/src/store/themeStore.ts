@@ -4,6 +4,7 @@ export const THEMES = [
   { id: "terminal", name: "Terminal", mode: "dark" },
   { id: "paper", name: "Paper", mode: "light" },
   { id: "amber", name: "Amber", mode: "dark" },
+  { id: "violet", name: "Violet", mode: "dark" },
   { id: "midnight", name: "Midnight", mode: "dark" },
   { id: "daylight", name: "Daylight", mode: "light" },
 ] as const;
@@ -21,7 +22,7 @@ function isTheme(value: string | null): value is Theme {
 
 // Stored choice first, then the OS light/dark preference, then Terminal.
 function readInitialTheme(): Theme {
-  let stored: string | null = null;
+  let stored: string | null;
   try {
     stored = localStorage.getItem(STORAGE_KEY);
   } catch {

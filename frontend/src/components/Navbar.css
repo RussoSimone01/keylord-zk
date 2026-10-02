@@ -81,7 +81,6 @@
     padding: 0 var(--space-4);
   }
 
-  .navbar .theme-switcher,
   .navbar-lock-label {
     display: none;
   }
