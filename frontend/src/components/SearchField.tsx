@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
 import "./SearchField.css";
+import { useTranslation } from "react-i18next";
 
 interface SearchFieldProps {
   value: string;
@@ -13,9 +14,11 @@ interface SearchFieldProps {
 function SearchField({
   value,
   onChange,
-  placeholder = "Search vault",
+  placeholder,
   count,
 }: SearchFieldProps) {
+  const { t } = useTranslation();
+  const label = placeholder ?? t("search.placeholder");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,8 +40,8 @@ function SearchField({
         ref={inputRef}
         type="search"
         value={value}
-        placeholder={placeholder}
-        aria-label={placeholder}
+        placeholder={label}
+        aria-label={label}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -54,8 +57,8 @@ function SearchField({
           type="button"
           className="icon-button"
           onClick={() => onChange("")}
-          title="Clear search"
-          aria-label="Clear search"
+          title={t("search.clear")}
+          aria-label={t("search.clear")}
         >
           <X size={14} />
         </button>

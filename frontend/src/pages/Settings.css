@@ -34,6 +34,23 @@
   color: var(--text-secondary);
 }
 
+/* A labeled control inside a section, e.g. Theme and Language under Appearance. */
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.settings-field + .settings-field {
+  margin-top: var(--space-2);
+}
+
+.settings-field-label {
+  font-size: 14px;
+  color: var(--text);
+}
+
 .settings-section > button {
   width: 100%;
   text-align: left;

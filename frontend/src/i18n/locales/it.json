@@ -1,0 +1,190 @@
+{
+  "common": {
+    "back": "← Indietro",
+    "cancel": "Annulla",
+    "confirm": "Conferma",
+    "delete": "Elimina",
+    "save": "Salva",
+    "working": "In corso…",
+    "copy": "Copia",
+    "copied": "Copiato",
+    "show": "Mostra",
+    "hide": "Nascondi",
+    "reveal": "Mostra",
+    "edit": "Modifica",
+    "username": "Nome utente",
+    "password": "Password",
+    "email": "Email",
+    "confirmPassword": "Conferma password"
+  },
+  "nav": {
+    "main": "Principale",
+    "vault": "Vault",
+    "generator": "Generatore",
+    "settings": "Impostazioni",
+    "lockVault": "Blocca il vault",
+    "logout": "Esci"
+  },
+  "theme": {
+    "label": "Tema",
+    "current": "Tema: {{name}}",
+    "mode": {
+      "dark": "scuro",
+      "light": "chiaro"
+    }
+  },
+  "language": {
+    "label": "Lingua"
+  },
+  "login": {
+    "title": "Accedi",
+    "submit": "Accedi",
+    "noAccount": "Non hai un account?",
+    "signupLink": "Registrati"
+  },
+  "signup": {
+    "title": "Crea un account",
+    "usernameHint": "Lettere, cifre, punti, trattini e trattini bassi",
+    "submit": "Registrati",
+    "haveAccount": "Hai già un account?",
+    "loginLink": "Accedi"
+  },
+  "validation": {
+    "passwordMismatch": "Le password non coincidono",
+    "passwordUnchanged": "La nuova password deve essere diversa da quella attuale",
+    "currentPasswordIncorrect": "La password attuale non è corretta"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "appearance": "Aspetto",
+    "security": "Sicurezza",
+    "changePassword": "Cambia master password",
+    "dangerZone": "Zona pericolosa",
+    "deleteAccount": "Elimina account"
+  },
+  "changePassword": {
+    "title": "Cambia master password",
+    "currentPassword": "Password attuale",
+    "newPassword": "Nuova password",
+    "confirmPassword": "Conferma nuova password",
+    "submit": "Cambia password"
+  },
+  "deleteAccount": {
+    "title": "Elimina account",
+    "warning": "Attenzione: questa azione non si può annullare",
+    "confirmWithPassword": "Conferma con la tua password",
+    "submit": "Elimina account",
+    "dialogTitle": "Eliminare il tuo account?",
+    "dialogConfirm": "Elimina per sempre",
+    "confirmWord": "ELIMINA",
+    "dialogBody": "Il tuo account, il vault e tutte le credenziali salvate verranno cancellati dal server. Senza la tua master password nessuno potrà recuperarli."
+  },
+  "vault": {
+    "title": "Vault",
+    "newCredential": "Nuova credenziale",
+    "editCredential": "Modifica credenziale",
+    "site": "Sito",
+    "generatePassword": "Genera password",
+    "showPassword": "Mostra password",
+    "hidePassword": "Nascondi password",
+    "sessionExpired": "Sessione scaduta, accedi di nuovo",
+    "emptyTitle": "Il tuo vault è vuoto",
+    "emptyBody": "Tutto ciò che salvi viene cifrato su questo dispositivo prima di arrivare al server.",
+    "addFirst": "Aggiungi la prima credenziale",
+    "searchPlaceholder": "Cerca per sito o nome utente",
+    "noMatches": "Nessun risultato per “{{query}}”",
+    "clearSearch": "Cancella ricerca",
+    "count_one": "{{count}} credenziale",
+    "count_other": "{{count}} credenziali",
+    "sortedAZ": "A–Z",
+    "unreadable_one": "{{count}} credenziale non si può decifrare: i dati sono danneggiati o sono stati cifrati con un'altra chiave. Non è recuperabile e va eliminata prima di cambiare la master password.",
+    "unreadable_other": "{{count}} credenziali non si possono decifrare: i dati sono danneggiati o sono stati cifrati con un'altra chiave. Non sono recuperabili e vanno eliminate prima di cambiare la master password.",
+    "unreadableItem": "Credenziale #{{id}}",
+    "deleteUnreadable": "Elimina la credenziale #{{id}}",
+    "deleteUnreadableTitle": "Eliminare la credenziale #{{id}}?",
+    "deleteUnreadableBody": "Il suo contenuto non si può decifrare e verrà rimosso dal vault. L'operazione non si può annullare.",
+    "deleteTitle": "Eliminare {{site}}?",
+    "deleteBody": "L'accesso salvato per <mono>{{username}}</mono> verrà rimosso dal vault. L'operazione non si può annullare."
+  },
+  "vaultItem": {
+    "copyUsername": "Copia nome utente",
+    "copyPassword": "Copia password",
+    "edit": "Modifica {{site}}",
+    "delete": "Elimina {{site}}"
+  },
+  "secret": {
+    "hidden": "Password nascosta"
+  },
+  "search": {
+    "placeholder": "Cerca nel vault",
+    "clear": "Cancella ricerca"
+  },
+  "strength": {
+    "label": "Robustezza della password",
+    "level": {
+      "0": "Molto debole",
+      "1": "Debole",
+      "2": "Discreta",
+      "3": "Robusta",
+      "4": "Molto robusta"
+    }
+  },
+  "generator": {
+    "title": "Generatore",
+    "intro": "Le password vengono generate su questo dispositivo con il generatore casuale crittografico del browser e non vengono mai inviate da nessuna parte.",
+    "regenerate": "Rigenera",
+    "length": "Lunghezza",
+    "use": "Usa questa password"
+  },
+  "dialog": {
+    "typeToConfirm": "Scrivi <mono>{{text}}</mono> per confermare"
+  },
+  "errors": {
+    "default": "Si è verificato un errore",
+    "unreachable": "Impossibile raggiungere il server",
+    "accountLockedUntil": "Troppi tentativi falliti, account bloccato fino a {{date}}",
+    "kdfUnsupported": "Il server ha inviato parametri di derivazione della chiave non supportati",
+    "unreadableBeforeChange_one": "{{count}} credenziale non si può decifrare: eliminala dal vault prima di cambiare la password",
+    "unreadableBeforeChange_other": "{{count}} credenziali non si possono decifrare: eliminale dal vault prima di cambiare la password",
+    "codes": {
+      "auth": {
+        "invalid_credentials": "Nome utente o password non validi",
+        "account_locked": "Account bloccato temporaneamente per troppi tentativi falliti, riprova più tardi",
+        "refresh_token_invalid": "La sessione non è più valida, accedi di nuovo",
+        "refresh_token_expired": "La sessione è scaduta, accedi di nuovo",
+        "refresh_token_reused": "La sessione è stata usata altrove, quindi per sicurezza tutte le sessioni sono state chiuse. Accedi di nuovo",
+        "session_invalid": "La sessione non è più valida, accedi di nuovo",
+        "password_incorrect": "La password non è corretta",
+        "unauthorized": "Devi accedere di nuovo",
+        "forbidden": "Non hai i permessi per questa operazione"
+      },
+      "user": {
+        "username_taken": "Questo nome utente è già in uso",
+        "email_taken": "Questa email è già in uso"
+      },
+      "vault": {
+        "credential_not_found": "Questa credenziale non esiste più",
+        "out_of_sync": "Il vault è stato modificato durante il cambio password, riprova",
+        "limit_reached": "Il vault è pieno: non può contenere più di {{max}} credenziali",
+        "duplicate_credential_ids": "Ogni credenziale deve comparire una sola volta"
+      },
+      "request": {
+        "validation_failed": "Alcuni campi non sono validi",
+        "invalid": "La richiesta non è valida",
+        "too_large": "La richiesta è troppo grande",
+        "method_not_allowed": "Operazione non supportata",
+        "unsupported_media_type": "Operazione non supportata"
+      },
+      "resource": {
+        "conflict": "I dati sono stati modificati nel frattempo, riprova",
+        "not_found": "Non trovato"
+      },
+      "rate_limit": {
+        "exceeded": "Troppe richieste, attendi un momento e riprova"
+      },
+      "server": {
+        "internal_error": "Si è verificato un errore imprevisto sul server"
+      }
+    }
+  }
+}

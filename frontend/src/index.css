@@ -101,29 +101,29 @@
 
 /* Violet */
 [data-theme="violet"] {
-	color-scheme: dark;
-	--bg: #0e0b14;
-	--surface: #16121f;
-	--surface-raised: #1e1929;
-	--border: #2d263b;
-	--border-strong: #776a8e;
-	--text: #ece7f5;
-	--text-secondary: #a398b6;
-	--accent: #b18cff;
-	--accent-hover: #c5a9ff;
-	--accent-soft: #b18cff1f;
-	--on-accent: #170b2e;
-	--focus: #b18cff;
-	--danger: #ff7a85;
-	--danger-soft: #ff7a851f;
-	--warning: #f2c14e;
-	--warning-soft: #f2c14e1f;
-	--success: #5fd9a4;
-	--success-soft: #5fd9a41f;
-	--info: #7cb8ff;
-	--info-soft: #7cb8ff1f;
-	--overlay: #000000b3;
-	--shadow-overlay: 0 16px 40px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+  --bg: #0e0b14;
+  --surface: #16121f;
+  --surface-raised: #1e1929;
+  --border: #2d263b;
+  --border-strong: #776a8e;
+  --text: #ece7f5;
+  --text-secondary: #a398b6;
+  --accent: #b18cff;
+  --accent-hover: #c5a9ff;
+  --accent-soft: #b18cff1f;
+  --on-accent: #170b2e;
+  --focus: #b18cff;
+  --danger: #ff7a85;
+  --danger-soft: #ff7a851f;
+  --warning: #f2c14e;
+  --warning-soft: #f2c14e1f;
+  --success: #5fd9a4;
+  --success-soft: #5fd9a41f;
+  --info: #7cb8ff;
+  --info-soft: #7cb8ff1f;
+  --overlay: #000000b3;
+  --shadow-overlay: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
 /* Midnight (original dark) */
@@ -293,4 +293,21 @@ button.icon-button.success:hover:not(:disabled) {
 input[type="password"] {
   font-family: var(--font-mono);
   letter-spacing: 0.02em;
+}
+
+/* Hidden visually but still read by screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Keeps page content clear of the bottom tab bar that the navbar shows on phones. */
+@media (max-width: 640px) {
+  body:has(.navbar) {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
 }

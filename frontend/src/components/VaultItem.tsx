@@ -3,6 +3,7 @@ import type { PlainCredential } from "../crypto/vault";
 import CopyButton from "./CopyButton";
 import SecretText from "./SecretText";
 import "./VaultItem.css";
+import { useTranslation } from "react-i18next";
 
 interface VaultItemProps {
   credential: PlainCredential;
@@ -26,6 +27,7 @@ function VaultItem({
   onEdit,
   onDelete,
 }: VaultItemProps) {
+  const { t } = useTranslation();
   return (
     <li className={selected ? "vault-item selected" : "vault-item"}>
       <span className="vault-monogram" aria-hidden="true">
@@ -39,7 +41,10 @@ function VaultItem({
           <span className="mono" title={credential.username}>
             {credential.username}
           </span>
-          <CopyButton value={credential.username} label="Copy username" />
+          <CopyButton
+            value={credential.username}
+            label={t("vaultItem.copyUsername")}
+          />
         </div>
       </div>
       <SecretText value={credential.password} className="vault-item-secret" />
@@ -48,8 +53,8 @@ function VaultItem({
           type="button"
           className="icon-button"
           onClick={onEdit}
-          title="Edit"
-          aria-label={`Edit ${credential.site}`}
+          title={t("common.edit")}
+          aria-label={t("vaultItem.edit", { site: credential.site })}
         >
           <Pencil size={16} />
         </button>
@@ -57,8 +62,8 @@ function VaultItem({
           type="button"
           className="icon-button danger"
           onClick={onDelete}
-          title="Delete"
-          aria-label={`Delete ${credential.site}`}
+          title={t("common.delete")}
+          aria-label={t("vaultItem.delete", { site: credential.site })}
         >
           <Trash2 size={16} />
         </button>

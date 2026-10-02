@@ -3,9 +3,11 @@ import { useAuthStore } from "../store/authStore";
 import { logout } from "../api/auth";
 import ThemeMenu from "./ThemeMenu";
 import "./Navbar.css";
-import { Lock } from "lucide-react";
+import { Dices, KeyRound, Lock, Settings } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function Navbar() {
+  const { t } = useTranslation();
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const navigate = useNavigate();
 
@@ -25,37 +27,40 @@ function Navbar() {
         k<span className="navbar-wordmark-rest">eylord</span>
         <span className="navbar-caret">_</span>
       </div>
-      <nav className="navbar-links" aria-label="Main">
+      <nav className="navbar-links" aria-label={t("nav.main")}>
         <NavLink
           className={({ isActive }) => (isActive ? "active" : "")}
           to="/vault"
         >
-          Vault
+          <KeyRound size={18} className="navbar-link-icon" aria-hidden="true" />
+          <span>{t("nav.vault")}</span>
         </NavLink>
         <NavLink
           className={({ isActive }) => (isActive ? "active" : "")}
           to="/generator"
         >
-          Generator
+          <Dices size={18} className="navbar-link-icon" aria-hidden="true" />
+          <span>{t("nav.generator")}</span>
         </NavLink>
         <NavLink
           className={({ isActive }) => (isActive ? "active" : "")}
           to="/settings"
         >
-          Settings
+          <Settings size={18} className="navbar-link-icon" aria-hidden="true" />
+          <span>{t("nav.settings")}</span>
         </NavLink>
       </nav>
       <div className="navbar-actions">
-				<ThemeMenu />
+        <ThemeMenu />
         <button
           className="navbar-lock"
           type="button"
           onClick={handleLock}
-          aria-label="Lock vault"
-          title="Lock vault"
+          aria-label={t("nav.lockVault")}
+          title={t("nav.lockVault")}
         >
           <Lock size={16} />
-          <span className="navbar-lock-label">Log out</span>
+          <span className="navbar-lock-label">{t("nav.logout")}</span>
         </button>
       </div>
     </header>

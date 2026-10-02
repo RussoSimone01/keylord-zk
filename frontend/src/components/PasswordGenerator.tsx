@@ -9,6 +9,7 @@ import {
 import SecretText from "./SecretText";
 import StrengthMeter from "./StrengthMeter";
 import "./PasswordGenerator.css";
+import { useTranslation } from "react-i18next";
 
 interface PasswordGeneratorProps {
   initialLength?: number;
@@ -27,6 +28,7 @@ function PasswordGenerator({
   initialLength = 20,
   onUse,
 }: PasswordGeneratorProps) {
+  const { t } = useTranslation();
   const [length, setLength] = useState(initialLength);
   const [options, setOptions] = useState<GeneratorOptions>(DEFAULT_OPTIONS);
   const [password, setPassword] = useState(() =>
@@ -57,15 +59,15 @@ function PasswordGenerator({
           type="button"
           className="icon-button"
           onClick={() => update(length, options)}
-          title="Regenerate"
-          aria-label="Regenerate"
+          title={t("generator.regenerate")}
+          aria-label={t("generator.regenerate")}
         >
           <Dices size={16} />
         </button>
       </div>
       <StrengthMeter score={estimateStrength(password)} />
       <div className="generator-length">
-        <label htmlFor="generator-length">Length</label>
+        <label htmlFor="generator-length">{t("generator.length")}</label>
         <input
           id="generator-length"
           type="range"
@@ -99,7 +101,7 @@ function PasswordGenerator({
           className="primary generator-use"
           onClick={() => onUse(password)}
         >
-          Use this password
+          {t("generator.use")}
         </button>
       )}
     </div>

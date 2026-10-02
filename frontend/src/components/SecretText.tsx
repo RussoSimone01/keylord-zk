@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import CopyButton from "./CopyButton";
 import "./SecretText.css";
+import { useTranslation } from "react-i18next";
 
 interface SecretTextProps {
   value: string;
@@ -17,9 +18,10 @@ const MASK = "••••••••••••";
 function SecretText({
   value,
   masked = true,
-  copyLabel = "Copy password",
+  copyLabel,
   className,
 }: SecretTextProps) {
+  const { t } = useTranslation();
   const [revealed, setRevealed] = useState(false);
   const hidden = masked && !revealed;
 
@@ -27,7 +29,7 @@ function SecretText({
     <div className={className ? `secret-text ${className}` : "secret-text"}>
       <span
         className={hidden ? "secret-value masked" : "secret-value"}
-        aria-label={hidden ? "Hidden password" : undefined}
+        aria-label={hidden ? t("secret.hidden") : undefined}
       >
         {hidden ? MASK : value}
       </span>
@@ -38,13 +40,16 @@ function SecretText({
             className="icon-button"
             aria-pressed={revealed}
             onClick={() => setRevealed(!revealed)}
-            title={revealed ? "Hide" : "Reveal"}
-            aria-label={revealed ? "Hide" : "Reveal"}
+            title={revealed ? t("common.hide") : t("common.reveal")}
+            aria-label={revealed ? t("common.hide") : t("common.reveal")}
           >
             {revealed ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
-        <CopyButton value={value} label={copyLabel} />
+        <CopyButton
+          value={value}
+          label={copyLabel ?? t("vaultItem.copyPassword")}
+        />
       </div>
     </div>
   );

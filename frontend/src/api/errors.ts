@@ -1,4 +1,5 @@
 import axios from "axios";
+import i18n from "../i18n";
 
 // Error body returned by the API (RFC 9457 ProblemDetails)
 export interface ApiProblem {
@@ -11,25 +12,43 @@ export interface ApiProblem {
   errors?: Record<string, string[]>;
 }
 
-const DEFAULT_MESSAGE = "An error occurred";
+// Mirrors VaultLimits.MaxCredentialsPerUser on the backend, used in the "vault full" message
+const VAULT_MAX_CREDENTIALS = 2000;
 
-// Client-side error whose message is meant to be shown to the user as is
-export class UserFacingError extends Error {}
+// Client-side error whose message is a translation key, shown to the user once translated
+export class UserFacingError extends Error {
+  readonly params?: Record<string, unknown>;
 
-// Message to show the user for any error thrown by an API call
+  constructor(key: string, params?: Record<string, unknown>) {
+    super(key);
+    this.params = params;
+  }
+}
+
+// Message to show the user for any error thrown by an API call, in the current language.
+// API errors are translated by their stable "code"; the server's English text is only a fallback for unknown codes.
 export function getErrorMessage(err: unknown): string {
   if (err instanceof UserFacingError) {
-    return err.message;
+    return i18n.t(err.message, err.params);
   }
   if (!axios.isAxiosError<ApiProblem>(err)) {
-    return DEFAULT_MESSAGE;
+    return i18n.t("errors.default");
   }
   if (!err.response) {
-    return "Unable to reach the server";
+    return i18n.t("errors.unreachable");
   }
   const problem = err.response.data;
   if (problem?.code === "auth.account_locked" && problem.lockedUntil) {
-    return `Too many failed attempts, account locked until ${new Date(problem.lockedUntil).toLocaleString()}`;
+    const date = new Date(problem.lockedUntil).toLocaleString(i18n.language);
+    return i18n.t("errors.accountLockedUntil", { date });
   }
-  return problem?.detail ?? problem?.title ?? DEFAULT_MESSAGE;
+  const fallback =
+    problem?.detail ?? problem?.title ?? i18n.t("errors.default");
+  if (!problem?.code) {
+    return fallback;
+  }
+  return i18n.t(`errors.codes.${problem.code}`, {
+    defaultValue: fallback,
+    max: VAULT_MAX_CREDENTIALS,
+  });
 }

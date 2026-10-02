@@ -7,12 +7,14 @@ import { useNavigate } from "react-router-dom";
 import "../pages/Settings.css";
 import Spinner from "./Spinner";
 import ConfirmDialog from "./ConfirmDialog";
+import { useTranslation } from "react-i18next";
 
 interface DeleteAccountProps {
   onBack: () => void;
 }
 
 function DeleteAccount({ onBack }: DeleteAccountProps) {
+  const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const authStore = useAuthStore();
@@ -44,9 +46,9 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
     <div>
       <div className="auth-card">
         <button className="settings-back" type="button" onClick={onBack}>
-          ← Back
+          {t("common.back")}
         </button>
-        <h1>Delete Account</h1>
+        <h1>{t("deleteAccount.title")}</h1>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -54,10 +56,12 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
           }}
         >
           <div className="settings-warning">
-            <b>WARNING: this action cannot be undone</b>
+            <b>{t("deleteAccount.warning")}</b>
           </div>
           <div className="auth-field">
-            <label htmlFor="password">Confirm with Password</label>
+            <label htmlFor="password">
+              {t("deleteAccount.confirmWithPassword")}
+            </label>
             <input
               id="password"
               type="password"
@@ -74,26 +78,23 @@ function DeleteAccount({ onBack }: DeleteAccountProps) {
             className="auth-submit danger"
             disabled={isSubmitting}
           >
-            Delete Account
+            {t("deleteAccount.submit")}
           </button>
           {error && <span className="auth-error">{error}</span>}
         </form>
       </div>
       <ConfirmDialog
         open={isConfirmOpen}
-        title="Delete your account?"
-        confirmLabel="Delete forever"
-        requireText="DELETE"
+        title={t("deleteAccount.dialogTitle")}
+        confirmLabel={t("deleteAccount.dialogConfirm")}
+        requireText={t("deleteAccount.confirmWord")}
         onConfirm={() => {
           setIsConfirmOpen(false);
           handleSubmit();
         }}
         onCancel={() => setIsConfirmOpen(false)}
       >
-        <p>
-          Your account, your vault and every saved credential will be erased
-          from the server. Without your master password nobody can recover them.
-        </p>
+        <p>{t("deleteAccount.dialogBody")}</p>
       </ConfirmDialog>
     </div>
   );

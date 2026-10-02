@@ -6,8 +6,11 @@ import { useAuthStore } from "../store/authStore";
 import { getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
+import { useTranslation } from "react-i18next";
+import LanguageSelect from "../components/LanguageSelect";
 
 function Login() {
+  const { t } = useTranslation();
   const authStore = useAuthStore();
   // Prefilled after a reload or a lock: unlocking then only needs the master password
   const [username, setUsername] = useState(authStore.username);
@@ -45,7 +48,7 @@ function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1>Log in</h1>
+        <h1>{t("login.title")}</h1>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -53,7 +56,7 @@ function Login() {
           }}
         >
           <div className="auth-field">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">{t("common.username")}</label>
             <input
               id="username"
               type="text"
@@ -64,7 +67,7 @@ function Login() {
             />
           </div>
           <div className="auth-field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t("common.password")}</label>
             <input
               id="password"
               type="password"
@@ -75,14 +78,16 @@ function Login() {
             />
           </div>
           <button className="auth-submit" type="submit" disabled={isSubmitting}>
-            Log in
+            {t("login.submit")}
           </button>
           {error && <span className="auth-error">{error}</span>}
         </form>
         <div className="auth-link">
-          Don't have an account? <Link to="/signup">Sign up</Link>
+          {t("login.noAccount")}{" "}
+          <Link to="/signup">{t("login.signupLink")}</Link>
         </div>
       </div>
+      <LanguageSelect />
     </div>
   );
 }

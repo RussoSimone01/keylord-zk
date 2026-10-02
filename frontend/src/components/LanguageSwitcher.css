@@ -1,0 +1,74 @@
+.language-switcher {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.language-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.language-option:hover:not(:disabled) {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.language-option.active {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.language-code {
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Compact native select used on the login and sign-up screens. */
+.language-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+}
+
+.language-select select {
+  height: 32px;
+  padding: 0 var(--space-2);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font: 400 13px/20px var(--font-sans);
+  cursor: pointer;
+}
+
+.language-select select:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.language-select select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Native dropdown lists are drawn by the OS: give the options readable theme colors. */
+.language-select option {
+  background: var(--surface);
+  color: var(--text);
+}

@@ -17,8 +17,10 @@ import StrengthMeter from "../components/StrengthMeter";
 import VaultItem from "../components/VaultItem";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { Dices, Eye, EyeOff, KeyRound, Plus, Trash2 } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 
 function Vault() {
+  const { t, i18n } = useTranslation();
   const [credentials, setCredentials] = useState<PlainCredential[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -64,7 +66,7 @@ function Vault() {
   async function handleSubmit() {
     try {
       if (encryptionKey === null) {
-        setError("Session expired, please log in again");
+        setError(t("vault.sessionExpired"));
         return;
       }
       const { encryptedData } = await encryptCredential(
@@ -176,22 +178,24 @@ function Vault() {
         c.site.toLowerCase().includes(query) ||
         c.username.toLowerCase().includes(query),
     )
-    .sort((a, b) => a.site.localeCompare(b.site));
+    .sort((a, b) => a.site.localeCompare(b.site, i18n.language));
 
   return (
     <div className="vault-container">
       <div className="vault-header">
-        <h1>Vault</h1>
+        <h1>{t("vault.title")}</h1>
         {!isFormOpen && (
           <button className="primary" type="button" onClick={openNewForm}>
-            <Plus size={16} /> New credential
+            <Plus size={16} /> {t("vault.newCredential")}
           </button>
         )}
       </div>
 
       {isFormOpen && (
         <div className="vault-form-card">
-          <h2>{id == null ? "New credential" : "Edit credential"}</h2>
+          <h2>
+            {id == null ? t("vault.newCredential") : t("vault.editCredential")}
+          </h2>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -204,7 +208,7 @@ function Vault() {
           >
             <div className="vault-form-row">
               <div className="vault-field">
-                <label htmlFor="site">Site</label>
+                <label htmlFor="site">{t("vault.site")}</label>
                 <input
                   id="site"
                   type="text"
@@ -216,7 +220,7 @@ function Vault() {
                 />
               </div>
               <div className="vault-field">
-                <label htmlFor="username">Username</label>
+                <label htmlFor="username">{t("common.username")}</label>
                 <input
                   id="username"
                   type="text"
@@ -227,7 +231,7 @@ function Vault() {
                 />
               </div>
               <div className="vault-field">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">{t("common.password")}</label>
                 <div className="vault-password-field">
                   <input
                     id="password"
@@ -242,8 +246,8 @@ function Vault() {
                     type="button"
                     className="icon-button"
                     onClick={handleGenerate}
-                    title="Generate password"
-                    aria-label="Generate password"
+                    title={t("vault.generatePassword")}
+                    aria-label={t("vault.generatePassword")}
                   >
                     <Dices size={16} />
                   </button>
@@ -252,9 +256,11 @@ function Vault() {
                     className="icon-button"
                     aria-pressed={showPassword}
                     onClick={() => setShowPassword(!showPassword)}
-                    title={showPassword ? "Hide" : "Show"}
+                    title={showPassword ? t("common.hide") : t("common.show")}
                     aria-label={
-                      showPassword ? "Hide password" : "Show password"
+                      showPassword
+                        ? t("vault.hidePassword")
+                        : t("vault.showPassword")
                     }
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -267,9 +273,9 @@ function Vault() {
             </div>
             <div className="vault-form-actions">
               <button className="primary" type="submit">
-                Save
+                {t("common.save")}
               </button>
-              <button type="reset">Cancel</button>
+              <button type="reset">{t("common.cancel")}</button>
             </div>
             {error && <span className="auth-error">{error}</span>}
           </form>
@@ -280,24 +286,19 @@ function Vault() {
 
       {unreadable.length > 0 && (
         <div className="vault-unreadable" role="alert">
-          <p>
-            {unreadable.length === 1
-              ? "1 credential cannot be decrypted"
-              : `${unreadable.length} credentials cannot be decrypted`}
-            : the data is damaged or was encrypted with a different key. It
-            cannot be recovered, and it must be deleted before changing the
-            master password.
-          </p>
+          <p>{t("vault.unreadable", { count: unreadable.length })}</p>
           <ul>
             {unreadable.map((c) => (
               <li key={c.id}>
-                <span className="mono">Credential #{c.id}</span>
+                <span className="mono">
+                  {t("vault.unreadableItem", { id: c.id })}
+                </span>
                 <button
                   type="button"
                   className="icon-button"
                   onClick={() => setPendingUnreadableDelete(c.id ?? null)}
-                  title="Delete"
-                  aria-label={`Delete credential #${c.id}`}
+                  title={t("common.delete")}
+                  aria-label={t("vault.deleteUnreadable", { id: c.id })}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -314,14 +315,11 @@ function Vault() {
             <div className="vault-empty-glyph" aria-hidden="true">
               <KeyRound size={22} />
             </div>
-            <div className="vault-empty-title">Your vault is empty</div>
-            <p>
-              Everything you save is encrypted on this device before it reaches
-              the server.
-            </p>
+            <div className="vault-empty-title">{t("vault.emptyTitle")}</div>
+            <p>{t("vault.emptyBody")}</p>
             {!isFormOpen && (
               <button className="primary" type="button" onClick={openNewForm}>
-                <Plus size={16} /> Add your first credential
+                <Plus size={16} /> {t("vault.addFirst")}
               </button>
             )}
           </div>
@@ -331,28 +329,25 @@ function Vault() {
           <SearchField
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search by site or username"
+            placeholder={t("vault.searchPlaceholder")}
             count={filteredCredentials.length}
           />
           {filteredCredentials.length === 0 ? (
             <div className="vault-empty">
               <div className="vault-empty-title">
-                No matches for “{searchQuery.trim()}”
+                {t("vault.noMatches", { query: searchQuery.trim() })}
               </div>
               <button type="button" onClick={() => setSearchQuery("")}>
-                Clear search
+                {t("vault.clearSearch")}
               </button>
             </div>
           ) : (
             <ul className="vault-list">
               <li className="vault-list-head" aria-hidden="true">
                 <span>
-                  {filteredCredentials.length}{" "}
-                  {filteredCredentials.length === 1
-                    ? "credential"
-                    : "credentials"}
+                  {t("vault.count", { count: filteredCredentials.length })}
                 </span>
-                <span>A–Z</span>
+                <span>{t("vault.sortedAZ")}</span>
               </li>
               {filteredCredentials.map((credential) => (
                 <VaultItem
@@ -370,30 +365,31 @@ function Vault() {
 
       <ConfirmDialog
         open={pendingUnreadableDelete != null}
-        title={`Delete credential #${pendingUnreadableDelete ?? ""}?`}
-        confirmLabel="Delete"
+        title={t("vault.deleteUnreadableTitle", {
+          id: pendingUnreadableDelete ?? "",
+        })}
+        confirmLabel={t("common.delete")}
         busy={isDeleting}
         onConfirm={confirmUnreadableDelete}
         onCancel={() => setPendingUnreadableDelete(null)}
       >
-        <p>
-          Its content cannot be decrypted and will be removed from your vault.
-          This cannot be undone.
-        </p>
+        <p>{t("vault.deleteUnreadableBody")}</p>
       </ConfirmDialog>
 
       <ConfirmDialog
         open={pendingDelete != null}
-        title={`Delete ${pendingDelete?.site ?? "credential"}?`}
-        confirmLabel="Delete"
+        title={t("vault.deleteTitle", { site: pendingDelete?.site ?? "" })}
+        confirmLabel={t("common.delete")}
         busy={isDeleting}
         onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}
       >
         <p>
-          The saved login for{" "}
-          <span className="mono">{pendingDelete?.username}</span> will be
-          removed from your vault. This cannot be undone.
+          <Trans
+            i18nKey="vault.deleteBody"
+            values={{ username: pendingDelete?.username ?? "" }}
+            components={{ mono: <span className="mono" /> }}
+          />
         </p>
       </ConfirmDialog>
     </div>

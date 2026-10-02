@@ -1,14 +1,13 @@
 import PasswordGenerator from "../components/PasswordGenerator";
 import "./Generator.css";
+import { useTranslation } from "react-i18next";
 
 function Generator() {
+  const { t } = useTranslation();
   return (
     <div className="generator-container">
-      <h1>Generator</h1>
-      <p className="generator-intro">
-        Passwords are generated on this device with the browser's cryptographic
-        random number generator and are never sent anywhere.
-      </p>
+      <h1>{t("generator.title")}</h1>
+      <p className="generator-intro">{t("generator.intro")}</p>
       <div className="generator-card">
         <PasswordGenerator />
       </div>

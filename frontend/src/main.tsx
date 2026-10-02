@@ -8,6 +8,7 @@ import "@fontsource/jetbrains-mono/500.css";
 import "@fontsource/jetbrains-mono/700.css";
 import "./index.css";
 import "./store/themeStore";
+import "./i18n";
 import App from "./App.tsx";
 
 createRoot(document.getElementById("root")!).render(

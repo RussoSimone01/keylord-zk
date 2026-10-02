@@ -75,49 +75,83 @@
   color: var(--text);
 }
 
+/* Tablets: tighter spacing so translated labels still fit on one line. */
+@media (max-width: 900px) {
+  .navbar {
+    gap: var(--space-6);
+  }
+}
+
+/* Icons are only shown in the phone tab bar. */
+.navbar-link-icon {
+  display: none;
+}
+
+/* Phones: the links move to a bottom tab bar with icon and label, so long translations
+   ("Impostazioni", "Einstellungen") never push the top bar off screen. */
 @media (max-width: 640px) {
   .navbar {
     gap: var(--space-3);
     padding: 0 var(--space-4);
   }
 
-  .navbar-lock-label {
-    display: none;
+  .navbar-actions {
+    margin-left: auto;
   }
 
-  .navbar-links a,
-  .navbar-links a:visited {
-    padding: var(--space-2);
+  .navbar-lock-label {
+    display: none;
   }
 
   .navbar-lock {
     padding: var(--space-2);
   }
-}
-
-/* Very narrow phones: shorten the wordmark to "k_" and tighten the links so nothing overflows. */
-@media (max-width: 400px) {
-  .navbar {
-    gap: var(--space-2);
-    padding: 0 var(--space-3);
-  }
-
-  .navbar-wordmark-rest {
-    display: none;
-  }
 
   .navbar-links {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
   }
 
   .navbar-links a,
   .navbar-links a:visited {
-    padding: var(--space-2) 6px;
-    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    height: 56px;
+    padding: 0 var(--space-1);
+    border-radius: 0;
+    font-size: 11px;
+    line-height: 14px;
   }
 
+  .navbar-links a span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .navbar-link-icon {
+    display: block;
+  }
+
+  /* The active tab is marked on its top edge, against the content above. */
   .navbar-links a.active::after {
-    left: 6px;
-    right: 6px;
+    top: -1px;
+    bottom: auto;
+    left: 20%;
+    right: 20%;
   }
 }

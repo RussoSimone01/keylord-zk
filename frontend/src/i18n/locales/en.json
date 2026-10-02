@@ -1,0 +1,190 @@
+{
+  "common": {
+    "back": "← Back",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "save": "Save",
+    "working": "Working…",
+    "copy": "Copy",
+    "copied": "Copied",
+    "show": "Show",
+    "hide": "Hide",
+    "reveal": "Reveal",
+    "edit": "Edit",
+    "username": "Username",
+    "password": "Password",
+    "email": "Email",
+    "confirmPassword": "Confirm password"
+  },
+  "nav": {
+    "main": "Main",
+    "vault": "Vault",
+    "generator": "Generator",
+    "settings": "Settings",
+    "lockVault": "Lock vault",
+    "logout": "Log out"
+  },
+  "theme": {
+    "label": "Theme",
+    "current": "Theme: {{name}}",
+    "mode": {
+      "dark": "dark",
+      "light": "light"
+    }
+  },
+  "language": {
+    "label": "Language"
+  },
+  "login": {
+    "title": "Log in",
+    "submit": "Log in",
+    "noAccount": "Don't have an account?",
+    "signupLink": "Sign up"
+  },
+  "signup": {
+    "title": "Create account",
+    "usernameHint": "Letters, digits, dots, hyphens and underscores",
+    "submit": "Sign up",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Log in"
+  },
+  "validation": {
+    "passwordMismatch": "Passwords do not match",
+    "passwordUnchanged": "The new password must be different from the current one",
+    "currentPasswordIncorrect": "The current password is incorrect"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "security": "Security",
+    "changePassword": "Change master password",
+    "dangerZone": "Danger zone",
+    "deleteAccount": "Delete account"
+  },
+  "changePassword": {
+    "title": "Change master password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "submit": "Change password"
+  },
+  "deleteAccount": {
+    "title": "Delete account",
+    "warning": "Warning: this action cannot be undone",
+    "confirmWithPassword": "Confirm with your password",
+    "submit": "Delete account",
+    "dialogTitle": "Delete your account?",
+    "dialogConfirm": "Delete forever",
+    "confirmWord": "DELETE",
+    "dialogBody": "Your account, your vault and every saved credential will be erased from the server. Without your master password nobody can recover them."
+  },
+  "vault": {
+    "title": "Vault",
+    "newCredential": "New credential",
+    "editCredential": "Edit credential",
+    "site": "Site",
+    "generatePassword": "Generate password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "sessionExpired": "Session expired, please log in again",
+    "emptyTitle": "Your vault is empty",
+    "emptyBody": "Everything you save is encrypted on this device before it reaches the server.",
+    "addFirst": "Add your first credential",
+    "searchPlaceholder": "Search by site or username",
+    "noMatches": "No matches for “{{query}}”",
+    "clearSearch": "Clear search",
+    "count_one": "{{count}} credential",
+    "count_other": "{{count}} credentials",
+    "sortedAZ": "A–Z",
+    "unreadable_one": "{{count}} credential cannot be decrypted: the data is damaged or was encrypted with a different key. It cannot be recovered, and it must be deleted before changing the master password.",
+    "unreadable_other": "{{count}} credentials cannot be decrypted: the data is damaged or was encrypted with a different key. They cannot be recovered, and they must be deleted before changing the master password.",
+    "unreadableItem": "Credential #{{id}}",
+    "deleteUnreadable": "Delete credential #{{id}}",
+    "deleteUnreadableTitle": "Delete credential #{{id}}?",
+    "deleteUnreadableBody": "Its content cannot be decrypted and will be removed from your vault. This cannot be undone.",
+    "deleteTitle": "Delete {{site}}?",
+    "deleteBody": "The saved login for <mono>{{username}}</mono> will be removed from your vault. This cannot be undone."
+  },
+  "vaultItem": {
+    "copyUsername": "Copy username",
+    "copyPassword": "Copy password",
+    "edit": "Edit {{site}}",
+    "delete": "Delete {{site}}"
+  },
+  "secret": {
+    "hidden": "Hidden password"
+  },
+  "search": {
+    "placeholder": "Search vault",
+    "clear": "Clear search"
+  },
+  "strength": {
+    "label": "Password strength",
+    "level": {
+      "0": "Very weak",
+      "1": "Weak",
+      "2": "Fair",
+      "3": "Strong",
+      "4": "Very strong"
+    }
+  },
+  "generator": {
+    "title": "Generator",
+    "intro": "Passwords are generated on this device with the browser's cryptographic random number generator and are never sent anywhere.",
+    "regenerate": "Regenerate",
+    "length": "Length",
+    "use": "Use this password"
+  },
+  "dialog": {
+    "typeToConfirm": "Type <mono>{{text}}</mono> to confirm"
+  },
+  "errors": {
+    "default": "An error occurred",
+    "unreachable": "Unable to reach the server",
+    "accountLockedUntil": "Too many failed attempts, account locked until {{date}}",
+    "kdfUnsupported": "Unsupported key derivation parameters received from the server",
+    "unreadableBeforeChange_one": "{{count}} credential cannot be decrypted: delete it from the vault before changing the password",
+    "unreadableBeforeChange_other": "{{count}} credentials cannot be decrypted: delete them from the vault before changing the password",
+    "codes": {
+      "auth": {
+        "invalid_credentials": "Invalid username or password",
+        "account_locked": "Account temporarily locked due to too many failed attempts, try again later",
+        "refresh_token_invalid": "Your session is no longer valid, please log in again",
+        "refresh_token_expired": "Your session has expired, please log in again",
+        "refresh_token_reused": "Your session was used elsewhere, so all sessions have been closed for safety. Please log in again",
+        "session_invalid": "Your session is no longer valid, please log in again",
+        "password_incorrect": "The password is incorrect",
+        "unauthorized": "You need to log in again",
+        "forbidden": "You are not allowed to do this"
+      },
+      "user": {
+        "username_taken": "This username is already in use",
+        "email_taken": "This email is already in use"
+      },
+      "vault": {
+        "credential_not_found": "This credential no longer exists",
+        "out_of_sync": "The vault was modified during the password change, please try again",
+        "limit_reached": "The vault is full: it cannot hold more than {{max}} credentials",
+        "duplicate_credential_ids": "Each credential must appear only once"
+      },
+      "request": {
+        "validation_failed": "Some fields are not valid",
+        "invalid": "The request is not valid",
+        "too_large": "The request is too large",
+        "method_not_allowed": "This operation is not supported",
+        "unsupported_media_type": "This operation is not supported"
+      },
+      "resource": {
+        "conflict": "The data was changed in the meantime, please try again",
+        "not_found": "Not found"
+      },
+      "rate_limit": {
+        "exceeded": "Too many requests, please wait a moment and try again"
+      },
+      "server": {
+        "internal_error": "An unexpected error occurred on the server"
+      }
+    }
+  }
+}

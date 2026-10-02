@@ -7,12 +7,14 @@ import { getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
 import "../pages/Settings.css";
 import Spinner from "./Spinner";
+import { useTranslation } from "react-i18next";
 
 interface ChangePasswordProps {
   onBack: () => void;
 }
 
 function ChangePassword({ onBack }: ChangePasswordProps) {
+  const { t } = useTranslation();
   const [oldPassword, setOldPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,7 +24,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
 
   function checkPassword(password: string, confirmPassword: string) {
     if (confirmPassword != "" && password != confirmPassword) {
-      setError("Password do not match");
+      setError(t("validation.passwordMismatch"));
     } else {
       setError("");
     }
@@ -32,18 +34,18 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
     setIsSubmitting(true);
     try {
       if (password != confirmPassword) {
-        setError("Password do not match");
+        setError(t("validation.passwordMismatch"));
         return;
       }
       if (oldPassword === password) {
-        setError("New password must be different from the old one");
+        setError(t("validation.passwordUnchanged"));
         return;
       }
       const { salt, kdfIterations } = await getSalt(authStore.username);
       const { authKey: oldAuthKey, encryptionKey: oldEncryptionKey } =
         await deriveKeys(oldPassword, salt, kdfIterations);
       if (!(await verifyPassword({ authKey: oldAuthKey }))) {
-        setError("Old password is incorrect");
+        setError(t("validation.currentPasswordIncorrect"));
         return;
       }
       const oldCredentials = await getAll();
@@ -78,9 +80,9 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
     <div>
       <div className="auth-card">
         <button className="settings-back" type="button" onClick={onBack}>
-          ← Back
+          {t("common.back")}
         </button>
-        <h1>Change Password</h1>
+        <h1>{t("changePassword.title")}</h1>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -88,7 +90,9 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
           }}
         >
           <div className="auth-field">
-            <label htmlFor="oldPassword">Old Password</label>
+            <label htmlFor="oldPassword">
+              {t("changePassword.currentPassword")}
+            </label>
             <input
               id="oldPassword"
               type="password"
@@ -100,7 +104,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
             ></input>
           </div>
           <div className="auth-field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t("changePassword.newPassword")}</label>
             <input
               id="password"
               type="password"
@@ -113,7 +117,9 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
             ></input>
           </div>
           <div className="auth-field">
-            <label htmlFor="confirmPassword">Confirm Password</label>
+            <label htmlFor="confirmPassword">
+              {t("changePassword.confirmPassword")}
+            </label>
             <input
               id="confirmPassword"
               type="password"
@@ -131,7 +137,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
             className="auth-submit"
             disabled={isSubmitting}
           >
-            Change Password
+            {t("changePassword.submit")}
           </button>
           {error && <span className="auth-error">{error}</span>}
         </form>

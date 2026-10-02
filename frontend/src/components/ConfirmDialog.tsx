@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Info, TriangleAlert } from "lucide-react";
 import "./ConfirmDialog.css";
+import { Trans, useTranslation } from "react-i18next";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -23,13 +24,14 @@ function ConfirmDialog({
   title,
   children,
   tone = "danger",
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   requireText,
   busy = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [typed, setTyped] = useState("");
   const titleId = useId();
@@ -100,7 +102,11 @@ function ConfirmDialog({
         {requireText != null && (
           <div className="confirm-dialog-field">
             <label htmlFor={inputId}>
-              Type <span className="mono">{requireText}</span> to confirm
+              <Trans
+                i18nKey="dialog.typeToConfirm"
+                values={{ text: requireText }}
+                components={{ mono: <span className="mono" /> }}
+              />
             </label>
             <input
               id={inputId}
@@ -122,14 +128,14 @@ function ConfirmDialog({
             disabled={busy}
             autoFocus={requireText == null}
           >
-            {cancelLabel}
+            {cancelLabel ?? t("common.cancel")}
           </button>
           <button
             type="submit"
             className={tone === "danger" ? "confirm-dialog-danger" : "primary"}
             disabled={!canConfirm}
           >
-            {busy ? "Working…" : confirmLabel}
+            {busy ? t("common.working") : (confirmLabel ?? t("common.confirm"))}
           </button>
         </div>
       </form>

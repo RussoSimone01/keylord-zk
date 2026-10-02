@@ -1,13 +1,9 @@
 import type { StrengthScore } from "../crypto/password";
 import "./StrengthMeter.css";
+import { useTranslation } from "react-i18next";
 
-const LEVELS = [
-  { word: "Very weak", tone: "danger" },
-  { word: "Weak", tone: "danger" },
-  { word: "Fair", tone: "warning" },
-  { word: "Strong", tone: "success" },
-  { word: "Very strong", tone: "success" },
-] as const;
+// Meter color per score; the word comes from the translations.
+const TONES = ["danger", "danger", "warning", "success", "success"] as const;
 
 interface StrengthMeterProps {
   score: StrengthScore;
@@ -15,25 +11,27 @@ interface StrengthMeterProps {
 
 // Four segments plus a word, so strength never depends on color alone.
 function StrengthMeter({ score }: StrengthMeterProps) {
-  const level = LEVELS[score];
+  const { t } = useTranslation();
+  const tone = TONES[score];
+  const word = t(`strength.level.${score}`);
   const filled = Math.max(score, 1);
 
   return (
     <div
-      className={`strength-meter ${level.tone}`}
+      className={`strength-meter ${tone}`}
       role="meter"
-      aria-label="Password strength"
+      aria-label={t("strength.label")}
       aria-valuemin={0}
       aria-valuemax={4}
       aria-valuenow={score}
-      aria-valuetext={level.word}
+      aria-valuetext={word}
     >
       <div className="strength-bar">
         {[0, 1, 2, 3].map((i) => (
           <span key={i} className={i < filled ? "on" : undefined} />
         ))}
       </div>
-      <span className="strength-word">{level.word}</span>
+      <span className="strength-word">{word}</span>
     </div>
   );
 }

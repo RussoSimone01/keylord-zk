@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CopyButtonProps {
   value: string;
@@ -8,7 +9,8 @@ interface CopyButtonProps {
 }
 
 // Icon button that copies value and shows a check for 2 seconds.
-function CopyButton({ value, label = "Copy", onCopied }: CopyButtonProps) {
+function CopyButton({ value, label, onCopied }: CopyButtonProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
@@ -27,8 +29,8 @@ function CopyButton({ value, label = "Copy", onCopied }: CopyButtonProps) {
       type="button"
       className={copied ? "icon-button success" : "icon-button"}
       onClick={handleClick}
-      title={copied ? "Copied" : label}
-      aria-label={copied ? "Copied" : label}
+      title={copied ? t("common.copied") : (label ?? t("common.copy"))}
+      aria-label={copied ? t("common.copied") : (label ?? t("common.copy"))}
     >
       {copied ? <Check size={16} /> : <Copy size={16} />}
     </button>

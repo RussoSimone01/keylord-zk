@@ -1,5 +1,6 @@
 import { THEMES, useThemeStore } from "../store/themeStore";
 import "./ThemeSwitcher.css";
+import { useTranslation } from "react-i18next";
 
 interface ThemeSwitcherProps {
   compact?: boolean;
@@ -7,6 +8,7 @@ interface ThemeSwitcherProps {
 
 // Radio group of themes; each swatch sets its own data-theme so it is drawn in that theme's colors.
 function ThemeSwitcher({ compact = false }: ThemeSwitcherProps) {
+  const { t } = useTranslation();
   const theme = useThemeStore((state) => state.theme);
   const setTheme = useThemeStore((state) => state.setTheme);
 
@@ -14,22 +16,26 @@ function ThemeSwitcher({ compact = false }: ThemeSwitcherProps) {
     <div
       className={compact ? "theme-switcher compact" : "theme-switcher"}
       role="radiogroup"
-      aria-label="Theme"
+      aria-label={t("theme.label")}
     >
-      {THEMES.map((t) => (
+      {THEMES.map((item) => (
         <button
-          key={t.id}
+          key={item.id}
           type="button"
           role="radio"
-          aria-checked={t.id === theme}
-          title={t.name}
-          className={t.id === theme ? "theme-option active" : "theme-option"}
-          onClick={() => setTheme(t.id)}
+          aria-checked={item.id === theme}
+          title={item.name}
+          className={item.id === theme ? "theme-option active" : "theme-option"}
+          onClick={() => setTheme(item.id)}
         >
-          <span className="theme-swatch" data-theme={t.id} aria-hidden="true">
+          <span
+            className="theme-swatch"
+            data-theme={item.id}
+            aria-hidden="true"
+          >
             <span />
           </span>
-          <span className={compact ? "sr-only" : undefined}>{t.name}</span>
+          <span className={compact ? "sr-only" : undefined}>{item.name}</span>
         </button>
       ))}
     </div>

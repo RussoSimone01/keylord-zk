@@ -184,9 +184,7 @@ export async function deriveKeys(
     iterations < KDF_MIN_ITERATIONS ||
     iterations > KDF_MAX_ITERATIONS
   ) {
-    throw new UserFacingError(
-      "Unsupported key derivation parameters received from the server",
-    );
+    throw new UserFacingError("errors.kdfUnsupported");
   }
   const passwordKey = await importPasswordKey(password);
   const masterKey = await deriveMasterKey(passwordKey, saltHex, iterations);
@@ -339,9 +337,9 @@ export async function reencryptVault(
     oldEncryptionKey,
   );
   if (unreadable.length > 0) {
-    throw new UserFacingError(
-      `${unreadable.length} ${unreadable.length === 1 ? "credential cannot" : "credentials cannot"} be decrypted: delete ${unreadable.length === 1 ? "it" : "them"} from the vault before changing the password`,
-    );
+    throw new UserFacingError("errors.unreadableBeforeChange", {
+      count: unreadable.length,
+    });
   }
   const digestById = new Map<number | undefined, string>(
     await Promise.all(

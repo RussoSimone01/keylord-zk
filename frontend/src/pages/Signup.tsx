@@ -6,8 +6,11 @@ import { deriveKeys, generateSalt, KDF_ITERATIONS } from "../crypto/vault";
 import { register } from "../api/auth";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
+import { useTranslation } from "react-i18next";
+import LanguageSelect from "../components/LanguageSelect";
 
 function Signup() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +22,7 @@ function Signup() {
 
   function checkPassword(password: string, confirmPassword: string) {
     if (confirmPassword != "" && password != confirmPassword) {
-      setError("Password do not match");
+      setError(t("validation.passwordMismatch"));
     } else {
       setError("");
     }
@@ -29,7 +32,7 @@ function Signup() {
     setIsSubmitting(true);
     try {
       if (password != confirmPassword) {
-        setError("Password do not match");
+        setError(t("validation.passwordMismatch"));
         return;
       }
       const salt: string = generateSalt();
@@ -61,7 +64,7 @@ function Signup() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1>Signup Page</h1>
+        <h1>{t("signup.title")}</h1>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -69,7 +72,7 @@ function Signup() {
           }}
         >
           <div className="auth-field">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">{t("common.username")}</label>
             <input
               id="username"
               type="text"
@@ -77,12 +80,12 @@ function Signup() {
               onChange={(e) => setUsername(e.target.value)}
               maxLength={50}
               pattern="[A-Za-z0-9._\-]+"
-              title="Letters, digits, dots, hyphens and underscores"
+              title={t("signup.usernameHint")}
               required
             ></input>
           </div>
           <div className="auth-field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t("common.email")}</label>
             <input
               id="email"
               type="text"
@@ -91,7 +94,7 @@ function Signup() {
             ></input>
           </div>
           <div className="auth-field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t("common.password")}</label>
             <input
               id="password"
               type="password"
@@ -104,7 +107,9 @@ function Signup() {
             ></input>
           </div>
           <div className="auth-field">
-            <label htmlFor="confirmPassword">Confirm Password</label>
+            <label htmlFor="confirmPassword">
+              {t("common.confirmPassword")}
+            </label>
             <input
               id="confirmPassword"
               type="password"
@@ -122,14 +127,16 @@ function Signup() {
             type="submit"
             disabled={isSubmitting}
           >
-            Sign up
+            {t("signup.submit")}
           </button>
           {error && <span className="auth-error">{error}</span>}
         </form>
         <div className="auth-link">
-          Already have an account? <Link to="/login">Log in</Link>
+          {t("signup.haveAccount")}{" "}
+          <Link to="/login">{t("signup.loginLink")}</Link>
         </div>
       </div>
+      <LanguageSelect />
     </div>
   );
 }
