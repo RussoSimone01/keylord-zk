@@ -104,7 +104,7 @@
   margin-bottom: var(--space-2);
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius-md);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .vault-empty-title {

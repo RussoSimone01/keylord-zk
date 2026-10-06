@@ -27,10 +27,13 @@
   },
   "theme": {
     "label": "Theme",
-    "current": "Theme: {{name}}",
-    "mode": {
-      "dark": "dark",
-      "light": "light"
+    "current": "Theme: {{name}}, {{mode}}",
+    "color": "Color",
+    "modeLabel": "Mode",
+    "modes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Automatic"
     }
   },
   "language": {

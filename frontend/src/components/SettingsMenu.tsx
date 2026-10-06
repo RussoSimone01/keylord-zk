@@ -1,4 +1,5 @@
 import ThemeSwitcher from "./ThemeSwitcher";
+import ModeSwitcher from "./ModeSwitcher";
 import "../pages/Settings.css";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -15,8 +16,12 @@ function SettingsMenu({ onSelect }: SettingsMenuProps) {
       <section className="settings-section">
         <h2 className="settings-label">{t("settings.appearance")}</h2>
         <div className="settings-field">
-          <span className="settings-field-label">{t("theme.label")}</span>
+          <span className="settings-field-label">{t("theme.color")}</span>
           <ThemeSwitcher />
+        </div>
+        <div className="settings-field">
+          <span className="settings-field-label">{t("theme.modeLabel")}</span>
+          <ModeSwitcher />
         </div>
         <div className="settings-field">
           <span className="settings-field-label">{t("language.label")}</span>

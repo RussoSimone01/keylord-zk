@@ -47,7 +47,7 @@
 @keyframes vault-item-flash {
   from {
     background: var(--accent-soft);
-    box-shadow: inset 3px 0 0 var(--accent);
+    box-shadow: inset 3px 0 0 var(--accent-text);
   }
 }
 
@@ -65,7 +65,7 @@
   height: 36px;
   border-radius: var(--radius-full);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-text);
   font: 700 15px/1 var(--font-mono);
 }
 

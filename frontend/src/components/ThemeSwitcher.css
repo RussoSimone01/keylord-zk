@@ -20,10 +20,6 @@
   font-size: 13px;
 }
 
-.theme-switcher.compact .theme-option {
-  padding: 0 var(--space-2);
-}
-
 .theme-option:hover:not(:disabled) {
   background: var(--surface-raised);
   color: var(--text);

@@ -1,41 +1,40 @@
-import { THEMES, useThemeStore } from "../store/themeStore";
+import { PALETTES, themeId, useThemeStore } from "../store/themeStore";
 import "./ThemeSwitcher.css";
 import { useTranslation } from "react-i18next";
 
-interface ThemeSwitcherProps {
-  compact?: boolean;
-}
-
-// Radio group of themes; each swatch sets its own data-theme so it is drawn in that theme's colors.
-function ThemeSwitcher({ compact = false }: ThemeSwitcherProps) {
+// Radio group of color palettes. Each swatch sets its own data-theme, so it is drawn
+// in that palette's colors for the mode currently shown.
+function ThemeSwitcher() {
   const { t } = useTranslation();
-  const theme = useThemeStore((state) => state.theme);
-  const setTheme = useThemeStore((state) => state.setTheme);
+  const palette = useThemeStore((state) => state.palette);
+  const resolvedMode = useThemeStore((state) => state.resolvedMode);
+  const setPalette = useThemeStore((state) => state.setPalette);
 
   return (
     <div
-      className={compact ? "theme-switcher compact" : "theme-switcher"}
+      className="theme-switcher"
       role="radiogroup"
-      aria-label={t("theme.label")}
+      aria-label={t("theme.color")}
     >
-      {THEMES.map((item) => (
+      {PALETTES.map((item) => (
         <button
           key={item.id}
           type="button"
           role="radio"
-          aria-checked={item.id === theme}
-          title={item.name}
-          className={item.id === theme ? "theme-option active" : "theme-option"}
-          onClick={() => setTheme(item.id)}
+          aria-checked={item.id === palette}
+          className={
+            item.id === palette ? "theme-option active" : "theme-option"
+          }
+          onClick={() => setPalette(item.id)}
         >
           <span
             className="theme-swatch"
-            data-theme={item.id}
+            data-theme={themeId(item.id, resolvedMode)}
             aria-hidden="true"
           >
             <span />
           </span>
-          <span className={compact ? "sr-only" : undefined}>{item.name}</span>
+          <span>{item.name}</span>
         </button>
       ))}
     </div>

@@ -61,7 +61,7 @@
 }
 
 .settings-section > button:hover:not(:disabled) {
-  border-color: var(--accent);
+  border-color: var(--accent-text);
   background: var(--surface);
 }
 
