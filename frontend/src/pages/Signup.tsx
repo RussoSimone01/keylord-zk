@@ -7,7 +7,7 @@ import { register } from "../api/auth";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
 import { useTranslation } from "react-i18next";
-import LanguageSelect from "../components/LanguageSelect";
+import DisplayPreferences from "../components/DisplayPreferences";
 
 function Signup() {
   const { t } = useTranslation();
@@ -136,7 +136,7 @@ function Signup() {
           <Link to="/login">{t("signup.loginLink")}</Link>
         </div>
       </div>
-      <LanguageSelect />
+      <DisplayPreferences />
     </div>
   );
 }

@@ -9,7 +9,12 @@ import { useTranslation } from "react-i18next";
 // Shows only the active palette and mode; clicking opens a menu with two groups, Color and Mode.
 // The menu stays open after a choice so both can be set in one go; Escape, Tab or a click outside closes it.
 // Each swatch sets its own data-theme so it is drawn in that palette's colors (styles in ThemeSwitcher.css).
-function ThemeMenu() {
+interface ThemeMenuProps {
+  // "above" opens the list upwards, for controls near the bottom of the page (login and sign-up).
+  placement?: "below" | "above";
+}
+
+function ThemeMenu({ placement = "below" }: ThemeMenuProps) {
   const { t } = useTranslation();
   const palette = useThemeStore((state) => state.palette);
   const mode = useThemeStore((state) => state.mode);
@@ -126,7 +131,9 @@ function ThemeMenu() {
       {open && (
         <div
           id={menuId}
-          className="theme-menu-list"
+          className={
+            placement === "above" ? "theme-menu-list above" : "theme-menu-list"
+          }
           role="menu"
           aria-label={t("theme.label")}
           onKeyDown={handleMenuKeyDown}

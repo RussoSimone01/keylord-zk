@@ -72,6 +72,11 @@
   flex: 1;
 }
 
+.theme-menu-list.above {
+  top: auto;
+  bottom: calc(100% + var(--space-2));
+}
+
 /* Small uppercase heading above each group (Color, Mode). */
 .theme-menu-group-label {
   padding: var(--space-2) var(--space-3) var(--space-1);

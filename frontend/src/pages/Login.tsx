@@ -7,7 +7,7 @@ import { getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
 import { useTranslation } from "react-i18next";
-import LanguageSelect from "../components/LanguageSelect";
+import DisplayPreferences from "../components/DisplayPreferences";
 
 function Login() {
   const { t } = useTranslation();
@@ -87,7 +87,7 @@ function Login() {
           <Link to="/signup">{t("login.signupLink")}</Link>
         </div>
       </div>
-      <LanguageSelect />
+      <DisplayPreferences />
     </div>
   );
 }
