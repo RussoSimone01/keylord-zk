@@ -47,7 +47,8 @@ namespace backend.Services.Implementations
                 Email = request.Email,
                 AuthKeyHash = BCrypt.Net.BCrypt.HashPassword(request.AuthKey),
                 KdfSalt = request.Salt,
-                KdfIterations = request.KdfIterations
+                KdfIterations = request.KdfIterations,
+                WrappedVaultKey = request.WrappedVaultKey
             };
             // User and first refresh token are stored together or not at all
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
@@ -65,7 +66,7 @@ namespace backend.Services.Implementations
             }
         }
 
-        public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken)
+        public async Task<LoginResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken)
         {
             // Unknown username and wrong password produce the same response
             User? user = await _userRepository.GetByUsernameAsync(request.Username, cancellationToken);
@@ -78,7 +79,14 @@ namespace backend.Services.Implementations
             {
                 throw new ApiException(AppErrors.InvalidCredentials);
             }
-            return await IssueTokensAsync(user, cancellationToken);
+            AuthResponseDto authResponse = await IssueTokensAsync(user, cancellationToken);
+            return new LoginResponseDto
+            {
+                AccessToken = authResponse.AccessToken,
+                RefreshToken = authResponse.RefreshToken,
+                WrappedVaultKey = user.WrappedVaultKey,
+                VaultKeyEpoch = user.VaultKeyEpoch
+            };
         }
 
         public async Task<AuthResponseDto> RefreshAsync(RefreshRequestDto request, CancellationToken cancellationToken)

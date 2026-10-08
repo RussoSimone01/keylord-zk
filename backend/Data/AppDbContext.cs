@@ -31,9 +31,10 @@ namespace backend.Data
                 entity.Property(u => u.Email).HasMaxLength(255);
                 entity.Property(u => u.AuthKeyHash).IsRequired();
                 entity.Property(u => u.KdfSalt).HasMaxLength(64).IsRequired();
+                entity.Property(u => u.WrappedVaultKey).HasMaxLength(512);
+                entity.Property(u => u.VaultKeyEpoch).HasDefaultValue(0);
                 entity.HasIndex(u => u.Username).IsUnique();
                 entity.HasIndex(u => u.Email).IsUnique();
-                // Case-insensitive unique indexes on LOWER(Username) and LOWER(Email) are created by migration CaseInsensitiveUniqueness
             });
 
             modelBuilder.Entity<Credential>(entity =>
