@@ -139,12 +139,29 @@ namespace backend.Services.Implementations
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
             // Blocks credential inserts from other sessions until commit
             await _userRepository.LockForUpdateAsync(userId, cancellationToken);
-            // The client must have re-encrypted exactly the current vault: anything added, removed or edited meanwhile aborts the change
-            if (!await _credentialRepository.TryReplaceAllEncryptedDataAsync(userId, replacementsById, cancellationToken))
+            User current = await _userRepository.GetByIdAsync(userId, cancellationToken)
+                ?? throw new ApiException(AppErrors.SessionInvalid);
+            if (current.WrappedVaultKey is not null)
             {
-                throw new ApiException(AppErrors.VaultOutOfSync);
+                // The vault key does not change: only its wrapping does, so no credential must travel
+                if (string.IsNullOrEmpty(request.NewWrappedVaultKey) || request.Credentials.Length != 0)
+                {
+                    throw new ApiException(AppErrors.VaultOutOfSync);
+                }
             }
-            await _userRepository.UpdatePasswordAsync(userId, newAuthKeyHash, request.NewSalt, request.NewKdfIterations, cancellationToken);
+            else
+            {
+                if (request.NewWrappedVaultKey is not null)
+                {
+                    throw new ApiException(AppErrors.VaultOutOfSync);
+                }
+                // The client must have re-encrypted exactly the current vault: anything added, removed or edited meanwhile aborts the change
+                if (!await _credentialRepository.TryReplaceAllEncryptedDataAsync(userId, replacementsById, cancellationToken))
+                {
+                    throw new ApiException(AppErrors.VaultOutOfSync);
+                }
+            }
+            await _userRepository.UpdatePasswordAsync(userId, newAuthKeyHash, request.NewSalt, request.NewKdfIterations, request.NewWrappedVaultKey, cancellationToken);
             // Other sessions are deleted, not revoked: presenting them again must not look like token theft
             await _refreshTokenRepository.DeleteAllByUserAsync(userId, cancellationToken);
             // The entity is not tracked: updated in memory only, so the new access token carries the new key stamp

@@ -22,8 +22,14 @@ namespace backend.DTOs
         public long NewKdfIterations { get; set; }
 
         // Must contain every credential of the vault, each exactly once, re-encrypted with the new key
+        // Must be empty for users on the vault-key format
         [Required]
         [MaxLength(VaultLimits.MaxCredentialsPerUser)]
         public ReencryptedCredentialDto[] Credentials { get; set; } = [];
+
+        // Only for users on the vault-key format: the same vault key, wrapped with the key derived from the new password
+        [Length(1, 512)]
+        [RegularExpression(EncryptedDataRules.Pattern, ErrorMessage = EncryptedDataRules.PatternMessage)]
+        public string? NewWrappedVaultKey { get; set; }
     }
 }

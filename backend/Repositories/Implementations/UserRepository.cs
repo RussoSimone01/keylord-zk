@@ -68,13 +68,14 @@ namespace backend.Repositories.Implementations
             await _db.Database.ExecuteSqlAsync($"""SELECT 1 FROM "Users" WHERE "Id" = {userId} FOR KEY SHARE""", cancellationToken);
         }
 
-        public async Task UpdatePasswordAsync(long userId, string newAuthKeyHash, string newSalt, long newKdfIterations, CancellationToken cancellationToken)
+        public async Task UpdatePasswordAsync(long userId, string newAuthKeyHash, string newSalt, long newKdfIterations, string? newWrappedVaultKey, CancellationToken cancellationToken)
         {
             await _db.Users.Where(u => u.Id == userId)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(u => u.AuthKeyHash, newAuthKeyHash)
                     .SetProperty(u => u.KdfSalt, newSalt)
                     .SetProperty(u => u.KdfIterations, newKdfIterations)
+                    .SetProperty(u => u.WrappedVaultKey, newWrappedVaultKey)
                     .SetProperty(u => u.UpdatedAt, DateTime.UtcNow),
                     cancellationToken
                 );

@@ -13,7 +13,7 @@ namespace backend.Repositories.Interfaces
         public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken);
         public Task LockForUpdateAsync(long userId, CancellationToken cancellationToken);
         public Task LockForKeyShareAsync(long userId, CancellationToken cancellationToken);
-        public Task UpdatePasswordAsync(long userId, string newAuthKeyHash, string newSalt, long newKdfIterations, CancellationToken cancellationToken);
+        public Task UpdatePasswordAsync(long userId, string newAuthKeyHash, string newSalt, long newKdfIterations, string? newWrappedVaultKey, CancellationToken cancellationToken);
         public Task UpdateEmailAsync(long userId, string newEmail, CancellationToken cancellationToken);
         public Task<bool> TryRegisterAttemptAsync(long userId, DateTime now, LockoutSchedule schedule, CancellationToken cancellationToken);
         public Task ResetLockoutAsync(long userId, CancellationToken cancellationToken);
