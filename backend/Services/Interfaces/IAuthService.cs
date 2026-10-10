@@ -12,5 +12,6 @@ namespace backend.Services.Interfaces
         public Task<bool> VerifyPasswordAsync(long userId, VerifyPasswordRequestDto request, CancellationToken cancellationToken);
         public Task DeleteAccountAsync(long userId, DeleteAccountRequestDto request, CancellationToken cancellationToken);
         public Task LogoutAsync(RefreshRequestDto request, CancellationToken cancellationToken);
+        public Task<AuthResponseDto> RotateVaultKeyAsync(long userId, RotateVaultKeyRequestDto request, CancellationToken cancellationToken);
     }
 }

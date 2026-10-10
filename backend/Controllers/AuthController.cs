@@ -68,5 +68,11 @@ namespace backend.Controllers
             await _authService.DeleteAccountAsync(User.GetUserId(), request, cancellationToken);
             return NoContent();
         }
+
+        [HttpPost("rotate-vault-key")]
+        public async Task<IActionResult> RotateVaultKey(RotateVaultKeyRequestDto request, CancellationToken cancellationToken)
+        {
+            return Ok(await _authService.RotateVaultKeyAsync(User.GetUserId(), request, cancellationToken));
+        }
     }
 }

@@ -210,6 +210,47 @@ namespace backend.Services.Implementations
             await _refreshTokenRepository.DeleteByHashAsync(_tokenService.HashRefreshToken(request.RefreshToken), cancellationToken);
         }
 
+        public async Task<AuthResponseDto> RotateVaultKeyAsync(long userId, RotateVaultKeyRequestDto request, CancellationToken cancellationToken)
+        {
+            User user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+                ?? throw new ApiException(AppErrors.SessionInvalid);
+            if (!await VerifyAuthKeyInSessionAsync(user, request.AuthKey, cancellationToken))
+            {
+                throw new ApiException(AppErrors.PasswordIncorrect);
+            }
+            if (request.Credentials.DistinctBy(c => c.Id).Count() != request.Credentials.Length)
+            {
+                throw new ApiException(AppErrors.DuplicateCredentialIds);
+            }
+            Dictionary<long, CredentialReplacement> replacementsById = request.Credentials.ToDictionary(
+                c => c.Id,
+                c => new CredentialReplacement(c.PreviousDigest, c.EncryptedData)
+            );
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await _userRepository.LockForUpdateAsync(userId, cancellationToken);
+            // The epoch is read under the lock: two concurrent rotations cannot both pass this check
+            User current = await _userRepository.GetByIdAsync(userId, cancellationToken)
+                ?? throw new ApiException(AppErrors.SessionInvalid);
+            if (current.VaultKeyEpoch != request.CurrentEpoch)
+            {
+                throw new ApiException(AppErrors.VaultOutOfSync);
+            }
+            if (!await _credentialRepository.TryReplaceAllEncryptedDataAsync(userId, replacementsById, cancellationToken))
+            {
+                throw new ApiException(AppErrors.VaultOutOfSync);
+            }
+            await _userRepository.UpdateVaultKeyAsync(userId, request.NewWrappedVaultKey, cancellationToken);
+            // Other sessions hold the old vault key: they are deleted, not revoked, as in a password change
+            await _refreshTokenRepository.DeleteAllByUserAsync(userId, cancellationToken);
+            // The entity is not tracked: updated in memory so the new tokens reflect the new state
+            user.WrappedVaultKey = request.NewWrappedVaultKey;
+            user.VaultKeyEpoch = current.VaultKeyEpoch + 1;
+            AuthResponseDto tokens = await IssueTokensAsync(user, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return tokens;
+        }
+
         /// <summary>
         /// Password check made from an authenticated session. If this failure locks the account, every session is ended:
         /// whoever is guessing from a (possibly stolen) session cannot renew it. Locks caused by failed logins do not end sessions,

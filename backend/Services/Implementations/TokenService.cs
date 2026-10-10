@@ -24,7 +24,7 @@ namespace backend.Services.Implementations
                 Subject = new([
                     new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                     new Claim(JwtRegisteredClaimNames.Name, user.Username),
-                    new Claim(AppClaimTypes.KeyStamp, ComputeKeyStamp(user.KdfSalt))
+                    new Claim(AppClaimTypes.KeyStamp, ComputeKeyStamp(user.KdfSalt, user.VaultKeyEpoch))
                 ]),
                 Expires = DateTime.UtcNow.AddMinutes(_jwt.AccessTokenExpiryMinutes),
                 Issuer = _jwt.Issuer,
@@ -39,9 +39,9 @@ namespace backend.Services.Implementations
         /// <summary>
         /// Short fingerprint of the salt. The salt changes at every password change, so the stamp identifies the password generation.
         /// </summary>
-        public string ComputeKeyStamp(string kdfSalt)
+        public string ComputeKeyStamp(string kdfSalt, int vaultKeyEpoch)
         {
-            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(kdfSalt));
+            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes($"{kdfSalt}:{vaultKeyEpoch}"));
             return Convert.ToHexString(hashBytes, 0, 16);
         }
 

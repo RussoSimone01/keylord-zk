@@ -72,8 +72,8 @@ namespace backend.Services.Implementations
         private async Task EnsureCurrentKeyAsync(long userId, string keyStamp, CancellationToken cancellationToken)
         {
             await _userRepository.LockForKeyShareAsync(userId, cancellationToken);
-            string? kdfSalt = await _userRepository.GetKdfSaltAsync(userId, cancellationToken);
-            if (kdfSalt is null || _tokenService.ComputeKeyStamp(kdfSalt) != keyStamp)
+            UserKeyState? state = await _userRepository.GetKeyStateAsync(userId, cancellationToken);
+            if (state is null || _tokenService.ComputeKeyStamp(state.KdfSalt, state.VaultKeyEpoch) != keyStamp)
             {
                 throw new ApiException(AppErrors.SessionInvalid);
             }

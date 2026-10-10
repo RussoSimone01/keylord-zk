@@ -28,9 +28,9 @@ namespace backend.Repositories.Implementations
             return await _db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Username.ToLower() == normalized, cancellationToken);
         }
 
-        public async Task<string?> GetKdfSaltAsync(long userId, CancellationToken cancellationToken)
+        public async Task<UserKeyState?> GetKeyStateAsync(long userId, CancellationToken cancellationToken)
         {
-            return await _db.Users.Where(u => u.Id == userId).Select(u => u.KdfSalt).SingleOrDefaultAsync(cancellationToken);
+            return await _db.Users.Where(u => u.Id == userId).Select(u => new UserKeyState(u.KdfSalt, u.VaultKeyEpoch)).SingleOrDefaultAsync(cancellationToken);
         }
 
         public async Task<DateTime?> GetLockedUntilAsync(long userId, CancellationToken cancellationToken)
@@ -87,6 +87,16 @@ namespace backend.Repositories.Implementations
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(u => u.Email, newEmail)
                     .SetProperty(u => u.UpdatedAt, DateTime.UtcNow),
+                    cancellationToken
+                );
+        }
+
+        public Task UpdateVaultKeyAsync(long userId, string wrappedVaultKey, CancellationToken cancellationToken)
+        {
+            return _db.Users.Where(u => u.Id == userId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(u => u.WrappedVaultKey, wrappedVaultKey)
+                    .SetProperty(u => u.VaultKeyEpoch, u => u.VaultKeyEpoch + 1),
                     cancellationToken
                 );
         }

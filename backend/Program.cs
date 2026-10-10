@@ -110,8 +110,8 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
                 }
                 IUserRepository userRepository = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
                 ITokenService tokenService = context.HttpContext.RequestServices.GetRequiredService<ITokenService>();
-                string? kdfSalt = await userRepository.GetKdfSaltAsync(userId, context.HttpContext.RequestAborted);
-                if (kdfSalt is null || tokenService.ComputeKeyStamp(kdfSalt) != keyStamp)
+                UserKeyState? state = await userRepository.GetKeyStateAsync(userId, context.HttpContext.RequestAborted);
+                if (state is null || tokenService.ComputeKeyStamp(state.KdfSalt, state.VaultKeyEpoch) != keyStamp)
                 {
                     context.Fail("Token no longer valid");
                 }
