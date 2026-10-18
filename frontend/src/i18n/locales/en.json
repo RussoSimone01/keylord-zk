@@ -70,7 +70,9 @@
     "currentPassword": "Current password",
     "newPassword": "New password",
     "confirmPassword": "Confirm new password",
-    "submit": "Change password"
+    "submit": "Change password",
+    "rotateKey": "Also rotate the encryption key",
+    "rotateKeyHint": "Creates a new key for your credentials and re-encrypts the whole vault. Recommended if you suspect your password or a device was compromised: it protects your data from now on, but does not make a copy that was already stolen secret again. It can take a few seconds with a large vault."
   },
   "deleteAccount": {
     "title": "Delete account",

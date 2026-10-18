@@ -48,9 +48,14 @@ export interface ChangePasswordRequest {
   newSalt: string;
   newKdfIterations: number;
   // Every credential of the vault, each once, with its current id. Empty for users with a vault key
+  // who only change the password
   credentials: ReencryptedCredential[];
   // Only for users with a vault key: the same vault key, wrapped with the key derived from the new password
   newWrappedVaultKey?: string;
+  // Only for users with a vault key: also replace the vault key itself. Needs every credential
+  rotateVaultKey?: boolean;
+  // Epoch the client believes is current: checked by the server when rotating
+  currentEpoch?: number;
 }
 
 export interface RefreshRequest {

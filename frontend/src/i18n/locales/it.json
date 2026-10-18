@@ -70,7 +70,9 @@
     "currentPassword": "Password attuale",
     "newPassword": "Nuova password",
     "confirmPassword": "Conferma nuova password",
-    "submit": "Cambia password"
+    "submit": "Cambia password",
+    "rotateKey": "Ruota anche la chiave di cifratura",
+    "rotateKeyHint": "Crea una nuova chiave per le tue credenziali e ricifra l'intero vault. Consigliato se sospetti che la password o un dispositivo siano stati compromessi: protegge i dati da ora in poi, ma non rende di nuovo segreta una copia già sottratta. Con un vault grande può richiedere qualche secondo."
   },
   "deleteAccount": {
     "title": "Elimina account",

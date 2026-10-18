@@ -430,7 +430,7 @@ export async function reencryptVault(
  * Porta un vault dal formato precedente a quello con vaultKey: crea la vaultKey e ricifra tutte le credenziali.
  * @throws UserFacingError se qualche credenziale non si decifra
  */
-export async function migrateVault(
+export async function renewVaultKey(
   encryptedCredentials: EncryptedCredential[],
   oldEncryptionKey: CryptoKey,
   wrappingKey: CryptoKey,
@@ -530,4 +530,41 @@ export async function rewrapVaultKey(
     newKeys.wrappingKey,
   );
   return { newKeys, newSalt, newKdfIterations, newWrappedVaultKey, vaultKey };
+}
+
+/**
+ * Cambio password con rotazione della vaultKey: nuovo salt, nuove chiavi, nuova vaultKey cifrata
+ * con la wrappingKey derivata dalla nuova password, e tutto il vault ricifrato con essa.
+ * Non serve la vecchia wrappingKey: il vault si decifra con la vaultKey attuale.
+ *
+ * @throws UserFacingError se qualche credenziale non si decifra
+ */
+export async function rotateVaultKeyWithNewPassword(
+  encryptedCredentials: EncryptedCredential[],
+  currentVaultKey: CryptoKey,
+  newPassword: string,
+): Promise<{
+  newKeys: DerivedKeys;
+  newSalt: string;
+  newKdfIterations: number;
+  newWrappedVaultKey: string;
+  vaultKey: CryptoKey;
+  reencryptedCredentials: ReencryptedCredential[];
+}> {
+  const newSalt = generateSalt();
+  const newKdfIterations = KDF_ITERATIONS;
+  const newKeys = await deriveKeys(newPassword, newSalt, newKdfIterations);
+  const renewed = await renewVaultKey(
+    encryptedCredentials,
+    currentVaultKey,
+    newKeys.wrappingKey,
+  );
+  return {
+    newKeys,
+    newSalt,
+    newKdfIterations,
+    newWrappedVaultKey: renewed.wrappedVaultKey,
+    vaultKey: renewed.vaultKey,
+    reencryptedCredentials: renewed.reencryptedCredentials,
+  };
 }

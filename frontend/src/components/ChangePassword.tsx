@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { changePassword, getSalt, verifyPassword } from "../api/auth";
-import { deriveKeys, reencryptVault, rewrapVaultKey } from "../crypto/vault";
+import {
+  deriveKeys,
+  reencryptVault,
+  rewrapVaultKey,
+  rotateVaultKeyWithNewPassword,
+} from "../crypto/vault";
 import { getAll } from "../api/vault";
 import { getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
@@ -22,6 +27,7 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
   const [error, setError] = useState("");
   const authStore = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rotateKey, setRotateKey] = useState(false);
 
   function checkPassword(password: string, confirmPassword: string) {
     if (confirmPassword != "" && password != confirmPassword) {
@@ -48,13 +54,30 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
         setError(t("validation.currentPasswordIncorrect"));
         return;
       }
+      const rotating = rotateKey && authStore.wrappedVaultKey !== null;
       let newAuthKey: string;
       let newSalt: string;
       let newKdfIterations: number;
       let credentials: ReencryptedCredential[];
       let newWrappedVaultKey: string | undefined;
       let newEncryptionKey: CryptoKey;
-      if (authStore.wrappedVaultKey) {
+      if (authStore.wrappedVaultKey && rotating) {
+        const currentVaultKey = authStore.encryptionKey;
+        if (currentVaultKey === null) {
+          return; // Not signed in: the route guard already prevents this
+        }
+        const rotated = await rotateVaultKeyWithNewPassword(
+          await getAll(),
+          currentVaultKey,
+          password,
+        );
+        newAuthKey = rotated.newKeys.authKey;
+        newSalt = rotated.newSalt;
+        newKdfIterations = rotated.newKdfIterations;
+        credentials = rotated.reencryptedCredentials;
+        newWrappedVaultKey = rotated.newWrappedVaultKey;
+        newEncryptionKey = rotated.vaultKey;
+      } else if (authStore.wrappedVaultKey) {
         const rewrapped = await rewrapVaultKey(
           authStore.wrappedVaultKey,
           oldKeys.wrappingKey,
@@ -87,13 +110,14 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
         newKdfIterations,
         credentials,
         newWrappedVaultKey,
+        rotateVaultKey: rotating,
+        currentEpoch: authStore.vaultKeyEpoch,
       });
       authStore.setAuth({
         username: authStore.username,
         encryptionKey: newEncryptionKey,
         wrappedVaultKey: newWrappedVaultKey ?? null,
-        // A password change does not rotate the vault key: the epoch stays as it is
-        vaultKeyEpoch: authStore.vaultKeyEpoch,
+        vaultKeyEpoch: authStore.vaultKeyEpoch + (rotating ? 1 : 0),
         accessToken,
         refreshToken,
       });
@@ -164,6 +188,20 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
               required
             ></input>
           </div>
+          {authStore.wrappedVaultKey !== null && (
+            <div className="auth-field">
+              <label htmlFor="rotateKey">
+                <input
+                  id="rotateKey"
+                  type="checkbox"
+                  checked={rotateKey}
+                  onChange={(e) => setRotateKey(e.target.checked)}
+                />{" "}
+                {t("changePassword.rotateKey")}
+              </label>
+              <small>{t("changePassword.rotateKeyHint")}</small>
+            </div>
+          )}
           <button
             id="changePwdButton"
             type="submit"

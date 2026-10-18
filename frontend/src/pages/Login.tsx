@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getSalt, login, rotateVaultKey } from "../api/auth";
 import {
   deriveKeys,
-  migrateVault,
+  renewVaultKey,
   resolveVaultKey,
   type DerivedKeys,
 } from "../crypto/vault";
@@ -26,7 +26,7 @@ async function migrateToVaultKey(
 ): Promise<void> {
   try {
     const { vaultKey, wrappedVaultKey, reencryptedCredentials } =
-      await migrateVault(await getAll(), keys.encryptionKey, keys.wrappingKey);
+      await renewVaultKey(await getAll(), keys.encryptionKey, keys.wrappingKey);
     const { accessToken, refreshToken } = await rotateVaultKey({
       authKey: keys.authKey,
       currentEpoch,
