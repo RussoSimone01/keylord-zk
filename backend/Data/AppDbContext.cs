@@ -31,7 +31,7 @@ namespace backend.Data
                 entity.Property(u => u.Email).HasMaxLength(255);
                 entity.Property(u => u.AuthKeyHash).IsRequired();
                 entity.Property(u => u.KdfSalt).HasMaxLength(64).IsRequired();
-                entity.Property(u => u.WrappedVaultKey).HasMaxLength(512);
+                entity.Property(u => u.WrappedVaultKey).HasMaxLength(512).IsRequired();
                 entity.Property(u => u.VaultKeyEpoch).HasDefaultValue(0);
                 entity.HasIndex(u => u.Username).IsUnique();
                 entity.HasIndex(u => u.Email).IsUnique();

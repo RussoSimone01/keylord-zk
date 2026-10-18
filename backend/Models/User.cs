@@ -10,7 +10,7 @@ namespace backend.Models
         public long KdfIterations { get; set; } = 600000;
         public int FailedLoginAttempts { get; set; } = 0;
         public DateTime? LockedUntil { get; set; }
-        public string? WrappedVaultKey { get; set; }
+        public string WrappedVaultKey { get; set; } = string.Empty;
         public int VaultKeyEpoch { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

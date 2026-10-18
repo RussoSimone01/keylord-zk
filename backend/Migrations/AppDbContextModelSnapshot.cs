@@ -132,6 +132,7 @@ namespace backend.Migrations
                         .HasDefaultValue(0);
 
                     b.Property<string>("WrappedVaultKey")
+                        .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
