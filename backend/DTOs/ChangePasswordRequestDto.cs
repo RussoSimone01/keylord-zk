@@ -21,16 +21,16 @@ namespace backend.DTOs
         [Range(KdfLimits.MinIterations, KdfLimits.MaxIterations)]
         public long NewKdfIterations { get; set; }
 
-        // Required for users not yet migrated and when RotateVaultKey is set: every credential, exactly once,
-        // re-encrypted with the new key. Must be empty for users with a vault key who only change the password
+        // Must be empty only if you rotate the vault key
         [Required]
         [MaxLength(VaultLimits.MaxCredentialsPerUser)]
         public ReencryptedCredentialDto[] Credentials { get; set; } = [];
 
         // Only for users on the vault-key format: the same vault key, wrapped with the key derived from the new password
+        [Required]
         [Length(1, 512)]
         [RegularExpression(EncryptedDataRules.Pattern, ErrorMessage = EncryptedDataRules.PatternMessage)]
-        public string? NewWrappedVaultKey { get; set; }
+        public string NewWrappedVaultKey { get; set; } = string.Empty;
 
         // Only for users with a vault key: also replaces the vault key itself (a rotation). The flag is explicit
         // because an empty vault cannot be told apart from a password change without it

@@ -143,11 +143,10 @@ namespace backend.Services.Implementations
             User current = await _userRepository.GetByIdAsync(userId, cancellationToken)
                 ?? throw new ApiException(AppErrors.SessionInvalid);
             bool rotating = request.RotateVaultKey;
-            if (current.WrappedVaultKey is null)
+            if (rotating)
             {
-                // Old format: the whole vault is re-encrypted with the key derived from the new password.
-                // There is no vault key to rotate: the migration happens at login
-                if (rotating || request.NewWrappedVaultKey is not null)
+                // The vault key changes too: same checks as a standalone rotation
+                if (request.CurrentEpoch != current.VaultKeyEpoch)
                 {
                     throw new ApiException(AppErrors.VaultOutOfSync);
                 }
@@ -157,25 +156,11 @@ namespace backend.Services.Implementations
                     throw new ApiException(AppErrors.VaultOutOfSync);
                 }
             }
-            else if (rotating)
-            {
-                // The vault key changes too: same checks as a standalone rotation
-                if (string.IsNullOrEmpty(request.NewWrappedVaultKey) || request.CurrentEpoch != current.VaultKeyEpoch)
-                {
-                    throw new ApiException(AppErrors.VaultOutOfSync);
-                }
-                if (!await _credentialRepository.TryReplaceAllEncryptedDataAsync(userId, replacementsById, cancellationToken))
-                {
-                    throw new ApiException(AppErrors.VaultOutOfSync);
-                }
-            }
-            else
+            else if (request.Credentials.Length != 0)
             {
                 // The vault key stays the same: only its wrapping changes, so no credential must travel
-                if (string.IsNullOrEmpty(request.NewWrappedVaultKey) || request.Credentials.Length != 0)
-                {
-                    throw new ApiException(AppErrors.VaultOutOfSync);
-                }
+                throw new ApiException(AppErrors.VaultOutOfSync);
+
             }
             int epochIncrement = rotating ? 1 : 0;
             await _userRepository.UpdatePasswordAsync(userId, newAuthKeyHash, request.NewSalt, request.NewKdfIterations,
@@ -227,47 +212,6 @@ namespace backend.Services.Implementations
         {
             // Deleted rather than revoked: the token is gone for good and cannot trigger reuse detection later
             await _refreshTokenRepository.DeleteByHashAsync(_tokenService.HashRefreshToken(request.RefreshToken), cancellationToken);
-        }
-
-        public async Task<AuthResponseDto> RotateVaultKeyAsync(long userId, RotateVaultKeyRequestDto request, CancellationToken cancellationToken)
-        {
-            User user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-                ?? throw new ApiException(AppErrors.SessionInvalid);
-            if (!await VerifyAuthKeyInSessionAsync(user, request.AuthKey, cancellationToken))
-            {
-                throw new ApiException(AppErrors.PasswordIncorrect);
-            }
-            if (request.Credentials.DistinctBy(c => c.Id).Count() != request.Credentials.Length)
-            {
-                throw new ApiException(AppErrors.DuplicateCredentialIds);
-            }
-            Dictionary<long, CredentialReplacement> replacementsById = request.Credentials.ToDictionary(
-                c => c.Id,
-                c => new CredentialReplacement(c.PreviousDigest, c.EncryptedData)
-            );
-
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-            await _userRepository.LockForUpdateAsync(userId, cancellationToken);
-            // The epoch is read under the lock: two concurrent rotations cannot both pass this check
-            User current = await _userRepository.GetByIdAsync(userId, cancellationToken)
-                ?? throw new ApiException(AppErrors.SessionInvalid);
-            if (current.VaultKeyEpoch != request.CurrentEpoch)
-            {
-                throw new ApiException(AppErrors.VaultOutOfSync);
-            }
-            if (!await _credentialRepository.TryReplaceAllEncryptedDataAsync(userId, replacementsById, cancellationToken))
-            {
-                throw new ApiException(AppErrors.VaultOutOfSync);
-            }
-            await _userRepository.UpdateVaultKeyAsync(userId, request.NewWrappedVaultKey, cancellationToken);
-            // Other sessions hold the old vault key: they are deleted, not revoked, as in a password change
-            await _refreshTokenRepository.DeleteAllByUserAsync(userId, cancellationToken);
-            // The entity is not tracked: updated in memory so the new tokens reflect the new state
-            user.WrappedVaultKey = request.NewWrappedVaultKey;
-            user.VaultKeyEpoch = current.VaultKeyEpoch + 1;
-            AuthResponseDto tokens = await IssueTokensAsync(user, cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return tokens;
         }
 
         /// <summary>
