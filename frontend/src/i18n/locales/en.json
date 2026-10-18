@@ -149,6 +149,14 @@
   "dialog": {
     "typeToConfirm": "Type <mono>{{text}}</mono> to confirm"
   },
+  "unlock": {
+    "title": "Vault locked",
+    "subtitle": "Enter your master password to continue.",
+    "passwordLabel": "Master password",
+    "submit": "Unlock",
+    "logout": "Log out",
+    "wrongPassword": "Wrong master password."
+  },
   "errors": {
     "default": "An error occurred",
     "unreachable": "Unable to reach the server",

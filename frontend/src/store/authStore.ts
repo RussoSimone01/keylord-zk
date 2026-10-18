@@ -3,9 +3,12 @@ import { create } from "zustand";
 interface AuthSession {
   username: string;
   encryptionKey: CryptoKey | null;
-  // Needed to re-wrap the vault key on a password change and to rotate it; null for users not migrated yet
+  // Needed to re-wrap the vault key on a password change and to rotate it
   wrappedVaultKey: string | null;
   vaultKeyEpoch: number;
+  // Needed to derive the wrappingKey again when unlocking without a server round trip
+  salt: string;
+  kdfIterations: number;
   accessToken: string;
   refreshToken: string;
 }
@@ -14,6 +17,11 @@ interface AuthStore extends AuthSession {
   setAuth(session: AuthSession): void;
   // A token refresh changes only the tokens: the key and the vault state stay as they are
   setTokens(accessToken: string, refreshToken: string): void;
+  // Locks the vault: only the key leaves memory; tokens and wrappedVaultKey stay,
+  // so the master password alone is enough to unlock (no server round trip)
+  lock(): void;
+  // Counterpart of lock: puts back the key obtained by unwrapping wrappedVaultKey
+  unlock(encryptionKey: CryptoKey): void;
   clearAuth(forgetUsername?: boolean): void;
 }
 
@@ -27,6 +35,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
   encryptionKey: null,
   wrappedVaultKey: null,
   vaultKeyEpoch: 0,
+  salt: "",
+  kdfIterations: 0,
   accessToken: "",
   refreshToken: "",
 
@@ -36,6 +46,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
+
+  lock: () => set({ encryptionKey: null }),
+
+  unlock: (encryptionKey) => set({ encryptionKey }),
 
   // The username is kept so that unlocking again only needs the master password, unless the account is gone
   clearAuth: (forgetUsername = false) => {
@@ -47,8 +61,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
       encryptionKey: null,
       wrappedVaultKey: null,
       vaultKeyEpoch: 0,
+      salt: "",
+      kdfIterations: 0,
       accessToken: "",
       refreshToken: "",
     });
   },
 }));
+
+export const selectIsLocked = (s: AuthStore) =>
+  s.encryptionKey === null && s.refreshToken !== "";

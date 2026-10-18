@@ -38,6 +38,8 @@ function Login() {
         encryptionKey: vaultKey,
         wrappedVaultKey,
         vaultKeyEpoch,
+        salt,
+        kdfIterations,
         accessToken,
         refreshToken,
       });

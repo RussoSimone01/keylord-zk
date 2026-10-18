@@ -12,7 +12,7 @@ function Navbar() {
   const navigate = useNavigate();
 
   // Locking ends the session on the server, clears the in-memory encryption key and tokens, then returns to login.
-  function handleLock() {
+  function handleLogout() {
     const { refreshToken } = useAuthStore.getState();
     if (refreshToken) {
       void logout(refreshToken);
@@ -55,7 +55,7 @@ function Navbar() {
         <button
           className="navbar-lock"
           type="button"
-          onClick={handleLock}
+          onClick={handleLogout}
           aria-label={t("nav.lockVault")}
           title={t("nav.lockVault")}
         >

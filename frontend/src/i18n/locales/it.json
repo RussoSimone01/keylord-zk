@@ -149,6 +149,14 @@
   "dialog": {
     "typeToConfirm": "Scrivi <mono>{{text}}</mono> per confermare"
   },
+  "unlock": {
+    "title": "Vault bloccato",
+    "subtitle": "Inserisci la master password per continuare.",
+    "passwordLabel": "Master password",
+    "submit": "Sblocca",
+    "logout": "Esci",
+    "wrongPassword": "Master password errata."
+  },
   "errors": {
     "default": "Si è verificato un errore",
     "unreachable": "Impossibile raggiungere il server",

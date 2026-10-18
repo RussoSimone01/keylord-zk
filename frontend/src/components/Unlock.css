@@ -1,0 +1,24 @@
+.unlock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.unlock-header h1 {
+    margin: 0;
+}
+
+.unlock-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-secondary);
+}
+
+.unlock-lock:hover:not(:disabled) {
+    color: var(--text);
+}
