@@ -138,20 +138,16 @@ namespace backend.Services.Implementations
             // Disposing the transaction without committing rolls it back
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
             // Blocks credential inserts from other sessions until commit
-            await _userRepository.LockForUpdateAsync(userId, cancellationToken);
+            await _userRepository.LockForUpdateAsync(userId, cancellationToken); await _userRepository.LockForUpdateAsync(userId, cancellationToken);
+            // The branch is decided under the lock: a migration or a rotation running in parallel holds the same lock
             User current = await _userRepository.GetByIdAsync(userId, cancellationToken)
                 ?? throw new ApiException(AppErrors.SessionInvalid);
-            if (current.WrappedVaultKey is not null)
+            bool rotating = request.RotateVaultKey;
+            if (current.WrappedVaultKey is null)
             {
-                // The vault key does not change: only its wrapping does, so no credential must travel
-                if (string.IsNullOrEmpty(request.NewWrappedVaultKey) || request.Credentials.Length != 0)
-                {
-                    throw new ApiException(AppErrors.VaultOutOfSync);
-                }
-            }
-            else
-            {
-                if (request.NewWrappedVaultKey is not null)
+                // Old format: the whole vault is re-encrypted with the key derived from the new password.
+                // There is no vault key to rotate: the migration happens at login
+                if (rotating || request.NewWrappedVaultKey is not null)
                 {
                     throw new ApiException(AppErrors.VaultOutOfSync);
                 }
@@ -161,12 +157,35 @@ namespace backend.Services.Implementations
                     throw new ApiException(AppErrors.VaultOutOfSync);
                 }
             }
-            await _userRepository.UpdatePasswordAsync(userId, newAuthKeyHash, request.NewSalt, request.NewKdfIterations, request.NewWrappedVaultKey, cancellationToken);
+            else if (rotating)
+            {
+                // The vault key changes too: same checks as a standalone rotation
+                if (string.IsNullOrEmpty(request.NewWrappedVaultKey) || request.CurrentEpoch != current.VaultKeyEpoch)
+                {
+                    throw new ApiException(AppErrors.VaultOutOfSync);
+                }
+                if (!await _credentialRepository.TryReplaceAllEncryptedDataAsync(userId, replacementsById, cancellationToken))
+                {
+                    throw new ApiException(AppErrors.VaultOutOfSync);
+                }
+            }
+            else
+            {
+                // The vault key stays the same: only its wrapping changes, so no credential must travel
+                if (string.IsNullOrEmpty(request.NewWrappedVaultKey) || request.Credentials.Length != 0)
+                {
+                    throw new ApiException(AppErrors.VaultOutOfSync);
+                }
+            }
+            int epochIncrement = rotating ? 1 : 0;
+            await _userRepository.UpdatePasswordAsync(userId, newAuthKeyHash, request.NewSalt, request.NewKdfIterations,
+                request.NewWrappedVaultKey, epochIncrement, cancellationToken);
             // Other sessions are deleted, not revoked: presenting them again must not look like token theft
             await _refreshTokenRepository.DeleteAllByUserAsync(userId, cancellationToken);
             // The entity is not tracked: updated in memory only, so the new access token carries the new key stamp
             user.AuthKeyHash = newAuthKeyHash;
             user.KdfSalt = request.NewSalt;
+            user.VaultKeyEpoch = current.VaultKeyEpoch + epochIncrement;
             AuthResponseDto tokens = await IssueTokensAsync(user, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return tokens;
