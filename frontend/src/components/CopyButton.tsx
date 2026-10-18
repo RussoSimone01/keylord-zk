@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { copyWithAutoClear } from "../lib/clipboard";
 
 interface CopyButtonProps {
   value: string;
@@ -17,7 +18,7 @@ function CopyButton({ value, label, onCopied }: CopyButtonProps) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   async function handleClick() {
-    await navigator.clipboard.writeText(value);
+    await copyWithAutoClear(value);
     setCopied(true);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopied(false), 2000);
