@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
 import { getLockSettings } from "../lib/lockSettings";
+import { onRemoteLock } from "../lib/lockChannel";
 
 const ACTIVITY_EVENTS = [
   "pointerdown",
@@ -51,11 +52,13 @@ export function useAutoLock(enabled: boolean) {
     );
     document.addEventListener("visibilitychange", onVisibilityChange);
     const interval = window.setInterval(check, CHECK_INTERVAL_MS);
+    const stopRemoteLock = onRemoteLock(lock);
 
     return () => {
       ACTIVITY_EVENTS.forEach((e) => window.removeEventListener(e, onActivity));
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.clearInterval(interval);
+      stopRemoteLock();
     };
   }, [enabled]);
 }

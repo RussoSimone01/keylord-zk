@@ -1,6 +1,6 @@
 import { useAuthStore } from "../store/authStore";
 
-const CLEAR_DELAY_MS = 5_000;
+const CLEAR_DELAY_MS = 30_000;
 
 let timer: number | undefined;
 // True while the clipboard may still hold something copied from the app

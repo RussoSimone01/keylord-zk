@@ -3,8 +3,9 @@ import { useAuthStore } from "../store/authStore";
 import { logout } from "../api/auth";
 import ThemeMenu from "./ThemeMenu";
 import "./Navbar.css";
-import { Dices, KeyRound, Lock, Settings } from "lucide-react";
+import { Dices, KeyRound, Lock, Settings, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { lockAllTabs } from "../lib/lockChannel";
 
 function Navbar() {
   const { t } = useTranslation();
@@ -53,13 +54,23 @@ function Navbar() {
       <div className="navbar-actions">
         <ThemeMenu />
         <button
+          type="button"
+          className="navbar-lock"
+          onClick={lockAllTabs}
+          title={t("navbar.lockVault")}
+          aria-label={t("common.lockVault")}
+        >
+          <Lock size={16} />
+          <span className="navbar-lock-label">{t("nav.lock")}</span>
+        </button>
+        <button
           className="navbar-lock"
           type="button"
           onClick={handleLogout}
-          aria-label={t("nav.lockVault")}
-          title={t("nav.lockVault")}
+          aria-label={t("nav.logout")}
+          title={t("nav.logout")}
         >
-          <Lock size={16} />
+          <LogOut size={16} />
           <span className="navbar-lock-label">{t("nav.logout")}</span>
         </button>
       </div>

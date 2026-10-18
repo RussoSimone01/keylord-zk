@@ -22,6 +22,7 @@
     "vault": "Vault",
     "generator": "Generatore",
     "settings": "Impostazioni",
+    "lock": "Blocca",
     "lockVault": "Blocca il vault",
     "logout": "Esci"
   },
