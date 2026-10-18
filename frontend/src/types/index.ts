@@ -47,15 +47,14 @@ export interface ChangePasswordRequest {
   newAuthKey: string;
   newSalt: string;
   newKdfIterations: number;
-  // Every credential of the vault, each once, with its current id. Empty for users with a vault key
-  // who only change the password
+  // Empty unless the vault key is rotated: then every credential, each once, re-encrypted with the new key
   credentials: ReencryptedCredential[];
-  // Only for users with a vault key: the same vault key, wrapped with the key derived from the new password
-  newWrappedVaultKey?: string;
-  // Only for users with a vault key: also replace the vault key itself. Needs every credential
-  rotateVaultKey?: boolean;
+  // The vault key wrapped with the key derived from the new password
+  newWrappedVaultKey: string;
+  // Also replace the vault key itself
+  rotateVaultKey: boolean;
   // Epoch the client believes is current: checked by the server when rotating
-  currentEpoch?: number;
+  currentEpoch: number;
 }
 
 export interface RefreshRequest {
@@ -72,15 +71,6 @@ export interface DeleteAccountRequest {
 
 export interface LoginResponse extends AuthResponse {
   // null for users not migrated yet
-  wrappedVaultKey: string | null;
+  wrappedVaultKey: string;
   vaultKeyEpoch: number;
-}
-
-export interface RotateVaultKeyRequest {
-  authKey: string;
-  // Epoch the client believes is current: 0 for a user not migrated yet
-  currentEpoch: number;
-  newWrappedVaultKey: string;
-  // Every credential of the vault, each once, re-encrypted with the new vault key
-  credentials: ReencryptedCredential[];
 }

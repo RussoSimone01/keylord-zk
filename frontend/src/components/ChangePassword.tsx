@@ -3,7 +3,6 @@ import { useAuthStore } from "../store/authStore";
 import { changePassword, getSalt, verifyPassword } from "../api/auth";
 import {
   deriveKeys,
-  reencryptVault,
   rewrapVaultKey,
   rotateVaultKeyWithNewPassword,
 } from "../crypto/vault";
@@ -13,7 +12,6 @@ import "../styles/auth.css";
 import "../pages/Settings.css";
 import Spinner from "./Spinner";
 import { useTranslation } from "react-i18next";
-import type { ReencryptedCredential } from "../types";
 
 interface ChangePasswordProps {
   onBack: () => void;
@@ -54,70 +52,46 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
         setError(t("validation.currentPasswordIncorrect"));
         return;
       }
-      const rotating = rotateKey && authStore.wrappedVaultKey !== null;
-      let newAuthKey: string;
-      let newSalt: string;
-      let newKdfIterations: number;
-      let credentials: ReencryptedCredential[];
-      let newWrappedVaultKey: string | undefined;
-      let newEncryptionKey: CryptoKey;
-      if (authStore.wrappedVaultKey && rotating) {
-        const currentVaultKey = authStore.encryptionKey;
-        if (currentVaultKey === null) {
-          return; // Not signed in: the route guard already prevents this
-        }
-        const rotated = await rotateVaultKeyWithNewPassword(
-          await getAll(),
-          currentVaultKey,
-          password,
-        );
-        newAuthKey = rotated.newKeys.authKey;
-        newSalt = rotated.newSalt;
-        newKdfIterations = rotated.newKdfIterations;
-        credentials = rotated.reencryptedCredentials;
-        newWrappedVaultKey = rotated.newWrappedVaultKey;
-        newEncryptionKey = rotated.vaultKey;
-      } else if (authStore.wrappedVaultKey) {
-        const rewrapped = await rewrapVaultKey(
-          authStore.wrappedVaultKey,
-          oldKeys.wrappingKey,
-          password,
-        );
-        newAuthKey = rewrapped.newKeys.authKey;
-        newSalt = rewrapped.newSalt;
-        newKdfIterations = rewrapped.newKdfIterations;
-        credentials = [];
-        newWrappedVaultKey = rewrapped.newWrappedVaultKey;
-        newEncryptionKey = rewrapped.vaultKey;
-      } else {
-        const oldCredentials = await getAll();
-        const reencrypted = await reencryptVault(
-          oldCredentials,
-          oldKeys.encryptionKey,
-          password,
-        );
-        newAuthKey = reencrypted.newKeys.authKey;
-        newSalt = reencrypted.newSalt;
-        newKdfIterations = reencrypted.newKdfIterations;
-        credentials = reencrypted.reencryptedCredentials;
-        newEncryptionKey = reencrypted.newKeys.encryptionKey;
+      const {
+        wrappedVaultKey,
+        encryptionKey: currentVaultKey,
+        vaultKeyEpoch,
+      } = authStore;
+      if (wrappedVaultKey === null || currentVaultKey === null) {
+        return; // No session: the route guard already prevents this
       }
+      // With the rotation the whole vault is re-encrypted with a new vault key;
+      // without it only the key's wrapping changes and no credential travels
+      const change = rotateKey
+        ? await rotateVaultKeyWithNewPassword(
+            await getAll(),
+            currentVaultKey,
+            password,
+          )
+        : {
+            ...(await rewrapVaultKey(
+              wrappedVaultKey,
+              oldKeys.wrappingKey,
+              password,
+            )),
+            reencryptedCredentials: [],
+          };
 
       const { accessToken, refreshToken } = await changePassword({
         oldAuthKey: oldKeys.authKey,
-        newAuthKey,
-        newSalt,
-        newKdfIterations,
-        credentials,
-        newWrappedVaultKey,
-        rotateVaultKey: rotating,
-        currentEpoch: authStore.vaultKeyEpoch,
+        newAuthKey: change.newKeys.authKey,
+        newSalt: change.newSalt,
+        newKdfIterations: change.newKdfIterations,
+        credentials: change.reencryptedCredentials,
+        newWrappedVaultKey: change.newWrappedVaultKey,
+        rotateVaultKey: rotateKey,
+        currentEpoch: vaultKeyEpoch,
       });
       authStore.setAuth({
         username: authStore.username,
-        encryptionKey: newEncryptionKey,
-        wrappedVaultKey: newWrappedVaultKey ?? null,
-        vaultKeyEpoch: authStore.vaultKeyEpoch + (rotating ? 1 : 0),
+        encryptionKey: change.vaultKey,
+        wrappedVaultKey: change.newWrappedVaultKey,
+        vaultKeyEpoch: vaultKeyEpoch + (rotateKey ? 1 : 0),
         accessToken,
         refreshToken,
       });

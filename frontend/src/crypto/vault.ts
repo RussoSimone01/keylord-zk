@@ -7,8 +7,9 @@
  * Flusso:
  *   masterPassword + salt
  *     → PBKDF2 → masterKey
- *       → HKDF(info="auth")     → authKey       (va al server, trattata come password)
- *       → HKDF(info="encrypt")  → encryptionKey  (resta in memoria, mai trasmessa)
+ *       → HKDF(info="auth") → authKey      (va al server, trattata come password)
+ *       → HKDF(info="wrap") → wrappingKey  (resta in memoria, cifra la vaultKey)
+ *   vaultKey: AES-256 casuale, salvata cifrata sul server; cifra le credenziali
  */
 
 // ---------------------------------------------------------------------------
@@ -18,9 +19,7 @@
 export interface DerivedKeys {
   /** Hex string — inviata al server come "password" per autenticarsi */
   authKey: string;
-  /** Chiave derivata dalla password: cifra direttamente le credenziali solo per gli utenti non migrati */
-  encryptionKey: CryptoKey;
-  /** Cifra e decifra la vaultKey, mai estraibile */
+  /** Cifra e decifra la vaultKey, mai estraibile e mai trasmessa */
   wrappingKey: CryptoKey;
 }
 
@@ -199,19 +198,13 @@ export async function deriveKeys(
   const authRaw = await crypto.subtle.exportKey("raw", authCryptoKey);
   const authKey = toHex(authRaw);
 
-  // encryptionKey: non estraibile, rimane in memoria come CryptoKey opaca
-  const encryptionKey = await hkdfDerive(masterKey, "encrypt", [
-    "encrypt",
-    "decrypt",
-  ]);
-
   // wrappingKey: non estraibile, rimane in memoria come CryptoKey opaca
   const wrappingKey = await hkdfDerive(masterKey, "wrap", [
     "wrapKey",
     "unwrapKey",
   ]);
 
-  return { authKey, encryptionKey, wrappingKey };
+  return { authKey, wrappingKey };
 }
 
 // ---------------------------------------------------------------------------
@@ -273,19 +266,6 @@ export async function createVaultKey(
   const wrappedVaultKey = await wrapVaultKey(generated, wrappingKey);
   const vaultKey = await unwrapVaultKey(wrappedVaultKey, wrappingKey);
   return { vaultKey, wrappedVaultKey };
-}
-
-/**
- * La chiave con cui si cifrano le credenziali: la vaultKey per gli utenti migrati,
- * quella derivata dalla password per gli altri.
- */
-export async function resolveVaultKey(
-  keys: DerivedKeys,
-  wrappedVaultKey: string | null,
-): Promise<CryptoKey> {
-  return wrappedVaultKey
-    ? unwrapVaultKey(wrappedVaultKey, keys.wrappingKey)
-    : keys.encryptionKey;
 }
 
 // ---------------------------------------------------------------------------
@@ -387,44 +367,6 @@ async function digestEncryptedData(encryptedData: string): Promise<string> {
 // ---------------------------------------------------------------------------
 // Cambio password
 // ---------------------------------------------------------------------------
-
-/**
- * Ricifra l'intero vault con una nuova encryptionKey.
- * Usato nel flusso change-password per gli utenti non ancora migrati alla vaultKey:
- *   1. Genera nuovo salt + nuove chiavi
- *   2. Decifra tutto con la vecchia chiave e ricifra con la nuova (reencryptCredentials)
- *
- * Gli id restano invariati: il server sostituisce il contenuto delle credenziali esistenti
- * e rifiuta la richiesta se il vault è cambiato nel frattempo. Per accorgersi anche delle modifiche,
- * ogni credenziale porta il digest del contenuto da cui è stata ricifrata.
- *
- * @throws UserFacingError se qualche credenziale non si decifra: non potrebbe essere ricifrata
- *
- * @returns Le credenziali ricifrate + le nuove chiavi (authKey + encryptionKey)
- */
-export async function reencryptVault(
-  encryptedCredentials: EncryptedCredential[],
-  oldEncryptionKey: CryptoKey,
-  newPassword: string,
-): Promise<{
-  newKeys: DerivedKeys;
-  newSalt: string;
-  newKdfIterations: number;
-  reencryptedCredentials: ReencryptedCredential[];
-}> {
-  // 1. Genera nuovo salt e nuove chiavi, con le iterazioni correnti (eventuali aumenti si applicano qui)
-  const newSalt = generateSalt();
-  const newKdfIterations = KDF_ITERATIONS;
-  const newKeys = await deriveKeys(newPassword, newSalt, newKdfIterations);
-
-  // 2. Decifra con la vecchia chiave e ricifra con la nuova
-  const reencryptedCredentials = await reencryptCredentials(
-    encryptedCredentials,
-    oldEncryptionKey,
-    newKeys.encryptionKey,
-  );
-  return { newKeys, newSalt, newKdfIterations, reencryptedCredentials };
-}
 
 /**
  * Porta un vault dal formato precedente a quello con vaultKey: crea la vaultKey e ricifra tutte le credenziali.

@@ -1,51 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getSalt, login, rotateVaultKey } from "../api/auth";
-import {
-  deriveKeys,
-  renewVaultKey,
-  resolveVaultKey,
-  type DerivedKeys,
-} from "../crypto/vault";
+import { getSalt, login } from "../api/auth";
+import { deriveKeys, unwrapVaultKey } from "../crypto/vault";
 import { useAuthStore } from "../store/authStore";
 import { UserFacingError, getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
 import { useTranslation } from "react-i18next";
 import DisplayPreferences from "../components/DisplayPreferences";
-import { getAll } from "../api/vault";
-
-/**
- * Moves a user from the old format to the vault key. Never blocks the login: when it cannot run now
- * (network, vault changed meanwhile, unreadable credentials) the user keeps the old format and it is retried at the next login.
- */
-async function migrateToVaultKey(
-  username: string,
-  keys: DerivedKeys,
-  currentEpoch: number,
-): Promise<void> {
-  try {
-    const { vaultKey, wrappedVaultKey, reencryptedCredentials } =
-      await renewVaultKey(await getAll(), keys.encryptionKey, keys.wrappingKey);
-    const { accessToken, refreshToken } = await rotateVaultKey({
-      authKey: keys.authKey,
-      currentEpoch,
-      newWrappedVaultKey: wrappedVaultKey,
-      credentials: reencryptedCredentials,
-    });
-    // The server deleted the refresh tokens of the login: the new session replaces it
-    useAuthStore.getState().setAuth({
-      username,
-      encryptionKey: vaultKey,
-      wrappedVaultKey,
-      vaultKeyEpoch: currentEpoch + 1,
-      accessToken,
-      refreshToken,
-    });
-  } catch {
-    // The session set at login stays valid and the old format keeps working
-  }
-}
 
 function Login() {
   const { t } = useTranslation();
@@ -64,24 +26,21 @@ function Login() {
       const keys = await deriveKeys(password, salt, kdfIterations);
       const { accessToken, refreshToken, wrappedVaultKey, vaultKeyEpoch } =
         await login({ username, authKey: keys.authKey });
-      let encryptionKey: CryptoKey;
+      let vaultKey: CryptoKey;
       try {
-        encryptionKey = await resolveVaultKey(keys, wrappedVaultKey);
+        vaultKey = await unwrapVaultKey(wrappedVaultKey, keys.wrappingKey);
       } catch {
         // The server accepted the password, so the wrapped key is damaged: this is not a wrong password
         throw new UserFacingError("errors.vaultKeyUnreadable");
       }
       authStore.setAuth({
         username,
-        encryptionKey,
+        encryptionKey: vaultKey,
         wrappedVaultKey,
         vaultKeyEpoch,
         accessToken,
         refreshToken,
       });
-      if (wrappedVaultKey === null) {
-        await migrateToVaultKey(username, keys, vaultKeyEpoch);
-      }
       navigate("/vault");
     } catch (err) {
       setError(getErrorMessage(err));
