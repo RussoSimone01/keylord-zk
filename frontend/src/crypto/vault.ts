@@ -207,8 +207,8 @@ export async function deriveKeys(
 
   // wrappingKey: non estraibile, rimane in memoria come CryptoKey opaca
   const wrappingKey = await hkdfDerive(masterKey, "wrap", [
-    "encrypt",
-    "decrypt",
+    "wrapKey",
+    "unwrapKey",
   ]);
 
   return { authKey, encryptionKey, wrappingKey };

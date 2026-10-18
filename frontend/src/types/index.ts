@@ -9,6 +9,7 @@ export interface RegisterRequest {
   authKey: string;
   salt: string;
   kdfIterations: number;
+  wrappedVaultKey: string;
 }
 
 export interface LoginRequest {
@@ -60,4 +61,10 @@ export interface VerifyPasswordRequest {
 
 export interface DeleteAccountRequest {
   authKey: string;
+}
+
+export interface LoginResponse extends AuthResponse {
+  // null for users not migrated yet
+  wrappedVaultKey: string | null;
+  vaultKeyEpoch: number;
 }

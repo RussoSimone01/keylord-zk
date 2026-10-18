@@ -2,7 +2,12 @@ import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { Link, useNavigate } from "react-router-dom";
 import { getErrorMessage } from "../api/errors";
-import { deriveKeys, generateSalt, KDF_ITERATIONS } from "../crypto/vault";
+import {
+  createVaultKey,
+  deriveKeys,
+  generateSalt,
+  KDF_ITERATIONS,
+} from "../crypto/vault";
 import { register } from "../api/auth";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
@@ -36,19 +41,21 @@ function Signup() {
         return;
       }
       const salt: string = generateSalt();
-      const { authKey, encryptionKey } = await deriveKeys(
+      const { authKey, wrappingKey } = await deriveKeys(
         password,
         salt,
         KDF_ITERATIONS,
       );
+      const { vaultKey, wrappedVaultKey } = await createVaultKey(wrappingKey);
       const { accessToken, refreshToken } = await register({
         username,
         email: email || undefined,
         authKey,
         salt,
         kdfIterations: KDF_ITERATIONS,
+        wrappedVaultKey,
       });
-      authStore.setAuth(username, encryptionKey, accessToken, refreshToken);
+      authStore.setAuth(username, vaultKey, accessToken, refreshToken);
       navigate("/vault");
     } catch (err) {
       setError(getErrorMessage(err));
