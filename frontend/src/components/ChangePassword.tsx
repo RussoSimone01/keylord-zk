@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { changePassword, getSalt, verifyPassword } from "../api/auth";
-import { deriveKeys, reencryptVault } from "../crypto/vault";
+import { deriveKeys, reencryptVault, rewrapVaultKey } from "../crypto/vault";
 import { getAll } from "../api/vault";
 import { getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
 import "../pages/Settings.css";
 import Spinner from "./Spinner";
 import { useTranslation } from "react-i18next";
+import type { ReencryptedCredential } from "../types";
 
 interface ChangePasswordProps {
   onBack: () => void;
@@ -42,28 +43,60 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
         return;
       }
       const { salt, kdfIterations } = await getSalt(authStore.username);
-      const { authKey: oldAuthKey, encryptionKey: oldEncryptionKey } =
-        await deriveKeys(oldPassword, salt, kdfIterations);
-      if (!(await verifyPassword({ authKey: oldAuthKey }))) {
+      const oldKeys = await deriveKeys(oldPassword, salt, kdfIterations);
+      if (!(await verifyPassword({ authKey: oldKeys.authKey }))) {
         setError(t("validation.currentPasswordIncorrect"));
         return;
       }
-      const oldCredentials = await getAll();
-      const { newKeys, newSalt, newKdfIterations, reencryptedCredentials } =
-        await reencryptVault(oldCredentials, oldEncryptionKey, password);
+      let newAuthKey: string;
+      let newSalt: string;
+      let newKdfIterations: number;
+      let credentials: ReencryptedCredential[];
+      let newWrappedVaultKey: string | undefined;
+      let newEncryptionKey: CryptoKey;
+      if (authStore.wrappedVaultKey) {
+        const rewrapped = await rewrapVaultKey(
+          authStore.wrappedVaultKey,
+          oldKeys.wrappingKey,
+          password,
+        );
+        newAuthKey = rewrapped.newKeys.authKey;
+        newSalt = rewrapped.newSalt;
+        newKdfIterations = rewrapped.newKdfIterations;
+        credentials = [];
+        newWrappedVaultKey = rewrapped.newWrappedVaultKey;
+        newEncryptionKey = rewrapped.vaultKey;
+      } else {
+        const oldCredentials = await getAll();
+        const reencrypted = await reencryptVault(
+          oldCredentials,
+          oldKeys.encryptionKey,
+          password,
+        );
+        newAuthKey = reencrypted.newKeys.authKey;
+        newSalt = reencrypted.newSalt;
+        newKdfIterations = reencrypted.newKdfIterations;
+        credentials = reencrypted.reencryptedCredentials;
+        newEncryptionKey = reencrypted.newKeys.encryptionKey;
+      }
+
       const { accessToken, refreshToken } = await changePassword({
-        oldAuthKey,
-        newAuthKey: newKeys.authKey,
+        oldAuthKey: oldKeys.authKey,
+        newAuthKey,
         newSalt,
         newKdfIterations,
-        credentials: reencryptedCredentials,
+        credentials,
+        newWrappedVaultKey,
       });
-      authStore.setAuth(
-        authStore.username,
-        newKeys.encryptionKey,
+      authStore.setAuth({
+        username: authStore.username,
+        encryptionKey: newEncryptionKey,
+        wrappedVaultKey: newWrappedVaultKey ?? null,
+        // A password change does not rotate the vault key: the epoch stays as it is
+        vaultKeyEpoch: authStore.vaultKeyEpoch,
         accessToken,
         refreshToken,
-      );
+      });
       onBack();
     } catch (err) {
       setError(getErrorMessage(err));

@@ -3,6 +3,7 @@ import type {
   ChangePasswordRequest,
   DeleteAccountRequest,
   LoginRequest,
+  LoginResponse,
   RefreshRequest,
   RegisterRequest,
   SaltResponse,
@@ -15,8 +16,8 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
   return response.data;
 }
 
-export async function login(data: LoginRequest): Promise<AuthResponse> {
-  const response = await client.post<AuthResponse>("/auth/login", data);
+export async function login(data: LoginRequest): Promise<LoginResponse> {
+  const response = await client.post<LoginResponse>("/auth/login", data);
   return response.data;
 }
 

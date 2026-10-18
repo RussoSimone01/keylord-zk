@@ -152,6 +152,7 @@
     "unreachable": "Unable to reach the server",
     "accountLockedUntil": "Too many failed attempts, account locked until {{date}}",
     "kdfUnsupported": "Unsupported key derivation parameters received from the server",
+    "vaultKeyUnreadable": "Unable to unlock the vault: the encryption key is damaged.",
     "unreadableBeforeChange_one": "{{count}} credential cannot be decrypted: delete it from the vault before changing the password",
     "unreadableBeforeChange_other": "{{count}} credentials cannot be decrypted: delete them from the vault before changing the password",
     "codes": {

@@ -453,3 +453,49 @@ export async function reencryptVault(
 
   return { newKeys, newSalt, newKdfIterations, reencryptedCredentials };
 }
+
+/**
+ * Cambio password per un utente con vaultKey: la vaultKey non cambia, cambia solo la chiave che la cifra.
+ * Nessuna credenziale viene ricifrata.
+ *
+ * La vaultKey viene decifrata come estraibile solo per il tempo del wrap con la nuova wrappingKey,
+ * poi si verifica che il nuovo blob si apra davvero: il server non può controllarlo.
+ *
+ * @throws UserFacingError se il blob attuale non si decifra con la wrappingKey indicata
+ */
+export async function rewrapVaultKey(
+  wrappedVaultKey: string,
+  oldWrappingKey: CryptoKey,
+  newPassword: string,
+): Promise<{
+  newKeys: DerivedKeys;
+  newSalt: string;
+  newKdfIterations: number;
+  newWrappedVaultKey: string;
+  /** La stessa vaultKey, non estraibile, ottenuta dal nuovo blob */
+  vaultKey: CryptoKey;
+}> {
+  let extractableKey: CryptoKey;
+  try {
+    extractableKey = await unwrapVaultKey(
+      wrappedVaultKey,
+      oldWrappingKey,
+      true,
+    );
+  } catch {
+    throw new UserFacingError("errors.vaultKeyUnreadable");
+  }
+  const newSalt = generateSalt();
+  const newKdfIterations = KDF_ITERATIONS;
+  const newKeys = await deriveKeys(newPassword, newSalt, newKdfIterations);
+  const newWrappedVaultKey = await wrapVaultKey(
+    extractableKey,
+    newKeys.wrappingKey,
+  );
+  // Round trip with the new wrapping key: if it fails nothing has been sent yet
+  const vaultKey = await unwrapVaultKey(
+    newWrappedVaultKey,
+    newKeys.wrappingKey,
+  );
+  return { newKeys, newSalt, newKdfIterations, newWrappedVaultKey, vaultKey };
+}

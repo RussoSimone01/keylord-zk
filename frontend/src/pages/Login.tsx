@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getSalt, login } from "../api/auth";
-import { deriveKeys } from "../crypto/vault";
+import { deriveKeys, resolveVaultKey } from "../crypto/vault";
 import { useAuthStore } from "../store/authStore";
-import { getErrorMessage } from "../api/errors";
+import { UserFacingError, getErrorMessage } from "../api/errors";
 import "../styles/auth.css";
 import Spinner from "../components/Spinner";
 import { useTranslation } from "react-i18next";
@@ -23,16 +23,24 @@ function Login() {
     setIsSubmitting(true);
     try {
       const { salt, kdfIterations } = await getSalt(username);
-      const { authKey, encryptionKey } = await deriveKeys(
-        password,
-        salt,
-        kdfIterations,
-      );
-      const { accessToken, refreshToken } = await login({
+      const keys = await deriveKeys(password, salt, kdfIterations);
+      const { accessToken, refreshToken, wrappedVaultKey, vaultKeyEpoch } =
+        await login({ username, authKey: keys.authKey });
+      let encryptionKey: CryptoKey;
+      try {
+        encryptionKey = await resolveVaultKey(keys, wrappedVaultKey);
+      } catch {
+        // The server accepted the password, so the wrapped key is damaged: this is not a wrong password
+        throw new UserFacingError("errors.vaultKeyUnreadable");
+      }
+      authStore.setAuth({
         username,
-        authKey,
+        encryptionKey,
+        wrappedVaultKey,
+        vaultKeyEpoch,
+        accessToken,
+        refreshToken,
       });
-      authStore.setAuth(username, encryptionKey, accessToken, refreshToken);
       navigate("/vault");
     } catch (err) {
       setError(getErrorMessage(err));

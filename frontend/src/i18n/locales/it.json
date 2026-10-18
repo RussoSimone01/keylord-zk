@@ -152,6 +152,7 @@
     "unreachable": "Impossibile raggiungere il server",
     "accountLockedUntil": "Troppi tentativi falliti, account bloccato fino a {{date}}",
     "kdfUnsupported": "Il server ha inviato parametri di derivazione della chiave non supportati",
+    "vaultKeyUnreadable": "Impossibile sbloccare il vault: la chiave di cifratura risulta danneggiata.",
     "unreadableBeforeChange_one": "{{count}} credenziale non si può decifrare: eliminala dal vault prima di cambiare la password",
     "unreadableBeforeChange_other": "{{count}} credenziali non si possono decifrare: eliminale dal vault prima di cambiare la password",
     "codes": {

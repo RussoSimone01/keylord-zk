@@ -55,7 +55,14 @@ function Signup() {
         kdfIterations: KDF_ITERATIONS,
         wrappedVaultKey,
       });
-      authStore.setAuth(username, vaultKey, accessToken, refreshToken);
+      authStore.setAuth({
+        username,
+        encryptionKey: vaultKey,
+        wrappedVaultKey,
+        vaultKeyEpoch: 0,
+        accessToken,
+        refreshToken,
+      });
       navigate("/vault");
     } catch (err) {
       setError(getErrorMessage(err));

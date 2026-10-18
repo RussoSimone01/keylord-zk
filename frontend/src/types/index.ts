@@ -47,8 +47,10 @@ export interface ChangePasswordRequest {
   newAuthKey: string;
   newSalt: string;
   newKdfIterations: number;
-  // Every credential of the vault, each once, with its current id
+  // Every credential of the vault, each once, with its current id. Empty for users with a vault key
   credentials: ReencryptedCredential[];
+  // Only for users with a vault key: the same vault key, wrapped with the key derived from the new password
+  newWrappedVaultKey?: string;
 }
 
 export interface RefreshRequest {

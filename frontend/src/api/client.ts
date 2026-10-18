@@ -22,16 +22,14 @@ const PUBLIC_ENDPOINTS = [
 let refreshPromise: Promise<string> | null = null;
 
 async function refreshAccessToken(): Promise<string> {
-  const { username, encryptionKey, refreshToken } = useAuthStore.getState();
+  const { refreshToken } = useAuthStore.getState();
   if (!refreshToken) {
     throw new Error("No refresh token");
   }
   const { data } = await refreshClient.post<AuthResponse>("/auth/refresh", {
     refreshToken,
   });
-  useAuthStore
-    .getState()
-    .setAuth(username, encryptionKey, data.accessToken, data.refreshToken);
+  useAuthStore.getState().setTokens(data.accessToken, data.refreshToken);
   return data.accessToken;
 }
 
