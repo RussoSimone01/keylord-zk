@@ -18,9 +18,9 @@ A **zero-knowledge** password manager. All cryptography runs in the browser thro
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
 - [Getting started](#getting-started)
-	- [Prerequisites](#prerequisites)
-	- [Backend](#backend)
-	- [Frontend](#frontend)
+    - [Prerequisites](#prerequisites)
+    - [Backend](#backend)
+    - [Frontend](#frontend)
 - [API reference](#api-reference)
 - [Deployment](#deployment)
 - [Security model](#security-model)
@@ -28,9 +28,7 @@ A **zero-knowledge** password manager. All cryptography runs in the browser thro
 
 ---
 
-## How it works
-
-The master password never leaves the browser. Two independent keys are derived from it using PBKDF2 followed by HKDF:
+The master password never leaves the browser. Two independent keys are derived from it using PBKDF2 followed by HKDF, and a third, random key encrypts the credentials:
 
 ```
 masterPassword + salt (32 random bytes, generated at signup)
@@ -38,16 +36,30 @@ masterPassword + salt (32 random bytes, generated at signup)
 	▼
 PBKDF2 (600,000 iterations, SHA-256)
 	│
-	├── HKDF(info="auth")    → authKey        → sent to the server to authenticate
-	└── HKDF(info="encrypt") → encryptionKey  → stays in the browser, encrypts the vault
+	├── HKDF(info="auth") → authKey      → sent to the server to authenticate
+	└── HKDF(info="wrap") → wrappingKey  → stays in the browser, encrypts the vaultKey
+
+vaultKey (random AES-256 key, generated in the browser at signup)
+	└── encrypts the credentials (AES-GCM)
 ```
 
 - **authKey** is exported as a 64-character hex string and sent to the server, which treats it like an ordinary password and stores only its bcrypt hash.
-- **encryptionKey** is a non-extractable `CryptoKey` held in memory only. It is never persisted and never transmitted.
+- **wrappingKey** is a non-extractable `CryptoKey` derived on demand. It is never persisted and never transmitted; its only job is to encrypt and decrypt the vault key.
+- **vaultKey** is a random key generated at signup. The server stores only its wrapped form, encrypted with the `wrappingKey`, as an `ivBase64:ciphertextBase64` string (`WrappedVaultKey`). After login the client unwraps it into a non-extractable `CryptoKey` held in memory only.
 
-Each credential (site, username, password) is serialized to JSON and encrypted individually with AES-256-GCM using a fresh random 12-byte IV. The server stores the result as a single `ivBase64:ciphertextBase64` string and has no way to recover its contents.
+Each credential (site, username, password) is serialized to JSON and encrypted individually with AES-256-GCM, using the `vaultKey` and a fresh random 12-byte IV. The server stores the result as a single `ivBase64:ciphertextBase64` string and has no way to recover its contents.
 
-At login, the client first fetches the user's salt and iteration count (`GET /api/auth/salt/{username}`), derives both keys locally, then authenticates with the `authKey`. Iteration counts outside the accepted range are refused by the client, and unknown usernames receive a deterministic fake salt, so the lookup reveals nothing about which accounts exist.
+At login, the client first fetches the user's salt and iteration count (`GET /api/auth/salt/{username}`), derives the keys locally, then authenticates with the `authKey`. The login response carries the wrapped vault key, which the client unwraps with the `wrappingKey`. Iteration counts outside the accepted range are refused by the client, and unknown usernames receive a deterministic fake salt, so the lookup reveals nothing about which accounts exist.
+
+### Why a separate vault key
+
+If the password encrypted the data directly, changing it would force re-encrypting the whole vault. With a random intermediate key (the scheme also used by Bitwarden and 1Password):
+
+- **Changing the password is cheap**: only the `vaultKey` is re-wrapped with the new `wrappingKey`; the credentials are not touched.
+- **The key can be rotated**: when changing the password the user can also generate a new `vaultKey` and re-encrypt the whole vault, which is useful if a compromise is suspected.
+- **More ways to unlock the vault can be added later** (recovery code, passkey, sharing) by encrypting another copy of the same `vaultKey`.
+
+Each user also has a `VaultKeyEpoch` counter, incremented at every rotation. Together with the salt it identifies the current generation of the keys.
 
 ## Features
 
@@ -57,7 +69,8 @@ At login, the client first fetches the user's salt and iteration count (`GET /ap
 - One-click copy of usernames and passwords to the clipboard
 - Password generator using `crypto.getRandomValues` with rejection sampling (8–64 characters, configurable character classes, look-alike characters such as `0/O` and `1/l/I` excluded)
 - Password strength meter
-- Master password change with full re-encryption of the vault, applied server-side in a single database transaction and rejected if the vault was modified meanwhile
+- Master password change that only re-wraps the vault key, so the credentials are not re-encrypted
+- Optional vault key rotation during a password change: a new vault key is generated and the whole vault is re-encrypted with it, applied server-side in a single database transaction and rejected if the vault was modified meanwhile
 - Credentials that cannot be decrypted are listed separately and can be deleted, without blocking the rest of the vault
 - Account deletion with explicit confirmation and master password re-entry, verified by the server
 - Rotating refresh tokens with reuse detection, expired tokens purged every 6 hours
@@ -138,9 +151,9 @@ keylord-zk/
 - A PostgreSQL database
 - Optionally, the EF Core CLI for managing migrations manually:
 
-	```bash
-	dotnet tool install --global dotnet-ef
-	```
+    ```bash
+    dotnet tool install --global dotnet-ef
+    ```
 
 ### Backend
 
@@ -153,19 +166,19 @@ Create `appsettings.Development.json` next to `appsettings.json` and fill in the
 
 ```json
 {
-	"ConnectionStrings": {
-		"Default": "<PostgreSQL connection string>"
-	},
-	"Jwt": {
-		"Secret": "<random string of at least 32 characters>",
-		"Issuer": "keylord-zk",
-		"Audience": "keylord-zk-client",
-		"AccessTokenExpiryMinutes": 15,
-		"RefreshTokenExpiryDays": 7
-	},
-	"Cors": {
-		"AllowedOrigin": "http://localhost:5173"
-	}
+    "ConnectionStrings": {
+        "Default": "<PostgreSQL connection string>"
+    },
+    "Jwt": {
+        "Secret": "<random string of at least 32 characters>",
+        "Issuer": "keylord-zk",
+        "Audience": "keylord-zk-client",
+        "AccessTokenExpiryMinutes": 15,
+        "RefreshTokenExpiryDays": 7
+    },
+    "Cors": {
+        "AllowedOrigin": "http://localhost:5173"
+    }
 }
 ```
 
@@ -211,32 +224,32 @@ The app is served under the `/keylord-zk/` base path, so open `http://localhost:
 
 Other scripts:
 
-| Command           | Description                              |
-| ----------------- | ---------------------------------------- |
-| `npm run build`   | Type-check and build to `frontend/dist`  |
-| `npm run preview` | Serve the production build locally       |
-| `npm run lint`    | Run ESLint                               |
+| Command           | Description                             |
+| ----------------- | --------------------------------------- |
+| `npm run build`   | Type-check and build to `frontend/dist` |
+| `npm run preview` | Serve the production build locally      |
+| `npm run lint`    | Run ESLint                              |
 
 ## API reference
 
 All routes are prefixed with `/api`. Routes marked 🔒 require an `Authorization: Bearer <accessToken>` header.
 
-| Method   | Route                       | Description                                                            |
-| -------- | --------------------------- | ---------------------------------------------------------------------- |
-| `POST`   | `/auth/register`            | Create an account from username, optional email, authKey and salt      |
+| Method   | Route                      | Description                                                                                                                                                                            |
+| -------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST`   | `/auth/register`           | Create an account from username, optional email, authKey, salt and wrapped vault key                                                                                                   |
+| `POST`   | `/auth/login`              | Authenticate with username and authKey, returns access/refresh tokens, the wrapped vault key and its epoch                                                                             |
+| `GET`    | `/auth/salt/{username}`    | Return the user's KDF salt and iteration count                                                                                                                                         |
+| `POST`   | `/auth/refresh`            | Exchange a refresh token for a new token pair (rotation)                                                                                                                               |
+| `POST`   | `/auth/logout`             | Delete the given refresh token, ending that session                                                                                                                                    |
+| `PUT`    | `/auth/change-password` 🔒 | Replace authKey, salt and wrapped vault key; with `rotateVaultKey` also re-encrypt every credential in place (same ids) and bump the epoch. Atomic; 409 if the vault changed meanwhile |
+| `POST`   | `/auth/verify-password` 🔒 | Check an authKey against the current user (counts towards the lockout)                                                                                                                 |
+| `DELETE` | `/auth/account` 🔒         | Delete the account and all its data; requires the authKey in the body                                                                                                                  |
+| `GET`    | `/vault` 🔒                | List the user's encrypted credentials                                                                                                                                                  |
+| `POST`   | `/vault` 🔒                | Store a new encrypted credential                                                                                                                                                       |
+| `PUT`    | `/vault/{id}` 🔒           | Replace an encrypted credential                                                                                                                                                        |
+| `DELETE` | `/vault/{id}` 🔒           | Delete a credential                                                                                                                                                                    |
 
 Usernames and emails are unique regardless of letter case, and lookups ignore case as well. New usernames may contain only letters, digits, dots, hyphens and underscores (at most 50 characters). Each credential's encrypted payload must have the `ivBase64:ciphertextBase64` format and at most 8,192 characters, a vault holds at most 2,000 credentials, and request bodies are limited to 64 KB (24 MB for `change-password`).
-| `POST`   | `/auth/login`               | Authenticate with username and authKey, returns access/refresh tokens  |
-| `GET`    | `/auth/salt/{username}`     | Return the user's KDF salt and iteration count                         |
-| `POST`   | `/auth/refresh`             | Exchange a refresh token for a new token pair (rotation)               |
-| `POST`   | `/auth/logout`              | Delete the given refresh token, ending that session                    |
-| `PUT`    | `/auth/change-password` 🔒  | Replace authKey and salt and re-encrypt every credential in place (same ids) atomically; 409 if the vault changed meanwhile |
-| `POST`   | `/auth/verify-password` 🔒  | Check an authKey against the current user (counts towards the lockout) |
-| `DELETE` | `/auth/account` 🔒          | Delete the account and all its data; requires the authKey in the body  |
-| `GET`    | `/vault` 🔒                 | List the user's encrypted credentials                                  |
-| `POST`   | `/vault` 🔒                 | Store a new encrypted credential                                       |
-| `PUT`    | `/vault/{id}` 🔒            | Replace an encrypted credential                                        |
-| `DELETE` | `/vault/{id}` 🔒            | Delete a credential                                                    |
 
 Ready-made requests are available in `backend/backend.http`.
 
@@ -246,8 +259,8 @@ Ready-made requests are available in `backend/backend.http`.
 
 Every push to `main` triggers `.github/workflows/deploy.yml`, which builds the frontend and publishes `frontend/dist` to GitHub Pages. Configure the following repository secret:
 
-| Secret         | Value                                                                           |
-| -------------- | ------------------------------------------------------------------------------- |
+| Secret         | Value                                                                               |
+| -------------- | ----------------------------------------------------------------------------------- |
 | `VITE_API_URL` | Public base URL of the API, including the `/api` prefix (e.g. `https://<host>/api`) |
 
 `public/404.html` implements the [spa-github-pages](https://github.com/rafgraph/spa-github-pages) redirect so that client-side routes survive a page reload.
@@ -256,11 +269,11 @@ Every push to `main` triggers `.github/workflows/deploy.yml`, which builds the f
 
 `render.yaml` in the repository root defines a Docker web service built from `backend/dockerfile`; only changes under `backend/` trigger a redeploy. The container runs as an unprivileged user and listens on the port in `$PORT` (set by Render, 8080 when absent). Set these environment variables from the Render dashboard:
 
-| Variable                     | Description                                       |
-| ---------------------------- | ------------------------------------------------- |
-| `ConnectionStrings__Default` | PostgreSQL connection string                      |
-| `Jwt__Secret`                | JWT signing secret                                |
-| `Cors__AllowedOrigin`        | Frontend origin, e.g. `https://<user>.github.io`  |
+| Variable                     | Description                                      |
+| ---------------------------- | ------------------------------------------------ |
+| `ConnectionStrings__Default` | PostgreSQL connection string                     |
+| `Jwt__Secret`                | JWT signing secret                               |
+| `Cors__AllowedOrigin`        | Frontend origin, e.g. `https://<user>.github.io` |
 
 If the service was created manually rather than from the Blueprint, set Root Directory to `backend` and Dockerfile Path to `./dockerfile` in the service settings, and add `ReverseProxy__Enabled=true` to the environment variables.
 
@@ -276,30 +289,33 @@ Every error is returned as an [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)
 
 ```json
 {
-	"type": "https://tools.ietf.org/html/rfc9110#section-15.5.2",
-	"title": "Unauthorized",
-	"status": 401,
-	"detail": "Invalid username or password",
-	"instance": "POST /api/auth/login",
-	"code": "auth.invalid_credentials",
-	"traceId": "00-…"
+    "type": "https://tools.ietf.org/html/rfc9110#section-15.5.2",
+    "title": "Unauthorized",
+    "status": 401,
+    "detail": "Invalid username or password",
+    "instance": "POST /api/auth/login",
+    "code": "auth.invalid_credentials",
+    "traceId": "00-…"
 }
 ```
 
 ## Security model
 
-- **Zero knowledge**: the server never receives the master password or the encryption key and never sees plaintext credentials.
-- **Key separation**: HKDF with distinct `info` labels ensures the `authKey` known to the server reveals nothing about the `encryptionKey`.
+- **Zero knowledge**: the server never receives the master password or the vault key in the clear and never sees plaintext credentials.
+- **Key separation**: HKDF with distinct `info` labels ensures the `authKey` known to the server reveals nothing about the `wrappingKey`.
 - **PBKDF2** with 600,000 iterations of SHA-256 and a 32-byte per-user salt. The iteration count is stored per user and can be raised at the next password change; both server and client accept only values between 600,000 and 2,000,000, so a compromised server cannot weaken the derivation by advertising fewer iterations.
 - **AES-256-GCM** with a random IV for every encryption, providing both confidentiality and integrity.
+- **Random vault key**: the password never encrypts the data directly. The server stores the vault key only in wrapped form, so it cannot be opened without the master password.
+- **Key rotation**: protects the data written from that moment on and invalidates whoever knew the previous key, but it cannot make a copy of the database that was already stolen secret again.
+- **Metadata**: zero knowledge hides the contents, not the metadata. The server can see how many credentials a user has, their size and when they change.
 - **bcrypt** on the `authKey` server-side as an additional layer of defense if the database leaks.
 - **Refresh tokens** are random 32-byte values, stored only as SHA-256 hashes and rotated on every use. Presenting a token that was already revoked, including two concurrent refreshes with the same token, is treated as theft and revokes every session of that user.
-- **Session invalidation**: access tokens carry a fingerprint of the KDF salt, checked on every request. A password change or account deletion invalidates every other session immediately, without waiting for token expiry.
+- **Session invalidation**: access tokens carry a fingerprint of the KDF salt and the vault key epoch, checked on every request. A password change, a vault key rotation or an account deletion invalidates every other session immediately, without waiting for token expiry.
 - **Rate limiting** per IP on registration (5/min), login (10/min) and salt lookup (10/min).
 - **No username enumeration** through login or salt lookup: unknown usernames get a deterministic fake salt (HMAC of the username with a key derived from the JWT secret) and the same error as a wrong password. Registration still reports a taken username, as it must.
 - **Progressive lockout**: every third consecutive failed password check (login, password verification, password change, account deletion) locks the account, for 15 minutes, then 1 hour, then 24 hours for each further lock. Attempts are counted atomically before verification, so concurrent guesses cannot exceed the limit. A successful check resets the counter. When the lock is triggered by a check made from an authenticated session, every session of the user is ended; locks caused by failed logins leave existing sessions alone, so guessing passwords cannot log the user out.
-- **Session storage**: tokens and encryption key live in memory only and are never written to any storage; only the username is kept in `sessionStorage` to prefill the login form. Reloading the page or duplicating the tab therefore requires the master password again, and each tab has its own session.
-- **Vault writes bound to the key**: credentials are created and updated only if the session's key is still current, checked under a lock shared with the password change, so data encrypted with an old key can never be stored.
+- **Session storage**: tokens and the vault key live in memory only and are never written to any storage; only the username is kept in `sessionStorage` to prefill the login form. Reloading the page or duplicating the tab therefore requires the master password again, and each tab has its own session.
+- **Vault writes bound to the key**: credentials are created and updated only if the session's key is still current, checked under a lock shared with the password change and the key rotation, so data encrypted with an old key can never be stored.
 
 ## Roadmap
 
