@@ -18,8 +18,10 @@
 export interface DerivedKeys {
   /** Hex string — inviata al server come "password" per autenticarsi */
   authKey: string;
-  /** CryptoKey — usata per cifrare/decifrare, mai lascia il browser */
+  /** Chiave derivata dalla password: cifra direttamente le credenziali solo per gli utenti non migrati */
   encryptionKey: CryptoKey;
+  /** Cifra e decifra la vaultKey, mai estraibile */
+  wrappingKey: CryptoKey;
 }
 
 export interface PlainCredential {
@@ -203,7 +205,87 @@ export async function deriveKeys(
     "decrypt",
   ]);
 
-  return { authKey, encryptionKey };
+  // wrappingKey: non estraibile, rimane in memoria come CryptoKey opaca
+  const wrappingKey = await hkdfDerive(masterKey, "wrap", [
+    "encrypt",
+    "decrypt",
+  ]);
+
+  return { authKey, encryptionKey, wrappingKey };
+}
+
+// ---------------------------------------------------------------------------
+// Chiave del vault
+// ---------------------------------------------------------------------------
+
+/** Cifra la vaultKey con la wrappingKey. Formato "ivBase64:ciphertextBase64", come le credenziali */
+async function wrapVaultKey(
+  vaultKey: CryptoKey,
+  wrappingKey: CryptoKey,
+): Promise<string> {
+  const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
+  const wrapped = await crypto.subtle.wrapKey("raw", vaultKey, wrappingKey, {
+    name: "AES-GCM",
+    iv,
+  });
+  return `${toBase64(iv)}:${toBase64(wrapped)}`;
+}
+
+/**
+ * Decifra la vaultKey. Di default la chiave risultante non è estraibile,
+ * come l'encryptionKey di prima.
+ * @throws Se la wrappingKey è sbagliata o il blob è corrotto
+ */
+export async function unwrapVaultKey(
+  wrappedVaultKey: string,
+  wrappingKey: CryptoKey,
+  extractable = false,
+): Promise<CryptoKey> {
+  const [ivB64, wrappedB64] = wrappedVaultKey.split(":");
+  if (!ivB64 || !wrappedB64) {
+    throw new Error("Formato wrappedVaultKey non valido");
+  }
+  return crypto.subtle.unwrapKey(
+    "raw",
+    fromBase64(wrappedB64),
+    wrappingKey,
+    { name: "AES-GCM", iv: fromBase64(ivB64) },
+    { name: "AES-GCM", length: KEY_BYTES * 8 },
+    extractable,
+    ["encrypt", "decrypt"],
+  );
+}
+
+/**
+ * Genera una vaultKey casuale e la cifra con la wrappingKey.
+ * La chiave estraibile esiste solo qui dentro, il tempo del wrap: quella restituita
+ * si ottiene decifrando il blob appena creato, quindi il round trip è già verificato
+ * prima che il blob venga inviato al server.
+ */
+export async function createVaultKey(
+  wrappingKey: CryptoKey,
+): Promise<{ vaultKey: CryptoKey; wrappedVaultKey: string }> {
+  const generated = await crypto.subtle.generateKey(
+    { name: "AES-GCM", length: KEY_BYTES * 8 },
+    true,
+    ["encrypt", "decrypt"],
+  );
+  const wrappedVaultKey = await wrapVaultKey(generated, wrappingKey);
+  const vaultKey = await unwrapVaultKey(wrappedVaultKey, wrappingKey);
+  return { vaultKey, wrappedVaultKey };
+}
+
+/**
+ * La chiave con cui si cifrano le credenziali: la vaultKey per gli utenti migrati,
+ * quella derivata dalla password per gli altri.
+ */
+export async function resolveVaultKey(
+  keys: DerivedKeys,
+  wrappedVaultKey: string | null,
+): Promise<CryptoKey> {
+  return wrappedVaultKey
+    ? unwrapVaultKey(wrappedVaultKey, keys.wrappingKey)
+    : keys.encryptionKey;
 }
 
 // ---------------------------------------------------------------------------
