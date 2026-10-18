@@ -70,3 +70,12 @@ export interface LoginResponse extends AuthResponse {
   wrappedVaultKey: string | null;
   vaultKeyEpoch: number;
 }
+
+export interface RotateVaultKeyRequest {
+  authKey: string;
+  // Epoch the client believes is current: 0 for a user not migrated yet
+  currentEpoch: number;
+  newWrappedVaultKey: string;
+  // Every credential of the vault, each once, re-encrypted with the new vault key
+  credentials: ReencryptedCredential[];
+}

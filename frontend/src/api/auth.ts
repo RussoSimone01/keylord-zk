@@ -6,6 +6,7 @@ import type {
   LoginResponse,
   RefreshRequest,
   RegisterRequest,
+  RotateVaultKeyRequest,
   SaltResponse,
   VerifyPasswordRequest,
 } from "../types";
@@ -62,4 +63,14 @@ export async function verifyPassword(
 
 export async function deleteAccount(data: DeleteAccountRequest): Promise<void> {
   await client.delete("/auth/account", { data });
+}
+
+export async function rotateVaultKey(
+  data: RotateVaultKeyRequest,
+): Promise<AuthResponse> {
+  const response = await client.post<AuthResponse>(
+    "/auth/rotate-vault-key",
+    data,
+  );
+  return response.data;
 }

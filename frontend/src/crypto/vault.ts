@@ -390,10 +390,9 @@ async function digestEncryptedData(encryptedData: string): Promise<string> {
 
 /**
  * Ricifra l'intero vault con una nuova encryptionKey.
- * Usato nel flusso change-password:
- *   1. Decifra tutto con la vecchia chiave
- *   2. Genera nuovo salt + nuove chiavi
- *   3. Ricifra tutto con la nuova chiave
+ * Usato nel flusso change-password per gli utenti non ancora migrati alla vaultKey:
+ *   1. Genera nuovo salt + nuove chiavi
+ *   2. Decifra tutto con la vecchia chiave e ricifra con la nuova (reencryptCredentials)
  *
  * Gli id restano invariati: il server sostituisce il contenuto delle credenziali esistenti
  * e rifiuta la richiesta se il vault è cambiato nel frattempo. Per accorgersi anche delle modifiche,
@@ -413,10 +412,54 @@ export async function reencryptVault(
   newKdfIterations: number;
   reencryptedCredentials: ReencryptedCredential[];
 }> {
-  // 1. Decifra con la vecchia chiave
-  const { credentials: plainCredentials, unreadable } = await decryptVault(
+  // 1. Genera nuovo salt e nuove chiavi, con le iterazioni correnti (eventuali aumenti si applicano qui)
+  const newSalt = generateSalt();
+  const newKdfIterations = KDF_ITERATIONS;
+  const newKeys = await deriveKeys(newPassword, newSalt, newKdfIterations);
+
+  // 2. Decifra con la vecchia chiave e ricifra con la nuova
+  const reencryptedCredentials = await reencryptCredentials(
     encryptedCredentials,
     oldEncryptionKey,
+    newKeys.encryptionKey,
+  );
+  return { newKeys, newSalt, newKdfIterations, reencryptedCredentials };
+}
+
+/**
+ * Porta un vault dal formato precedente a quello con vaultKey: crea la vaultKey e ricifra tutte le credenziali.
+ * @throws UserFacingError se qualche credenziale non si decifra
+ */
+export async function migrateVault(
+  encryptedCredentials: EncryptedCredential[],
+  oldEncryptionKey: CryptoKey,
+  wrappingKey: CryptoKey,
+): Promise<{
+  vaultKey: CryptoKey;
+  wrappedVaultKey: string;
+  reencryptedCredentials: ReencryptedCredential[];
+}> {
+  const { vaultKey, wrappedVaultKey } = await createVaultKey(wrappingKey);
+  const reencryptedCredentials = await reencryptCredentials(
+    encryptedCredentials,
+    oldEncryptionKey,
+    vaultKey,
+  );
+  return { vaultKey, wrappedVaultKey, reencryptedCredentials };
+}
+
+/**
+ * Ricifra ogni credenziale da una chiave a un'altra, con l'impronta del contenuto di partenza.
+ * @throws UserFacingError se qualche credenziale non si decifra: non potrebbe essere ricifrata
+ */
+async function reencryptCredentials(
+  encryptedCredentials: EncryptedCredential[],
+  oldKey: CryptoKey,
+  newKey: CryptoKey,
+): Promise<ReencryptedCredential[]> {
+  const { credentials: plainCredentials, unreadable } = await decryptVault(
+    encryptedCredentials,
+    oldKey,
   );
   if (unreadable.length > 0) {
     throw new UserFacingError("errors.unreadableBeforeChange", {
@@ -431,27 +474,16 @@ export async function reencryptVault(
       ),
     ),
   );
-
-  // 2. Genera nuovo salt e nuove chiavi, con le iterazioni correnti (eventuali aumenti si applicano qui)
-  const newSalt = generateSalt();
-  const newKdfIterations = KDF_ITERATIONS;
-  const newKeys = await deriveKeys(newPassword, newSalt, newKdfIterations);
-
-  // 3. Ricifra con la nuova chiave; l'id viaggia in chiaro accanto al payload, non dentro
-  const reencryptedCredentials = await Promise.all(
+  // L'id viaggia in chiaro accanto al payload, non dentro
+  return Promise.all(
     plainCredentials.map(async ({ id, ...plain }) => {
       if (id === undefined) {
         throw new Error("Credenziale senza id");
       }
-      const { encryptedData } = await encryptCredential(
-        plain,
-        newKeys.encryptionKey,
-      );
+      const { encryptedData } = await encryptCredential(plain, newKey);
       return { id, previousDigest: digestById.get(id)!, encryptedData };
     }),
   );
-
-  return { newKeys, newSalt, newKdfIterations, reencryptedCredentials };
 }
 
 /**
