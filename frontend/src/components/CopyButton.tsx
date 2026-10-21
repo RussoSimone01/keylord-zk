@@ -9,7 +9,7 @@ interface CopyButtonProps {
   onCopied?: () => void;
 }
 
-// Icon button that copies value and shows a check for 2 seconds.
+// Icon button that copies value and shows a check for 2 seconds; the toast tells when the clipboard is emptied.
 function CopyButton({ value, label, onCopied }: CopyButtonProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -18,7 +18,10 @@ function CopyButton({ value, label, onCopied }: CopyButtonProps) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   async function handleClick() {
-    await copyWithAutoClear(value);
+    // A refused copy is reported by a toast; the icon stays as it is
+    if (!(await copyWithAutoClear(value))) {
+      return;
+    }
     setCopied(true);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopied(false), 2000);

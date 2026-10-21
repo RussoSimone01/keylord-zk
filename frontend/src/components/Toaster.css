@@ -1,0 +1,89 @@
+/* Fixed at the bottom center; the empty region lets clicks through to the page. */
+.toaster {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-6);
+  z-index: 70;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 100%;
+  min-height: 44px;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-overlay);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 20px;
+  pointer-events: auto;
+  animation: toast-in 0.16s ease-out;
+}
+
+.toast-icon {
+  flex: none;
+}
+
+.toast-success .toast-icon {
+  color: var(--success);
+}
+
+.toast-info .toast-icon {
+  color: var(--info);
+}
+
+.toast-warning .toast-icon {
+  color: var(--warning);
+}
+
+.toast-danger .toast-icon {
+  color: var(--danger);
+}
+
+/* Message and countdown wrap as one block on narrow screens. */
+.toast-text {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) 0;
+}
+
+.toast-countdown {
+  font: 500 13px/20px var(--font-mono);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The toast already sits on surface-raised: hover one step lower so it stays visible. */
+.toast button.icon-button:hover:not(:disabled) {
+  background: var(--surface);
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+/* Phones: above the bottom tab bar. */
+@media (max-width: 640px) {
+  .toaster {
+    bottom: calc(56px + env(safe-area-inset-bottom) + var(--space-3));
+  }
+}

@@ -65,6 +65,20 @@
     "dangerZone": "Danger zone",
     "deleteAccount": "Delete account"
   },
+  "autoLock": {
+    "inactivity": "Lock after inactivity of",
+    "hidden": "When the tab is not visible",
+    "immediately": "Lock immediately",
+    "after": "Lock after {{time}}",
+    "onlyInactivity": "Only after inactivity",
+    "seconds_one": "{{count}} second",
+    "seconds_other": "{{count}} seconds",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "hint": "Locking applies to every open tab and empties the clipboard. The master password alone opens the vault again. These settings are saved on this device."
+  },
   "changePassword": {
     "title": "Change master password",
     "currentPassword": "Current password",
@@ -214,5 +228,15 @@
         "internal_error": "An unexpected error occurred on the server"
       }
     }
+  },
+  "clipboard": {
+    "copied": "Copied to clipboard",
+    "clearsIn": "clears in {{seconds}}s",
+    "announce": "Copied. The clipboard will be cleared in {{seconds}} seconds.",
+    "cleared": "Clipboard cleared",
+    "failed": "Couldn't copy: the browser didn't allow access to the clipboard."
+  },
+  "toast": {
+    "dismiss": "Dismiss notification"
   }
 }

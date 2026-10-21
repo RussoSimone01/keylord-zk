@@ -8,7 +8,7 @@ export interface LockSettings {
 const DEFAULTS: LockSettings = { inactivityMs: 5 * 60_000, hiddenMs: 60_000 };
 // The settings live in localStorage, so they are clamped: tampering cannot switch the lock off
 const INACTIVITY_RANGE = { min: 5_000, max: 60 * 60_000 };
-const HIDDEN_RANGE = { min: 0, max: 60 * 60_000 };
+export const HIDDEN_RANGE = { min: 0, max: 60 * 60_000 };
 
 function clamp(
   value: unknown,
@@ -37,5 +37,9 @@ export function getLockSettings(): LockSettings {
 }
 
 export function saveLockSettings(settings: LockSettings) {
-  localStorage.setItem(KEY, JSON.stringify(settings));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(settings));
+  } catch {
+    // Storage unavailable (private mode): the defaults keep applying
+  }
 }

@@ -3,6 +3,7 @@ import ModeSwitcher from "./ModeSwitcher";
 import "../pages/Settings.css";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./LanguageSwitcher";
+import AutoLockSettings from "./AutoLockSettings";
 
 interface SettingsMenuProps {
   onSelect: (selection: "changePassword" | "deleteAccount") => void;
@@ -30,6 +31,7 @@ function SettingsMenu({ onSelect }: SettingsMenuProps) {
       </section>
       <section className="settings-section">
         <h2 className="settings-label">{t("settings.security")}</h2>
+        <AutoLockSettings />
         <button type="button" onClick={() => onSelect("changePassword")}>
           {t("settings.changePassword")}
         </button>

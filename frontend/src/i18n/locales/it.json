@@ -65,6 +65,20 @@
     "dangerZone": "Zona pericolosa",
     "deleteAccount": "Elimina account"
   },
+  "autoLock": {
+    "inactivity": "Blocca dopo un'inattività di",
+    "hidden": "Se la scheda non è visibile",
+    "immediately": "Blocca subito",
+    "after": "Blocca dopo {{time}}",
+    "onlyInactivity": "Solo per inattività",
+    "seconds_one": "{{count}} secondo",
+    "seconds_other": "{{count}} secondi",
+    "minutes_one": "{{count}} minuto",
+    "minutes_other": "{{count}} minuti",
+    "hours_one": "{{count}} ora",
+    "hours_other": "{{count}} ore",
+    "hint": "Il blocco vale per tutte le schede aperte e svuota gli appunti. Per riaprire il vault basta la master password. Queste impostazioni sono salvate su questo dispositivo."
+  },
   "changePassword": {
     "title": "Cambia master password",
     "currentPassword": "Password attuale",
@@ -214,5 +228,15 @@
         "internal_error": "Si è verificato un errore imprevisto sul server"
       }
     }
+  },
+  "clipboard": {
+    "copied": "Copiato negli appunti",
+    "clearsIn": "si svuotano tra {{seconds}} s",
+    "announce": "Copiato. Gli appunti verranno svuotati tra {{seconds}} secondi.",
+    "cleared": "Appunti svuotati",
+    "failed": "Impossibile copiare: il browser non ha consentito l'accesso agli appunti."
+  },
+  "toast": {
+    "dismiss": "Chiudi notifica"
   }
 }

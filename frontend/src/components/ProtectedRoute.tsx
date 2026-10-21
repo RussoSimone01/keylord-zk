@@ -2,6 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore, selectIsLocked } from "../store/authStore";
 import Navbar from "./Navbar";
 import Unlock from "./Unlock";
+import Toaster from "./Toaster";
 import { useAutoLock } from "../hooks/useAutoLock";
 
 function ProtectedRoute() {
@@ -20,6 +21,7 @@ function ProtectedRoute() {
     <>
       <Navbar />
       <Outlet />
+      <Toaster />
     </>
   );
 }

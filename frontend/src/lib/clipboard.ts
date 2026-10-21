@@ -1,4 +1,6 @@
+import i18n from "../i18n";
 import { useAuthStore } from "../store/authStore";
+import { useToastStore } from "../store/toastStore";
 
 const CLEAR_DELAY_MS = 30_000;
 
@@ -7,23 +9,56 @@ let timer: number | undefined;
 let pending = false;
 // When the clipboard should be cleared; 0 after a refused attempt, so the next focus retries
 let clearAt = 0;
+// The "copied" toast with the countdown, replaced by "cleared" once the clipboard is empty
+let copyToastId: number | null = null;
 
-async function clear() {
+async function clear(silent = false) {
   try {
     await navigator.clipboard.writeText("");
     pending = false;
+    const toasts = useToastStore.getState();
+    if (!silent && copyToastId !== null && toasts.toast?.id === copyToastId) {
+      toasts.show({
+        tone: "info",
+        message: i18n.t("clipboard.cleared"),
+        duration: 2500,
+      });
+    }
+    copyToastId = null;
   } catch {
     // Usually the document has no focus and writeText is refused: retry when it gets it back
     clearAt = 0;
   }
 }
 
-export async function copyWithAutoClear(value: string) {
-  await navigator.clipboard.writeText(value);
+// Copies value and schedules the clipboard to be emptied. Reports the outcome with a toast
+// and returns false when the browser refuses the copy (no permission, insecure context).
+export async function copyWithAutoClear(value: string): Promise<boolean> {
+  const toasts = useToastStore.getState();
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    copyToastId = null;
+    toasts.show({
+      tone: "danger",
+      message: i18n.t("clipboard.failed"),
+      duration: 6000,
+    });
+    return false;
+  }
   pending = true;
   clearAt = Date.now() + CLEAR_DELAY_MS;
   window.clearTimeout(timer);
   timer = window.setTimeout(() => void clear(), CLEAR_DELAY_MS);
+  copyToastId = toasts.show({
+    tone: "success",
+    message: i18n.t("clipboard.copied"),
+    announce: i18n.t("clipboard.announce", {
+      seconds: CLEAR_DELAY_MS / 1000,
+    }),
+    countdown: { until: clearAt, key: "clipboard.clearsIn" },
+  });
+  return true;
 }
 
 function retryIfDue() {
@@ -35,10 +70,11 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) retryIfDue();
 });
 
-// Locking or logging out drops the key: clean the clipboard right away, without waiting for the timer
+// Locking or logging out drops the key: clean the clipboard right away, without waiting for the timer.
+// Silent, because the toasts of the unlocked session are already gone.
 useAuthStore.subscribe((state, prev) => {
   if (prev.encryptionKey && !state.encryptionKey && pending) {
     window.clearTimeout(timer);
-    void clear();
+    void clear(true);
   }
 });
