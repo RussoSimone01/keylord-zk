@@ -60,6 +60,8 @@ function Signup() {
         encryptionKey: vaultKey,
         wrappedVaultKey,
         vaultKeyEpoch: 0,
+        salt,
+        kdfIterations: KDF_ITERATIONS,
         accessToken,
         refreshToken,
       });

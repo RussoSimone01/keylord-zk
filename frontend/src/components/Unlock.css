@@ -1,24 +1,33 @@
 .unlock-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.unlock-identity {
+  margin: 0 0 var(--space-2);
+  color: var(--text-secondary);
+}
+
+.unlock-identity .mono {
+  color: var(--text);
 }
 
 .unlock-header h1 {
-    margin: 0;
+  margin: 0;
 }
 
-.unlock-lock {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    background: transparent;
-    border-color: transparent;
-    color: var(--text-secondary);
+.unlock-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
 }
 
-.unlock-lock:hover:not(:disabled) {
-    color: var(--text);
+.unlock-logout:hover:not(:disabled) {
+  color: var(--text);
 }

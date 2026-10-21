@@ -1,0 +1,168 @@
+.user-menu {
+  position: relative;
+}
+
+.user-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  max-width: 220px;
+  padding: 0 var(--space-2) 0 var(--space-1);
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.user-menu-trigger:hover:not(:disabled),
+.user-menu-trigger[aria-expanded="true"] {
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+/* Same look as the vault monograms, smaller. */
+.user-menu-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font: 700 12px/1 var(--font-mono);
+}
+
+.user-menu-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.user-menu-chevron {
+  flex: none;
+  color: var(--text-secondary);
+  transition: transform 0.12s;
+}
+
+.user-menu-trigger[aria-expanded="true"] .user-menu-chevron {
+  transform: rotate(180deg);
+}
+
+/* Anchored to the trigger's right edge so it never runs off the screen. */
+.user-menu-list {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  max-width: calc(100vw - 2 * var(--space-4));
+  padding: var(--space-1);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
+}
+
+.user-menu-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  margin-bottom: var(--space-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.user-menu-identity-label {
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.user-menu-identity-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 14px/20px var(--font-mono);
+  color: var(--text);
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border-color: transparent;
+  text-align: left;
+  color: var(--text);
+}
+
+.user-menu-item:hover:not(:disabled),
+.user-menu-item:focus-visible {
+  background: var(--surface);
+}
+
+.user-menu-item:focus-visible {
+  outline-offset: -2px;
+}
+
+.user-menu-item-icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-secondary);
+}
+
+.user-menu-item-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-menu-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.user-menu-item-title {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.user-menu-item-hint {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--text-secondary);
+}
+
+.user-menu-kbd {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  font: 500 11px/16px var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.user-menu-separator {
+  height: 1px;
+  margin: var(--space-1) 0;
+  background: var(--border);
+}
+
+/* Below 900px only the initial is shown, leaving room for translated nav labels. */
+@media (max-width: 900px) {
+  .user-menu-name {
+    display: none;
+  }
+}

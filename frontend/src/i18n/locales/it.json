@@ -22,7 +22,6 @@
     "vault": "Vault",
     "generator": "Generatore",
     "settings": "Impostazioni",
-    "lock": "Blocca",
     "lockVault": "Blocca il vault",
     "logout": "Esci"
   },
@@ -156,7 +155,16 @@
     "passwordLabel": "Master password",
     "submit": "Sblocca",
     "logout": "Esci",
-    "wrongPassword": "Master password errata."
+    "wrongPassword": "Master password errata.",
+    "signedInAs": "Accesso come <mono>{{username}}</mono>",
+    "unlocking": "Sblocco in corso…",
+    "tooManyAttempts": "Troppi tentativi errati, quindi la sessione è stata chiusa. Accedi di nuovo per continuare."
+  },
+  "userMenu": {
+    "label": "Account: {{username}}",
+    "signedInAs": "Accesso come",
+    "lockHint": "Resti connesso: per riaprirlo basta la master password.",
+    "logoutHint": "Chiude la sessione su questo dispositivo."
   },
   "errors": {
     "default": "Si è verificato un errore",

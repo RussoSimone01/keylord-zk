@@ -1,30 +1,16 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
-import { logout } from "../api/auth";
+import { NavLink } from "react-router-dom";
 import ThemeMenu from "./ThemeMenu";
 import "./Navbar.css";
-import { Dices, KeyRound, Lock, Settings, LogOut } from "lucide-react";
+import { Dices, KeyRound, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { lockAllTabs } from "../lib/lockChannel";
+import UserMenu from "./UserMenu";
 
 function Navbar() {
   const { t } = useTranslation();
-  const clearAuth = useAuthStore((state) => state.clearAuth);
-  const navigate = useNavigate();
-
-  // Locking ends the session on the server, clears the in-memory encryption key and tokens, then returns to login.
-  function handleLogout() {
-    const { refreshToken } = useAuthStore.getState();
-    if (refreshToken) {
-      void logout(refreshToken);
-    }
-    clearAuth();
-    navigate("/login");
-  }
 
   return (
     <header className="navbar">
-      <div className="navbar-wordmark" aria-label="keylord">
+      <div className="navbar-wordmark">
         k<span className="navbar-wordmark-rest">eylord</span>
         <span className="navbar-caret">_</span>
       </div>
@@ -53,26 +39,7 @@ function Navbar() {
       </nav>
       <div className="navbar-actions">
         <ThemeMenu />
-        <button
-          type="button"
-          className="navbar-lock"
-          onClick={lockAllTabs}
-          title={t("navbar.lockVault")}
-          aria-label={t("common.lockVault")}
-        >
-          <Lock size={16} />
-          <span className="navbar-lock-label">{t("nav.lock")}</span>
-        </button>
-        <button
-          className="navbar-lock"
-          type="button"
-          onClick={handleLogout}
-          aria-label={t("nav.logout")}
-          title={t("nav.logout")}
-        >
-          <LogOut size={16} />
-          <span className="navbar-lock-label">{t("nav.logout")}</span>
-        </button>
+        <UserMenu />
       </div>
     </header>
   );

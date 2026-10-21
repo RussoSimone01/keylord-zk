@@ -8,6 +8,7 @@ import "../styles/auth.css";
 import Spinner from "../components/Spinner";
 import { useTranslation } from "react-i18next";
 import DisplayPreferences from "../components/DisplayPreferences";
+import { takeLoginNotice } from "../lib/session";
 
 function Login() {
   const { t } = useTranslation();
@@ -17,6 +18,8 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  // Set when the session was ended for the user (e.g. too many unlock attempts), to say why
+  const [notice] = useState(takeLoginNotice);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit() {
@@ -59,6 +62,11 @@ function Login() {
     <div className="auth-container">
       <div className="auth-card">
         <h1>{t("login.title")}</h1>
+        {notice && !error && (
+          <p className="auth-notice" role="status">
+            {t(notice)}
+          </p>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault();

@@ -1,13 +1,12 @@
 import { useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-// adjust the imports to your project
+import { Trans, useTranslation } from "react-i18next";
 import { deriveKeys, unwrapVaultKey } from "../crypto/vault";
 import { useAuthStore } from "../store/authStore";
 import { getErrorMessage } from "../api/errors";
-import { logout } from "../api/auth";
+import { endSession, type LoginNotice } from "../lib/session";
 import { useNavigate } from "react-router-dom";
 import DisplayPreferences from "./DisplayPreferences";
-import { Lock } from "lucide-react";
+import { LogOut } from "lucide-react";
 import "./Unlock.css";
 
 const MAX_ATTEMPTS = 3;
@@ -15,7 +14,6 @@ const MAX_ATTEMPTS = 3;
 function Unlock() {
   const { t } = useTranslation();
   const username = useAuthStore((s) => s.username);
-  const clearAuth = useAuthStore((state) => state.clearAuth);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,11 +23,11 @@ function Unlock() {
   async function handleSubmit() {
     setIsSubmitting(true);
     setError("");
-    const { salt, kdfIterations, wrappedVaultKey, unlock, clearAuth } =
+    const { salt, kdfIterations, wrappedVaultKey, unlock } =
       useAuthStore.getState();
     try {
       if (!wrappedVaultKey) {
-        clearAuth();
+        endSessionWith("vault.sessionExpired");
         return;
       }
       const keys = await deriveKeys(password, salt, kdfIterations);
@@ -40,8 +38,8 @@ function Unlock() {
         // AES-GCM tag mismatch: almost certainly a wrong password
         attempts.current += 1;
         if (attempts.current >= MAX_ATTEMPTS) {
-          // Too many local attempts: force a full login, where the server lockout applies
-          clearAuth();
+          // Too many local attempts: end the session and force a full login, where the server lockout applies
+          endSessionWith("unlock.tooManyAttempts");
           return;
         }
         setError(t("unlock.wrongPassword"));
@@ -55,12 +53,14 @@ function Unlock() {
     }
   }
 
-  async function handleLogout() {
-    const { refreshToken } = useAuthStore.getState();
-    if (refreshToken) {
-      void logout(refreshToken);
-    }
-    clearAuth();
+  // Revokes the session on the server too; the login page then explains why it ended
+  function endSessionWith(notice: LoginNotice) {
+    endSession(notice);
+    navigate("/login", { replace: true });
+  }
+
+  function handleLogout() {
+    endSession();
     navigate("/login");
   }
 
@@ -69,11 +69,22 @@ function Unlock() {
       <div className="auth-card">
         <div className="unlock-header">
           <h1>{t("unlock.title")}</h1>
-          <button type="button" onClick={handleLogout} className="unlock-lock">
-            <Lock size={16} />
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="unlock-logout"
+          >
+            <LogOut size={16} aria-hidden="true" />
             <span>{t("unlock.logout")}</span>
           </button>
         </div>
+        <p className="unlock-identity">
+          <Trans
+            i18nKey="unlock.signedInAs"
+            values={{ username }}
+            components={{ mono: <span className="mono" /> }}
+          />
+        </p>
         <p>{t("unlock.subtitle")}</p>
         <form
           onSubmit={(e) => {
@@ -81,16 +92,17 @@ function Unlock() {
             void handleSubmit();
           }}
         >
-          <div className="auth-field">
-            <label htmlFor="username">{t("common.username")}</label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              readOnly
-              disabled
-            />
-          </div>
+          {/* Not shown: lets password managers pair the master password with this account */}
+          <input
+            className="sr-only"
+            type="text"
+            name="username"
+            autoComplete="username"
+            value={username}
+            readOnly
+            tabIndex={-1}
+            aria-hidden="true"
+          />
           <div className="auth-field">
             <label htmlFor="unlock-password">{t("unlock.passwordLabel")}</label>
             <input
@@ -108,7 +120,7 @@ function Unlock() {
             type="submit"
             disabled={isSubmitting || !password}
           >
-            {t("unlock.submit")}
+            {isSubmitting ? t("unlock.unlocking") : t("unlock.submit")}
           </button>
           {error && (
             <span className="auth-error" role="alert">

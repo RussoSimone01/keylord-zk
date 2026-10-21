@@ -92,6 +92,9 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
         encryptionKey: change.vaultKey,
         wrappedVaultKey: change.newWrappedVaultKey,
         vaultKeyEpoch: vaultKeyEpoch + (rotateKey ? 1 : 0),
+        // Unlocking derives the wrapping key again, so it needs the new salt and iterations
+        salt: change.newSalt,
+        kdfIterations: change.newKdfIterations,
         accessToken,
         refreshToken,
       });

@@ -22,7 +22,6 @@
     "vault": "Vault",
     "generator": "Generator",
     "settings": "Settings",
-    "lock": "Lock",
     "lockVault": "Lock vault",
     "logout": "Log out"
   },
@@ -156,7 +155,16 @@
     "passwordLabel": "Master password",
     "submit": "Unlock",
     "logout": "Log out",
-    "wrongPassword": "Wrong master password."
+    "wrongPassword": "Wrong master password.",
+    "signedInAs": "Signed in as <mono>{{username}}</mono>",
+    "unlocking": "Unlocking…",
+    "tooManyAttempts": "Too many wrong attempts, so the session was closed. Log in again to continue."
+  },
+  "userMenu": {
+    "label": "Account: {{username}}",
+    "signedInAs": "Signed in as",
+    "lockHint": "You stay signed in: your master password reopens it.",
+    "logoutHint": "Ends the session on this device."
   },
   "errors": {
     "default": "An error occurred",
