@@ -137,19 +137,20 @@ namespace backend.Services.Implementations
 
             // Disposing the transaction without committing rolls it back
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-            // Blocks credential inserts from other sessions until commit
-            await _userRepository.LockForUpdateAsync(userId, cancellationToken); await _userRepository.LockForUpdateAsync(userId, cancellationToken);
-            // The branch is decided under the lock: a migration or a rotation running in parallel holds the same lock
+            // Blocks credential inserts and other password changes until commit
+            await _userRepository.LockForUpdateAsync(userId, cancellationToken);
+            // Read again under the lock: a password change or rotation committed meanwhile is visible here
             User current = await _userRepository.GetByIdAsync(userId, cancellationToken)
                 ?? throw new ApiException(AppErrors.SessionInvalid);
+            // Both branches depend on the current keys: a different epoch means another vault key, a different salt
+            // means the old password checked above is no longer the current one
+            if (request.CurrentEpoch != current.VaultKeyEpoch || current.KdfSalt != user.KdfSalt)
+            {
+                throw new ApiException(AppErrors.VaultOutOfSync);
+            }
             bool rotating = request.RotateVaultKey;
             if (rotating)
             {
-                // The vault key changes too: same checks as a standalone rotation
-                if (request.CurrentEpoch != current.VaultKeyEpoch)
-                {
-                    throw new ApiException(AppErrors.VaultOutOfSync);
-                }
                 // The client must have re-encrypted exactly the current vault: anything added, removed or edited meanwhile aborts the change
                 if (!await _credentialRepository.TryReplaceAllEncryptedDataAsync(userId, replacementsById, cancellationToken))
                 {
@@ -160,7 +161,6 @@ namespace backend.Services.Implementations
             {
                 // The vault key stays the same: only its wrapping changes, so no credential must travel
                 throw new ApiException(AppErrors.VaultOutOfSync);
-
             }
             int epochIncrement = rotating ? 1 : 0;
             await _userRepository.UpdatePasswordAsync(userId, newAuthKeyHash, request.NewSalt, request.NewKdfIterations,

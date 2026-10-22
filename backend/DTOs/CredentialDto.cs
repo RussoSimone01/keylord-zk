@@ -7,7 +7,7 @@ namespace backend.DTOs
     {
         [Required]
         [MaxLength(VaultLimits.MaxEncryptedDataLength)]
-        [RegularExpression(VaultLimits.EncryptedDataPattern, ErrorMessage = "Encrypted data must have the format ivBase64:ciphertextBase64")]
+        [RegularExpression(EncryptedDataRules.CredentialPattern, ErrorMessage = EncryptedDataRules.CredentialPatternMessage)]
         public string EncryptedData { get; set; } = string.Empty;
     }
 }

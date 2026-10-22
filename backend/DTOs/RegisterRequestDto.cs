@@ -26,8 +26,7 @@ namespace backend.DTOs
         public long KdfIterations { get; set; }
 
         [Required]
-        [Length(1, 512)]
-        [RegularExpression(EncryptedDataRules.Pattern, ErrorMessage = EncryptedDataRules.PatternMessage)]
+        [RegularExpression(EncryptedDataRules.WrappedVaultKeyPattern, ErrorMessage = EncryptedDataRules.WrappedVaultKeyPatternMessage)]
         public string WrappedVaultKey { get; set; } = string.Empty;
     }
 }

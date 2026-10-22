@@ -369,7 +369,7 @@ async function digestEncryptedData(encryptedData: string): Promise<string> {
 // ---------------------------------------------------------------------------
 
 /**
- * Porta un vault dal formato precedente a quello con vaultKey: crea la vaultKey e ricifra tutte le credenziali.
+ * Crea una nuova vaultKey, cifrata con la wrappingKey indicata, e ricifra tutte le credenziali dalla chiave attuale.
  * @throws UserFacingError se qualche credenziale non si decifra
  */
 export async function renewVaultKey(

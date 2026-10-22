@@ -53,7 +53,7 @@ export interface ChangePasswordRequest {
   newWrappedVaultKey: string;
   // Also replace the vault key itself
   rotateVaultKey: boolean;
-  // Epoch the client believes is current: checked by the server when rotating
+  // Epoch the client believes is current: the server rejects the request if the vault key changed meanwhile
   currentEpoch: number;
 }
 

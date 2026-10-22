@@ -178,18 +178,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Check status used by Render
-app.MapGet("/health", async (AppDbContext db, CancellationToken ct) =>
-{
-    try
-    {
-        await db.Database.CanConnectAsync(ct);
-        return Results.Ok(new { status = "healthy" });
-    }
-    catch
-    {
-        return Results.StatusCode(503);
-    }
-});
+// Liveness check used by Render: it only tells that the API answers, without touching the database,
+// so frequent probes do not keep it awake
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 app.Run();

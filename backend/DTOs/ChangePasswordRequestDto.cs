@@ -21,22 +21,21 @@ namespace backend.DTOs
         [Range(KdfLimits.MinIterations, KdfLimits.MaxIterations)]
         public long NewKdfIterations { get; set; }
 
-        // Must be empty only if you rotate the vault key
+        // Empty unless RotateVaultKey is set: then every credential of the vault, each once, re-encrypted with the new vault key
         [Required]
         [MaxLength(VaultLimits.MaxCredentialsPerUser)]
         public ReencryptedCredentialDto[] Credentials { get; set; } = [];
 
-        // Only for users on the vault-key format: the same vault key, wrapped with the key derived from the new password
+        // The vault key wrapped with the key derived from the new password: the same vault key, or a new one when rotating
         [Required]
-        [Length(1, 512)]
-        [RegularExpression(EncryptedDataRules.Pattern, ErrorMessage = EncryptedDataRules.PatternMessage)]
+        [RegularExpression(EncryptedDataRules.WrappedVaultKeyPattern, ErrorMessage = EncryptedDataRules.WrappedVaultKeyPatternMessage)]
         public string NewWrappedVaultKey { get; set; } = string.Empty;
 
-        // Only for users with a vault key: also replaces the vault key itself (a rotation). The flag is explicit
+        // Also replaces the vault key itself (a rotation). The flag is explicit
         // because an empty vault cannot be told apart from a password change without it
         public bool RotateVaultKey { get; set; }
 
-        // Epoch the client believes is current: checked only when RotateVaultKey is set
+        // Epoch the client believes is current: a different value means the vault key changed meanwhile and the request is rejected
         [Range(0, int.MaxValue)]
         public int CurrentEpoch { get; set; }
     }
