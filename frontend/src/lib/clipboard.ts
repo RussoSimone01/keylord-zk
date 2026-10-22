@@ -1,8 +1,8 @@
 import i18n from "../i18n";
 import { useAuthStore } from "../store/authStore";
 import { useToastStore } from "../store/toastStore";
-
-const CLEAR_DELAY_MS = 30_000;
+import { getClipboardClearMs } from "./clipboardSettings";
+import { formatDuration } from "./duration";
 
 let timer: number | undefined;
 // True while the clipboard may still hold something copied from the app
@@ -46,15 +46,17 @@ export async function copyWithAutoClear(value: string): Promise<boolean> {
     });
     return false;
   }
+  // Read at every copy, so a change in Settings applies from the next one
+  const delay = getClipboardClearMs();
   pending = true;
-  clearAt = Date.now() + CLEAR_DELAY_MS;
+  clearAt = Date.now() + delay;
   window.clearTimeout(timer);
-  timer = window.setTimeout(() => void clear(), CLEAR_DELAY_MS);
+  timer = window.setTimeout(() => void clear(), delay);
   copyToastId = toasts.show({
     tone: "success",
     message: i18n.t("clipboard.copied"),
     announce: i18n.t("clipboard.announce", {
-      seconds: CLEAR_DELAY_MS / 1000,
+      time: formatDuration(i18n.t, delay),
     }),
     countdown: { until: clearAt, key: "clipboard.clearsIn" },
   });

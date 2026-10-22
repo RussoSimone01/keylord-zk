@@ -71,13 +71,11 @@
     "immediately": "Lock immediately",
     "after": "Lock after {{time}}",
     "onlyInactivity": "Only after inactivity",
-    "seconds_one": "{{count}} second",
-    "seconds_other": "{{count}} seconds",
-    "minutes_one": "{{count}} minute",
-    "minutes_other": "{{count}} minutes",
-    "hours_one": "{{count}} hour",
-    "hours_other": "{{count}} hours",
-    "hint": "Locking applies to every open tab and empties the clipboard. The master password alone opens the vault again. These settings are saved on this device."
+    "hint": "Locking applies to every open tab. The master password alone opens the vault again. These settings are saved on this device."
+  },
+  "clipboardSettings": {
+    "label": "Clear the clipboard after",
+    "hint": "Applies to copied passwords and usernames. The clipboard is still cleared at once when the vault locks or you log out."
   },
   "changePassword": {
     "title": "Change master password",
@@ -232,11 +230,19 @@
   "clipboard": {
     "copied": "Copied to clipboard",
     "clearsIn": "clears in {{seconds}}s",
-    "announce": "Copied. The clipboard will be cleared in {{seconds}} seconds.",
+    "announce": "Copied. The clipboard will be cleared in {{time}}.",
     "cleared": "Clipboard cleared",
     "failed": "Couldn't copy: the browser didn't allow access to the clipboard."
   },
   "toast": {
     "dismiss": "Dismiss notification"
+  },
+  "duration": {
+    "seconds_one": "{{count}} second",
+    "seconds_other": "{{count}} seconds",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours"
   }
 }

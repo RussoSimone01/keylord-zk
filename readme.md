@@ -76,7 +76,7 @@ The app distinguishes between **locking** the vault and **logging out**:
 
 The vault locks itself after a period of inactivity (5 minutes by default, configurable from 1 to 60 minutes) and when the tab stays hidden for too long (1 minute by default, configurable from immediately to 30 minutes, or disabled in favour of the inactivity limit alone). The timings are stored on the device and clamped to their ranges, so editing them in storage cannot switch the lock off.
 
-Locking manually, from the user menu or with **Alt+Shift+L** (**⌥⇧L** on macOS), locks every open tab of the app at once. Values copied to the clipboard are erased after 30 seconds, and immediately when the vault is locked or the user logs out.
+Locking manually, from the user menu or with **Alt+Shift+L** (**⌥⇧L** on macOS), locks every open tab of the app at once. Values copied to the clipboard are erased after 30 seconds by default (configurable from 10 seconds to 2 minutes, clamped the same way), and immediately when the vault is locked or the user logs out.
 
 Reloading the page or duplicating the tab always requires the master password again: keys and tokens live in memory only, and each tab has its own session.
 
@@ -87,7 +87,7 @@ Reloading the page or duplicating the tab always requires the master password ag
 - Signup and login with client-side key derivation
 - Full CRUD on credentials, each encrypted individually with AES-GCM, edited in a side panel that warns before discarding unsaved changes
 - Vault search by site or username
-- One-click copy of usernames and passwords, with automatic clipboard clearing after 30 seconds
+- One-click copy of usernames and passwords, with automatic clipboard clearing after a configurable delay (30 seconds by default)
 - Passwords masked with a fixed-length placeholder that does not reveal their length
 - Password generator using `crypto.getRandomValues` with rejection sampling (8–64 characters, configurable character classes, look-alike characters such as `0/O` and `1/l/I` excluded)
 - Password strength meter
@@ -170,7 +170,7 @@ keylord-zk/
 │       ├── crypto/           → vault.ts (key derivation, vault key, AES-GCM), password.ts (generator, strength)
 │       ├── hooks/            → auto-lock, media queries
 │       ├── i18n/             → i18next setup and the English and Italian translations
-│       ├── lib/              → session handling, cross-tab lock, lock settings, clipboard clearing
+│       ├── lib/              → session handling, cross-tab lock, lock and clipboard settings, clipboard clearing
 │       ├── pages/            → Login, Signup, Vault, Generator, Settings
 │       ├── store/            → authStore (in-memory session), theme, locale and toast stores
 │       ├── styles/
@@ -360,7 +360,7 @@ Rate limiting and lockout logs rely on the client IP. With `ReverseProxy__Enable
 - **Progressive lockout**: every third consecutive failed password check (login, password verification, password change, account deletion) locks the account, for 15 minutes, then 1 hour, then 24 hours for each further lock. Attempts are counted atomically before verification, so concurrent guesses cannot exceed the limit. A successful check resets the counter. When the lock is triggered by a check made from an authenticated session, every session of the user is ended; locks caused by failed logins leave existing sessions alone, so guessing passwords cannot log the user out.
 - **Session storage**: tokens and the vault key live in memory only and are never written to any storage; only the username is kept in `sessionStorage` to prefill the login form. Reloading the page or duplicating the tab therefore requires the master password again, and each tab has its own session.
 - **Local unlock**: a locked vault is reopened by unwrapping the vault key in the browser. Three failed attempts end the session, so further guesses must go through the server and its lockout.
-- **Automatic lock and clipboard clearing**: the vault locks after inactivity or when the tab is hidden, and copied secrets are erased from the clipboard after 30 seconds or as soon as the vault is locked.
+- **Automatic lock and clipboard clearing**: the vault locks after inactivity or when the tab is hidden, and copied secrets are erased from the clipboard after a delay of at most 2 minutes (30 seconds by default) or as soon as the vault is locked.
 - **Vault writes bound to the key**: credentials are created and updated only if the session's key is still current, checked under a lock shared with the password change and the key rotation, so data encrypted with an old key can never be stored.
 
 ## Roadmap

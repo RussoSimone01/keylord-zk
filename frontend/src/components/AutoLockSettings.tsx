@@ -6,9 +6,9 @@ import {
   saveLockSettings,
   type LockSettings,
 } from "../lib/lockSettings";
+import { formatDuration } from "../lib/duration";
 
 const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
 const INACTIVITY_OPTIONS = [1, 5, 15, 30, 60].map((m) => m * MINUTE);
 const HIDDEN_OPTIONS = [0, 1, 5, 15, 30].map((m) => m * MINUTE);
 // "Only after inactivity" is stored as the longest hidden time: it never fires before the inactivity limit
@@ -32,12 +32,6 @@ function AutoLockSettings() {
   function update(next: LockSettings) {
     saveLockSettings(next);
     setSettings(next);
-  }
-
-  function duration(ms: number) {
-    if (ms % HOUR === 0) return t("autoLock.hours", { count: ms / HOUR });
-    if (ms % MINUTE === 0) return t("autoLock.minutes", { count: ms / MINUTE });
-    return t("autoLock.seconds", { count: Math.round(ms / 1000) });
   }
 
   // A hidden time not shorter than the inactivity limit has no effect of its own
@@ -65,7 +59,7 @@ function AutoLockSettings() {
         >
           {withCurrent(INACTIVITY_OPTIONS, settings.inactivityMs).map((ms) => (
             <option key={ms} value={ms}>
-              {duration(ms)}
+              {formatDuration(t, ms)}
             </option>
           ))}
         </select>
@@ -93,7 +87,7 @@ function AutoLockSettings() {
             <option key={ms} value={ms}>
               {ms === 0
                 ? t("autoLock.immediately")
-                : t("autoLock.after", { time: duration(ms) })}
+                : t("autoLock.after", { time: formatDuration(t, ms) })}
             </option>
           ))}
           <option value={ONLY_INACTIVITY}>

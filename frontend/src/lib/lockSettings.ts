@@ -10,7 +10,7 @@ const DEFAULTS: LockSettings = { inactivityMs: 5 * 60_000, hiddenMs: 60_000 };
 const INACTIVITY_RANGE = { min: 5_000, max: 60 * 60_000 };
 export const HIDDEN_RANGE = { min: 0, max: 60 * 60_000 };
 
-function clamp(
+export function clamp(
   value: unknown,
   range: { min: number; max: number },
   fallback: number,

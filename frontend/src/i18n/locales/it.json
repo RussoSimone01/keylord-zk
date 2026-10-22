@@ -71,13 +71,11 @@
     "immediately": "Blocca subito",
     "after": "Blocca dopo {{time}}",
     "onlyInactivity": "Solo per inattività",
-    "seconds_one": "{{count}} secondo",
-    "seconds_other": "{{count}} secondi",
-    "minutes_one": "{{count}} minuto",
-    "minutes_other": "{{count}} minuti",
-    "hours_one": "{{count}} ora",
-    "hours_other": "{{count}} ore",
-    "hint": "Il blocco vale per tutte le schede aperte e svuota gli appunti. Per riaprire il vault basta la master password. Queste impostazioni sono salvate su questo dispositivo."
+    "hint": "Il blocco vale per tutte le schede aperte. Per riaprire il vault basta la master password. Queste impostazioni sono salvate su questo dispositivo."
+  },
+  "clipboardSettings": {
+    "label": "Svuota gli appunti dopo",
+    "hint": "Vale per password e nomi utente copiati. Gli appunti si svuotano comunque subito quando il vault si blocca o esci."
   },
   "changePassword": {
     "title": "Cambia master password",
@@ -232,11 +230,19 @@
   "clipboard": {
     "copied": "Copiato negli appunti",
     "clearsIn": "si svuotano tra {{seconds}} s",
-    "announce": "Copiato. Gli appunti verranno svuotati tra {{seconds}} secondi.",
+    "announce": "Copiato. Gli appunti verranno svuotati tra {{time}}.",
     "cleared": "Appunti svuotati",
     "failed": "Impossibile copiare: il browser non ha consentito l'accesso agli appunti."
   },
   "toast": {
     "dismiss": "Chiudi notifica"
+  },
+  "duration": {
+    "seconds_one": "{{count}} secondo",
+    "seconds_other": "{{count}} secondi",
+    "minutes_one": "{{count}} minuto",
+    "minutes_other": "{{count}} minuti",
+    "hours_one": "{{count}} ora",
+    "hours_other": "{{count}} ore"
   }
 }
