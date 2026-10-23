@@ -4,6 +4,7 @@ import "./Navbar.css";
 import { Dices, KeyRound, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import UserMenu from "./UserMenu";
+import Wordmark from "./Wordmark";
 
 function Navbar() {
   const { t } = useTranslation();
@@ -11,8 +12,7 @@ function Navbar() {
   return (
     <header className="navbar">
       <div className="navbar-wordmark">
-        k<span className="navbar-wordmark-rest">eylord</span>
-        <span className="navbar-caret">_</span>
+        <Wordmark />
       </div>
       <nav className="navbar-links" aria-label={t("nav.main")}>
         <NavLink

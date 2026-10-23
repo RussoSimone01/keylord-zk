@@ -25,6 +25,9 @@
     "lockVault": "Blocca il vault",
     "logout": "Esci"
   },
+  "brand": {
+    "tagline": "Password manager zero-knowledge. Tutto viene cifrato sul tuo dispositivo."
+  },
   "theme": {
     "label": "Tema",
     "current": "Tema: {{name}}, {{mode}}",

@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import AuthBrand from "./AuthBrand";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { Trans, useTranslation } from "react-i18next";
 import { deriveKeys, unwrapVaultKey } from "../crypto/vault";
 import { useAuthStore } from "../store/authStore";
@@ -13,6 +15,7 @@ const MAX_ATTEMPTS = 3;
 
 function Unlock() {
   const { t } = useTranslation();
+  usePageTitle("unlock.title");
   const username = useAuthStore((s) => s.username);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -66,6 +69,7 @@ function Unlock() {
 
   return (
     <div className="auth-container">
+      <AuthBrand />
       <div className="auth-card">
         <div className="unlock-header">
           <h1>{t("unlock.title")}</h1>

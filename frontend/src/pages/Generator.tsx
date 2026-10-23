@@ -1,9 +1,11 @@
 import PasswordGenerator from "../components/PasswordGenerator";
+import { usePageTitle } from "../hooks/usePageTitle";
 import "./Generator.css";
 import { useTranslation } from "react-i18next";
 
 function Generator() {
   const { t } = useTranslation();
+  usePageTitle("generator.title");
   return (
     <div className="generator-container">
       <h1>{t("generator.title")}</h1>

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import AuthBrand from "../components/AuthBrand";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { useAuthStore } from "../store/authStore";
 import { Link, useNavigate } from "react-router-dom";
 import { getErrorMessage } from "../api/errors";
@@ -16,6 +18,7 @@ import DisplayPreferences from "../components/DisplayPreferences";
 
 function Signup() {
   const { t } = useTranslation();
+  usePageTitle("signup.title");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,6 +82,7 @@ function Signup() {
 
   return (
     <div className="auth-container">
+      <AuthBrand tagline />
       <div className="auth-card">
         <h1>{t("signup.title")}</h1>
         <form

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import AuthBrand from "../components/AuthBrand";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { Link, useNavigate } from "react-router-dom";
 import { getSalt, login } from "../api/auth";
 import { deriveKeys, unwrapVaultKey } from "../crypto/vault";
@@ -12,6 +14,7 @@ import { takeLoginNotice } from "../lib/session";
 
 function Login() {
   const { t } = useTranslation();
+  usePageTitle("login.title");
   const authStore = useAuthStore();
   // Prefilled after a reload or a lock: unlocking then only needs the master password
   const [username, setUsername] = useState(authStore.username);
@@ -60,6 +63,7 @@ function Login() {
 
   return (
     <div className="auth-container">
+      <AuthBrand tagline />
       <div className="auth-card">
         <h1>{t("login.title")}</h1>
         {notice && !error && (

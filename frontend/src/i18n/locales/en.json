@@ -25,6 +25,9 @@
     "lockVault": "Lock vault",
     "logout": "Log out"
   },
+  "brand": {
+    "tagline": "Zero-knowledge password manager. Everything is encrypted on your device."
+  },
   "theme": {
     "label": "Theme",
     "current": "Theme: {{name}}, {{mode}}",
