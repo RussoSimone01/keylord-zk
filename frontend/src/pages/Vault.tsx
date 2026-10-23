@@ -23,7 +23,8 @@ import { KeyRound, Plus, Trash2 } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
 
 const EMPTY_DRAFT: CredentialDraft = { site: "", username: "", password: "" };
-const DOCKED_QUERY = "(min-width: 1100px)";
+// Wide enough for the 480px panel beside a list that still shows the full password mask
+const DOCKED_QUERY = "(min-width: 1200px)";
 const FLASH_MS = 1600;
 
 function sameDraft(a: CredentialDraft, b: CredentialDraft) {

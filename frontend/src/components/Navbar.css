@@ -62,6 +62,16 @@
   align-items: center;
 }
 
+/* Above phones the bar stays on top while scrolling: the menus are always at hand and
+   the docked credential panel can start right below it. */
+@media (min-width: 641px) {
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+}
+
 /* Tablets: tighter spacing so translated labels still fit on one line. */
 @media (max-width: 900px) {
   .navbar {

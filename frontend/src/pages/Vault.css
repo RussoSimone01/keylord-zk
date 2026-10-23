@@ -4,12 +4,15 @@
   padding: var(--space-8) var(--space-6);
 }
 
+/* The docked panel is fixed to the right edge: the list is centered in the space left of it. */
 .vault-container.with-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 400px;
-  align-items: start;
-  gap: var(--space-6);
-  max-width: 1320px;
+  max-width: none;
+  margin-right: var(--credential-panel-width);
+}
+
+.vault-container.with-panel .vault-main {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .vault-main {
