@@ -30,14 +30,11 @@
   },
   "theme": {
     "label": "Tema",
-    "current": "Tema: {{name}}, {{mode}}",
-    "color": "Colore",
-    "modeLabel": "Modalità",
-    "modes": {
-      "light": "Chiaro",
-      "dark": "Scuro",
-      "system": "Automatico"
-    }
+    "current": "Tema: {{name}}",
+    "currentSystem": "Tema: Automatico ({{name}})",
+    "system": "Automatico",
+    "dark": "Scuri",
+    "light": "Chiari"
   },
   "language": {
     "label": "Lingua"

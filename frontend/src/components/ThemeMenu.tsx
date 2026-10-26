@@ -1,39 +1,48 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
-import { MODES, PALETTES, themeId, useThemeStore } from "../store/themeStore";
-import ModeIcon from "./ModeIcon";
-import "./ThemeSwitcher.css";
+import { THEMES, useThemeStore, type ThemeChoice } from "../store/themeStore";
+import ThemeSwatch from "./ThemeSwatch";
 import "./ThemeMenu.css";
 import { useTranslation } from "react-i18next";
 
-// Shows only the active palette and mode; clicking opens a menu with two groups, Color and Mode.
-// The menu stays open after a choice so both can be set in one go; Escape, Tab or a click outside closes it.
-// Each swatch sets its own data-theme so it is drawn in that palette's colors (styles in ThemeSwitcher.css).
+// Shows only the current theme; clicking opens a menu with Automatic, then the dark and the light themes.
+// Choosing a theme closes the menu and returns focus to the trigger; Escape, Tab or a click outside close it too.
 interface ThemeMenuProps {
   // "above" opens the list upwards, for controls near the bottom of the page (login and sign-up).
   placement?: "below" | "above";
 }
 
+const DARK = THEMES.filter((item) => item.scheme === "dark");
+const LIGHT = THEMES.filter((item) => item.scheme === "light");
+// Menu order, used for focus and arrow keys
+const ORDER: ThemeChoice[] = [
+  "system",
+  ...DARK.map((item) => item.id),
+  ...LIGHT.map((item) => item.id),
+];
+
 function ThemeMenu({ placement = "below" }: ThemeMenuProps) {
   const { t } = useTranslation();
-  const palette = useThemeStore((state) => state.palette);
-  const mode = useThemeStore((state) => state.mode);
-  const resolvedMode = useThemeStore((state) => state.resolvedMode);
-  const setPalette = useThemeStore((state) => state.setPalette);
-  const setMode = useThemeStore((state) => state.setMode);
+  const choice = useThemeStore((state) => state.choice);
+  const theme = useThemeStore((state) => state.theme);
+  const setChoice = useThemeStore((state) => state.setChoice);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  // Palette items first, then mode items: arrow keys move through both groups as one list
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const menuId = useId();
-  const colorLabelId = useId();
-  const modeLabelId = useId();
-  const active = PALETTES.find((p) => p.id === palette) ?? PALETTES[0];
-  const current = t("theme.current", {
-    name: active.name,
-    mode: t(`theme.modes.${mode}`),
-  });
+  const darkLabelId = useId();
+  const lightLabelId = useId();
+
+  const nameOf = (id: ThemeChoice) =>
+    id === "system"
+      ? t("theme.system")
+      : (THEMES.find((item) => item.id === id)?.name ?? id);
+  // Automatic also names the theme it is showing now
+  const current =
+    choice === "system"
+      ? t("theme.currentSystem", { name: nameOf(theme) })
+      : t("theme.current", { name: nameOf(choice) });
 
   // While open: a click outside closes the menu without moving focus.
   useEffect(() => {
@@ -49,13 +58,11 @@ function ThemeMenu({ placement = "below" }: ThemeMenuProps) {
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [open]);
 
-  // On open, focus moves to the checked palette so arrow keys start from there.
+  // On open, focus moves to the checked item so arrow keys start from there.
   useEffect(() => {
     if (open) {
-      const currentPalette = useThemeStore.getState().palette;
-      itemRefs.current[
-        PALETTES.findIndex((p) => p.id === currentPalette)
-      ]?.focus();
+      const checked = useThemeStore.getState().choice;
+      itemRefs.current[ORDER.indexOf(checked)]?.focus();
     }
   }, [open]);
 
@@ -64,6 +71,11 @@ function ThemeMenu({ placement = "below" }: ThemeMenuProps) {
     if (returnFocus) {
       triggerRef.current?.focus();
     }
+  }
+
+  function choose(id: ThemeChoice) {
+    setChoice(id);
+    close(true);
   }
 
   function handleTriggerKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
@@ -97,6 +109,29 @@ function ThemeMenu({ placement = "below" }: ThemeMenuProps) {
     }
   }
 
+  function item(id: ThemeChoice) {
+    return (
+      <button
+        key={id}
+        ref={(el) => {
+          itemRefs.current[ORDER.indexOf(id)] = el;
+        }}
+        type="button"
+        role="menuitemradio"
+        aria-checked={id === choice}
+        tabIndex={-1}
+        className="theme-menu-item"
+        onClick={() => choose(id)}
+      >
+        <ThemeSwatch choice={id} />
+        <span className="theme-menu-item-name">{nameOf(id)}</span>
+        {id === choice && (
+          <Check size={14} className="theme-menu-check" aria-hidden="true" />
+        )}
+      </button>
+    );
+  }
+
   return (
     <div className="theme-menu" ref={rootRef}>
       <button
@@ -111,17 +146,8 @@ function ThemeMenu({ placement = "below" }: ThemeMenuProps) {
         onClick={() => setOpen(!open)}
         onKeyDown={handleTriggerKeyDown}
       >
-        <span
-          className="theme-swatch"
-          data-theme={themeId(palette, resolvedMode)}
-          aria-hidden="true"
-        >
-          <span />
-        </span>
-        <span className="theme-menu-name">{active.name}</span>
-        <span className="theme-menu-mode-icon">
-          <ModeIcon mode={mode} size={14} />
-        </span>
+        <ThemeSwatch choice={choice} />
+        <span className="theme-menu-name">{nameOf(choice)}</span>
         <ChevronDown
           size={14}
           className="theme-menu-chevron"
@@ -138,74 +164,19 @@ function ThemeMenu({ placement = "below" }: ThemeMenuProps) {
           aria-label={t("theme.label")}
           onKeyDown={handleMenuKeyDown}
         >
-          <div role="group" aria-labelledby={colorLabelId}>
-            <div id={colorLabelId} className="theme-menu-group-label">
-              {t("theme.color")}
-            </div>
-            {PALETTES.map((item, i) => (
-              <button
-                key={item.id}
-                ref={(el) => {
-                  itemRefs.current[i] = el;
-                }}
-                type="button"
-                role="menuitemradio"
-                aria-checked={item.id === palette}
-                tabIndex={-1}
-                className="theme-menu-item"
-                onClick={() => setPalette(item.id)}
-              >
-                <span
-                  className="theme-swatch"
-                  data-theme={themeId(item.id, resolvedMode)}
-                  aria-hidden="true"
-                >
-                  <span />
-                </span>
-                <span className="theme-menu-item-name">{item.name}</span>
-                {item.id === palette && (
-                  <Check
-                    size={14}
-                    className="theme-menu-check"
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
-            ))}
-          </div>
+          {item("system")}
           <div className="theme-menu-separator" role="separator" />
-          <div role="group" aria-labelledby={modeLabelId}>
-            <div id={modeLabelId} className="theme-menu-group-label">
-              {t("theme.modeLabel")}
+          <div role="group" aria-labelledby={darkLabelId}>
+            <div id={darkLabelId} className="theme-menu-group-label">
+              {t("theme.dark")}
             </div>
-            {MODES.map((item, i) => (
-              <button
-                key={item}
-                ref={(el) => {
-                  itemRefs.current[PALETTES.length + i] = el;
-                }}
-                type="button"
-                role="menuitemradio"
-                aria-checked={item === mode}
-                tabIndex={-1}
-                className="theme-menu-item"
-                onClick={() => setMode(item)}
-              >
-                <span className="theme-menu-item-icon">
-                  <ModeIcon mode={item} />
-                </span>
-                <span className="theme-menu-item-name">
-                  {t(`theme.modes.${item}`)}
-                </span>
-                {item === mode && (
-                  <Check
-                    size={14}
-                    className="theme-menu-check"
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
-            ))}
+            {DARK.map((entry) => item(entry.id))}
+          </div>
+          <div role="group" aria-labelledby={lightLabelId}>
+            <div id={lightLabelId} className="theme-menu-group-label">
+              {t("theme.light")}
+            </div>
+            {LIGHT.map((entry) => item(entry.id))}
           </div>
         </div>
       )}

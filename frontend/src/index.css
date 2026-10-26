@@ -1,7 +1,7 @@
 /* Design tokens from the Keylord design system. Colors switch with [data-theme] on <html>; everything else is shared.
-   Each palette has a dark and a light variant, named "<palette>-<mode>" (see store/themeStore.ts).
-   --accent fills buttons and marks; --accent-text is the accent for text, icons and thin indicators,
-   darker where the accent itself is too light to read (Amber light). */
+   Each theme is either dark or light (see store/themeStore.ts): Terminal, Midnight, Amber and Violet are dark,
+   Paper and Daylight light. --accent fills buttons and marks; --accent-text is the accent for text, icons
+   and thin indicators, a shade darker in the light themes. */
 
 :root {
   --space-1: 4px;
@@ -20,9 +20,9 @@
   --font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
 }
 
-/* Terminal: green, dark */
+/* Terminal: green, dark (default) */
 :root,
-[data-theme="terminal-dark"] {
+[data-theme="terminal"] {
   color-scheme: dark;
   --bg: #070a08;
   --surface: #121915;
@@ -49,8 +49,8 @@
   --shadow-overlay: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* Terminal: green, light */
-[data-theme="terminal-light"] {
+/* Paper: green ink on cream, light */
+[data-theme="paper"] {
   color-scheme: light;
   --bg: #f1eee6;
   --surface: #fbf9f4;
@@ -78,7 +78,7 @@
 }
 
 /* Midnight: blue, dark */
-[data-theme="midnight-dark"] {
+[data-theme="midnight"] {
   color-scheme: dark;
   --bg: #0a0f1a;
   --surface: #121a2a;
@@ -105,8 +105,8 @@
   --shadow-overlay: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 
-/* Midnight: blue, light */
-[data-theme="midnight-light"] {
+/* Daylight: blue on cool white, light */
+[data-theme="daylight"] {
   color-scheme: light;
   --bg: #edf2f8;
   --surface: #fafcff;
@@ -134,7 +134,7 @@
 }
 
 /* Amber: orange, dark */
-[data-theme="amber-dark"] {
+[data-theme="amber"] {
   color-scheme: dark;
   --bg: #0c0905;
   --surface: #1a130b;
@@ -161,50 +161,22 @@
   --shadow-overlay: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* Amber: orange, light */
-[data-theme="amber-light"] {
-  color-scheme: light;
-  --bg: #f6efe4;
-  --surface: #fdf9f3;
-  --surface-raised: #ffffff;
-  --border: #e5d6bf;
-  --border-strong: #8f7b5c;
-  --text: #1f160b;
-  --text-secondary: #5e4b33;
-  --accent: #ffa53d;
-  --accent-hover: #ff9520;
-  --accent-text: #a14800;
-  --accent-soft: #ffa53d29;
-  --on-accent: #2a1500;
-  --focus: #a14800;
-  --danger: #b42318;
-  --danger-soft: #b4231814;
-  --warning: #7a5600;
-  --warning-soft: #7a560014;
-  --success: #286a1a;
-  --success-soft: #2f7a1f14;
-  --info: #0b6680;
-  --info-soft: #0e749014;
-  --overlay: #1f160b73;
-  --shadow-overlay: 0 12px 32px rgba(31, 22, 11, 0.14);
-}
-
-/* Violet: purple, dark */
-[data-theme="violet-dark"] {
+/* Violet: purple, dark. Surfaces only lightly tinted, so the accent is the one strong purple */
+[data-theme="violet"] {
   color-scheme: dark;
-  --bg: #0b0613;
-  --surface: #181027;
-  --surface-raised: #251b3b;
-  --border: #3d2f5a;
-  --border-strong: #8d7cab;
-  --text: #f3effb;
-  --text-secondary: #b5a7cd;
-  --accent: #a873ff;
-  --accent-hover: #bc93ff;
-  --accent-text: #a873ff;
-  --accent-soft: #a873ff29;
-  --on-accent: #0f0321;
-  --focus: #a873ff;
+  --bg: #0a0712;
+  --surface: #171123;
+  --surface-raised: #231c32;
+  --border: #392f4e;
+  --border-strong: #7f7696;
+  --text: #f1eff7;
+  --text-secondary: #a69eb9;
+  --accent: #b786ff;
+  --accent-hover: #cca8ff;
+  --accent-text: #b786ff;
+  --accent-soft: #b786ff24;
+  --on-accent: #140725;
+  --focus: #b786ff;
   --danger: #ff6b8a;
   --danger-soft: #ff6b8a24;
   --warning: #f5c451;
@@ -217,33 +189,6 @@
   --shadow-overlay: 0 16px 40px rgba(0, 0, 0, 0.65);
 }
 
-/* Violet: purple, light */
-[data-theme="violet-light"] {
-  color-scheme: light;
-  --bg: #f3f0fa;
-  --surface: #fcfbff;
-  --surface-raised: #ffffff;
-  --border: #dcd4ee;
-  --border-strong: #867aa1;
-  --text: #1b1426;
-  --text-secondary: #584d6d;
-  --accent: #7a3cf0;
-  --accent-hover: #6527d6;
-  --accent-text: #6a2ee0;
-  --accent-soft: #7a3cf014;
-  --on-accent: #ffffff;
-  --focus: #6a2ee0;
-  --danger: #c0263d;
-  --danger-soft: #c0263d14;
-  --warning: #8a5a00;
-  --warning-soft: #8a5a0014;
-  --success: #18693f;
-  --success-soft: #1d7a4f14;
-  --info: #1f5fb8;
-  --info-soft: #1f5fb814;
-  --overlay: #1b142673;
-  --shadow-overlay: 0 12px 32px rgba(27, 20, 38, 0.14);
-}
 * {
   box-sizing: border-box;
 }

@@ -1,58 +1,45 @@
 import { create } from "zustand";
 
-// Each palette has a dark and a light variant; the CSS theme id is "<palette>-<mode>".
-export const PALETTES = [
-  { id: "terminal", name: "Terminal" },
-  { id: "midnight", name: "Midnight" },
-  { id: "amber", name: "Amber" },
-  { id: "violet", name: "Violet" },
+// Every theme is either dark or light; its id is the CSS data-theme value.
+export const THEMES = [
+  { id: "terminal", name: "Terminal", scheme: "dark" },
+  { id: "midnight", name: "Midnight", scheme: "dark" },
+  { id: "amber", name: "Amber", scheme: "dark" },
+  { id: "violet", name: "Violet", scheme: "dark" },
+  { id: "paper", name: "Paper", scheme: "light" },
+  { id: "daylight", name: "Daylight", scheme: "light" },
 ] as const;
 
-// "system" follows the operating system's light/dark setting and changes with it.
-export const MODES = ["light", "dark", "system"] as const;
+export type Theme = (typeof THEMES)[number]["id"];
+// "system" follows the operating system's light/dark setting and changes with it
+export type ThemeChoice = Theme | "system";
 
-export type Palette = (typeof PALETTES)[number]["id"];
-export type Mode = (typeof MODES)[number];
-export type ResolvedMode = "light" | "dark";
+// Themes used by "system": the default theme and its light counterpart
+export const SYSTEM_THEMES = { dark: "terminal", light: "paper" } as const;
 
+const KEY = "theme";
+// Keys of the version where palette and mode were chosen separately
 const PALETTE_KEY = "themePalette";
 const MODE_KEY = "themeMode";
-// Single key used before palette and mode were separate.
-const LEGACY_KEY = "theme";
 
-// Themes saved by earlier versions, mapped to palette and mode.
-const LEGACY: Record<string, [Palette, ResolvedMode]> = {
-  terminal: ["terminal", "dark"],
-  paper: ["terminal", "light"],
-  amber: ["amber", "dark"],
-  violet: ["violet", "dark"],
-  midnight: ["midnight", "dark"],
-  daylight: ["midnight", "light"],
-  dark: ["terminal", "dark"],
-  light: ["terminal", "light"],
+// Palette + light mode of that version: the light palettes without a light theme of their own get the closest one
+const LIGHT_OF: Record<string, Theme> = {
+  terminal: "paper",
+  midnight: "daylight",
+  amber: "paper",
+  violet: "daylight",
+};
+
+// Values saved under KEY by the first versions
+const LEGACY: Record<string, ThemeChoice> = {
+  dark: "terminal",
+  light: "paper",
 };
 
 const darkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
 
-export function themeId(palette: Palette, mode: ResolvedMode): string {
-  return `${palette}-${mode}`;
-}
-
-function isPalette(value: string | null): value is Palette {
-  return PALETTES.some((p) => p.id === value);
-}
-
-function isMode(value: string | null): value is Mode {
-  return MODES.some((m) => m === value);
-}
-
-function systemMode(): ResolvedMode {
-  // Dark when the preference cannot be read, as before
-  return darkQuery == null || darkQuery.matches ? "dark" : "light";
-}
-
-function resolve(mode: Mode): ResolvedMode {
-  return mode === "system" ? systemMode() : mode;
+function isChoice(value: string | null): value is ThemeChoice {
+  return value === "system" || THEMES.some((t) => t.id === value);
 }
 
 function read(key: string): string | null {
@@ -71,75 +58,89 @@ function write(key: string, value: string) {
   }
 }
 
-// Saved palette and mode first, then a theme saved by an earlier version, then Terminal following the system.
-function readInitial(): { palette: Palette; mode: Mode } {
-  const palette = read(PALETTE_KEY);
-  const mode = read(MODE_KEY);
-  if (isPalette(palette) && isMode(mode)) {
-    return { palette, mode };
+function remove(...keys: string[]) {
+  try {
+    keys.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // Nothing to clean up when storage is unavailable
   }
-  const legacy = LEGACY[read(LEGACY_KEY) ?? ""];
-  if (legacy) {
-    const [legacyPalette, legacyMode] = legacy;
-    write(PALETTE_KEY, legacyPalette);
-    write(MODE_KEY, legacyMode);
-    try {
-      localStorage.removeItem(LEGACY_KEY);
-    } catch {
-      // Nothing to clean up when storage is unavailable
-    }
-    return { palette: legacyPalette, mode: legacyMode };
-  }
-  return {
-    palette: isPalette(palette) ? palette : "terminal",
-    mode: isMode(mode) ? mode : "system",
-  };
 }
 
-function applyTheme(palette: Palette, resolvedMode: ResolvedMode) {
-  document.documentElement.setAttribute(
-    "data-theme",
-    themeId(palette, resolvedMode),
-  );
+// Turns a palette + mode pair into a single theme: dark is the palette itself, Automatic stays Automatic
+function fromPaletteAndMode(palette: string | null, mode: string | null) {
+  if (palette === null && mode === null) {
+    return null;
+  }
+  if (mode === "light") {
+    return LIGHT_OF[palette ?? ""] ?? "paper";
+  }
+  if (mode === "dark" && isChoice(palette)) {
+    return palette;
+  }
+  return "system";
+}
+
+// Saved theme, else a choice saved by an earlier version (converted and saved again), else Automatic.
+function readInitial(): ThemeChoice {
+  const saved = read(KEY);
+  if (isChoice(saved)) {
+    return saved;
+  }
+  const migrated =
+    fromPaletteAndMode(read(PALETTE_KEY), read(MODE_KEY)) ??
+    LEGACY[saved ?? ""] ??
+    null;
+  remove(PALETTE_KEY, MODE_KEY);
+  if (migrated === null) {
+    return "system";
+  }
+  write(KEY, migrated);
+  return migrated;
+}
+
+function systemTheme(): Theme {
+  // Dark when the preference cannot be read, as before
+  return darkQuery == null || darkQuery.matches
+    ? SYSTEM_THEMES.dark
+    : SYSTEM_THEMES.light;
+}
+
+function resolve(choice: ThemeChoice): Theme {
+  return choice === "system" ? systemTheme() : choice;
+}
+
+function applyTheme(theme: Theme) {
+  document.documentElement.setAttribute("data-theme", theme);
 }
 
 interface ThemeStore {
-  palette: Palette;
-  mode: Mode;
-  // The mode actually shown: equals mode, or the system's when mode is "system"
-  resolvedMode: ResolvedMode;
-  setPalette: (palette: Palette) => void;
-  setMode: (mode: Mode) => void;
+  choice: ThemeChoice;
+  // The theme actually shown: equals choice, or the system's when choice is "system"
+  theme: Theme;
+  setChoice: (choice: ThemeChoice) => void;
 }
 
 const initial = readInitial();
-const initialResolved = resolve(initial.mode);
-applyTheme(initial.palette, initialResolved);
+const initialTheme = resolve(initial);
+applyTheme(initialTheme);
 
-export const useThemeStore = create<ThemeStore>((set, get) => ({
-  palette: initial.palette,
-  mode: initial.mode,
-  resolvedMode: initialResolved,
-  setPalette: (palette) => {
-    write(PALETTE_KEY, palette);
-    applyTheme(palette, get().resolvedMode);
-    set({ palette });
-  },
-  setMode: (mode) => {
-    const resolvedMode = resolve(mode);
-    write(MODE_KEY, mode);
-    applyTheme(get().palette, resolvedMode);
-    set({ mode, resolvedMode });
+export const useThemeStore = create<ThemeStore>((set) => ({
+  choice: initial,
+  theme: initialTheme,
+  setChoice: (choice) => {
+    const theme = resolve(choice);
+    write(KEY, choice);
+    applyTheme(theme);
+    set({ choice, theme });
   },
 }));
 
-// In "system" mode the theme follows the OS live, e.g. when it switches to dark in the evening.
+// With "system" the theme follows the OS live, e.g. when it switches to dark in the evening.
 darkQuery?.addEventListener("change", () => {
-  const { palette, mode } = useThemeStore.getState();
-  if (mode !== "system") {
+  if (useThemeStore.getState().choice !== "system") {
     return;
   }
-  const resolvedMode = systemMode();
-  applyTheme(palette, resolvedMode);
-  useThemeStore.setState({ resolvedMode });
+  const theme = systemTheme();
+  applyTheme(theme);
+  useThemeStore.setState({ theme });
 });

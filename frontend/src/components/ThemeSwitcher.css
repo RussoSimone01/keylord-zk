@@ -30,20 +30,3 @@
   border-color: var(--border-strong);
   color: var(--text);
 }
-
-.theme-swatch {
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  border-radius: var(--radius-full);
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-}
-
-.theme-swatch > span {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  background: var(--accent);
-}

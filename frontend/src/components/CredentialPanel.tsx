@@ -112,7 +112,6 @@ function CredentialPanel({
                 type="text"
                 value={draft.site}
                 onChange={(e) => set("site", e.target.value)}
-                placeholder="github.com"
                 autoFocus={mode === "new"}
                 required
               />
