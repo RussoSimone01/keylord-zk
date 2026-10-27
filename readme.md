@@ -16,6 +16,7 @@ A **zero-knowledge** password manager. All cryptography runs in the browser thro
 - [How it works](#how-it-works)
     - [Why a separate vault key](#why-a-separate-vault-key)
     - [Locking and sessions](#locking-and-sessions)
+    - [Vault export](#vault-export)
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
@@ -97,6 +98,29 @@ Locking manually, from the user menu or with **Alt+Shift+L** (**⌥⇧L** on mac
 
 Reloading the page or duplicating the tab always requires the master password again: keys and tokens live in memory only, and each tab has its own session.
 
+### Vault export
+
+The vault can be exported from **Settings → Data**, after the master password has been checked by the server (failed checks count towards the lockout). The file is built in the browser from the decrypted vault; credentials that cannot be decrypted are left out and reported. Three formats are available:
+
+- **Encrypted JSON** (recommended): the items are encrypted with AES-256-GCM under a key derived with PBKDF2 (SHA-256, 600,000 iterations, a fresh 32-byte salt) from a password chosen for the file, at least 12 characters long. The file does not depend on the account or its vault key, so it can be opened even if the account no longer exists. The header fields are bound to the ciphertext as additional authenticated data, so tampering with them (for example lowering the iterations) makes decryption fail. The file is decrypted once more before the download starts, so a file that cannot be opened is never saved.
+- **Plain JSON**: the same items in clear, in the credential schema described above.
+- **Plain CSV**: the Bitwarden CSV layout (`folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp`), accepted by many password managers. Addresses are joined with commas, custom fields are written as `name: value` lines and lose their hidden flag. Values are written unchanged, because prefixing those starting with `=`, `+`, `-` or `@` against formula injection would alter passwords; the interface warns not to open the file in a spreadsheet.
+
+Plain exports require an explicit acknowledgment. The encrypted file looks like this:
+
+```json
+{
+	"format": "keylord-export",
+	"version": 1,
+	"encrypted": true,
+	"kdf": { "name": "PBKDF2", "hash": "SHA-256", "iterations": 600000, "salt": "<64 hex characters>" },
+	"cipher": "AES-256-GCM",
+	"data": "<ivBase64>:<ciphertextBase64>"
+}
+```
+
+The ciphertext holds `{ "exportedAt": "<ISO 8601>", "items": [ … ] }`, the same body as a plain JSON export. The additional data is the string `keylord-export:1:PBKDF2:SHA-256:<iterations>:<salt>:AES-256-GCM`.
+
 ## Features
 
 **Vault**
@@ -117,6 +141,7 @@ Reloading the page or duplicating the tab always requires the master password ag
 - Optional vault key rotation during a password change: a new vault key is generated and the whole vault is re-encrypted with it, applied server-side in a single database transaction and rejected if the vault was modified meanwhile
 - Lock and unlock with the master password alone, automatic lock after inactivity or when the tab is hidden, and a keyboard shortcut that locks every tab
 - Account deletion with explicit confirmation and master password re-entry, verified by the server
+- Vault export as password-protected JSON, plain JSON or Bitwarden-compatible CSV, after master password re-entry
 - Rotating refresh tokens with reuse detection, expired tokens purged every 6 hours
 - Progressive account lockout after failed password checks
 - Error responses in RFC 9457 format with stable machine-readable codes, translated in the interface
@@ -185,10 +210,10 @@ keylord-zk/
 │   └── src/
 │       ├── api/              → Axios client with token refresh, auth and vault endpoints, error messages
 │       ├── components/       → navbar and user menu, unlock screen, credential panel, settings, ...
-│       ├── crypto/           → vault.ts (key derivation, vault key, AES-GCM), password.ts (generator, strength)
+│       ├── crypto/           → vault.ts (key derivation, vault key, AES-GCM), credential.ts (payload schema), export.ts (export files), password.ts (generator, strength)
 │       ├── hooks/            → auto-lock, media queries
 │       ├── i18n/             → i18next setup and the English and Italian translations
-│       ├── lib/              → session handling, cross-tab lock, lock and clipboard settings, clipboard clearing
+│       ├── lib/              → session handling, cross-tab lock, lock and clipboard settings, clipboard clearing, file download
 │       ├── pages/            → Login, Signup, Vault, Generator, Settings
 │       ├── store/            → authStore (in-memory session), theme, locale and toast stores
 │       ├── styles/
@@ -379,13 +404,14 @@ Rate limiting and lockout logs rely on the client IP. With `ReverseProxy__Enable
 - **Session storage**: tokens and the vault key live in memory only and are never written to any storage; only the username is kept in `sessionStorage` to prefill the login form. Reloading the page or duplicating the tab therefore requires the master password again, and each tab has its own session.
 - **Local unlock**: a locked vault is reopened by unwrapping the vault key in the browser. Three failed attempts end the session, so further guesses must go through the server and its lockout.
 - **Automatic lock and clipboard clearing**: the vault locks after inactivity or when the tab is hidden, and copied secrets are erased from the clipboard after a delay of at most 2 minutes (30 seconds by default) or as soon as the vault is locked.
+- **Exports**: built in the browser and never sent to the server. An encrypted export is as strong as its file password, which can be attacked offline once the file leaves the device; a plain export protects nothing, and the browser may keep it in the downloads folder and history.
 - **Vault writes bound to the key**: credentials are created and updated only if the session's key is still current, checked under a lock shared with the password change and the key rotation, so data encrypted with an old key can never be stored.
 
 ## Roadmap
 
 - [ ] Automated tests (unit and integration)
 - [ ] Further credential types (payment cards, SSH keys, identities)
-- [ ] Import and export of the vault
+- [ ] Vault import (Keylord encrypted export, Bitwarden, browser CSV files)
 - [ ] Account recovery through single-use recovery codes
 - [ ] Breach checks for stored credentials
 - [ ] Folders for organizing credentials

@@ -55,13 +55,16 @@
   "validation": {
     "passwordMismatch": "Le password non coincidono",
     "passwordUnchanged": "La nuova password deve essere diversa da quella attuale",
-    "currentPasswordIncorrect": "La password attuale non è corretta"
+    "currentPasswordIncorrect": "La password attuale non è corretta",
+    "masterPasswordIncorrect": "La master password non è corretta"
   },
   "settings": {
     "title": "Impostazioni",
     "appearance": "Aspetto",
     "security": "Sicurezza",
     "changePassword": "Cambia master password",
+    "data": "Dati",
+    "exportVault": "Esporta vault",
     "dangerZone": "Zona pericolosa",
     "deleteAccount": "Elimina account"
   },
@@ -95,6 +98,31 @@
     "dialogConfirm": "Elimina per sempre",
     "confirmWord": "ELIMINA",
     "dialogBody": "Il tuo account, il vault e tutte le credenziali salvate verranno cancellati dal server. Senza la tua master password nessuno potrà recuperarli."
+  },
+  "exportVault": {
+    "title": "Esporta vault",
+    "intro": "Scarica una copia di tutte le credenziali. Il file viene creato in questo browser: nulla di decifrato passa dal server.",
+    "format": "Formato",
+    "formatEncrypted": "JSON cifrato (consigliato)",
+    "formatEncryptedHint": "Protetto da una password che scegli ora. Adatto come backup e per una futura importazione in Keylord.",
+    "formatJson": "JSON non cifrato",
+    "formatJsonHint": "Tutti i campi, leggibili da chiunque abbia il file. Utile per script o per controllarne il contenuto.",
+    "formatCsv": "CSV non cifrato",
+    "formatCsvHint": "Nel formato CSV di Bitwarden, accettato da molti password manager. I campi personalizzati perdono l'indicazione di campo nascosto.",
+    "filePassword": "Password del file",
+    "confirmFilePassword": "Conferma password del file",
+    "filePasswordHint": "Serve solo ad aprire questo file e non viene salvata da nessuna parte: se la perdi, il file non si può più aprire. Usane una diversa dalla master password.",
+    "passwordTooShort": "La password del file deve avere almeno {{min}} caratteri",
+    "plainWarning": "Il file conterrà tutte le password in chiaro. Conservalo in un posto sicuro ed eliminalo appena non ti serve più.",
+    "csvWarning": "I valori sono scritti senza modifiche: non aprire il file con un foglio di calcolo, che potrebbe interpretare come formule i valori che iniziano con =, +, - o @.",
+    "acknowledgePlain": "Ho capito che il file non sarà cifrato",
+    "masterPassword": "Conferma con la master password",
+    "submit": "Esporta",
+    "empty": "Il vault è vuoto: non c'è nulla da esportare",
+    "done_one": "{{count}} credenziale esportata",
+    "done_other": "{{count}} credenziali esportate",
+    "skipped_one": "{{count}} credenziale illeggibile non è stata esportata",
+    "skipped_other": "{{count}} credenziali illeggibili non sono state esportate"
   },
   "vault": {
     "title": "Vault",

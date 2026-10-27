@@ -128,3 +128,70 @@
   font-size: 14px;
   margin-bottom: var(--space-6);
 }
+
+.settings-warning p {
+  margin: 0;
+}
+
+.settings-warning p + p {
+  margin-top: var(--space-2);
+}
+
+/* Export format choice: one bordered option per format, with its description. */
+.export-formats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  border: 0;
+}
+
+.export-formats legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.export-format {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.export-format:hover {
+  border-color: var(--border-strong);
+}
+
+.export-format.active {
+  border-color: var(--accent-text);
+  background: var(--accent-soft);
+}
+
+.export-format input {
+  margin-top: 3px;
+  accent-color: var(--accent-text);
+}
+
+.export-format-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.export-format-hint {
+  display: block;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-secondary);
+}

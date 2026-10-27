@@ -5,8 +5,11 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import AutoLockSettings from "./AutoLockSettings";
 import ClipboardSettings from "./ClipboardSettings";
 
+export type SettingsSection =
+  "changePassword" | "exportVault" | "deleteAccount";
+
 interface SettingsMenuProps {
-  onSelect: (selection: "changePassword" | "deleteAccount") => void;
+  onSelect: (selection: SettingsSection) => void;
 }
 
 function SettingsMenu({ onSelect }: SettingsMenuProps) {
@@ -31,6 +34,12 @@ function SettingsMenu({ onSelect }: SettingsMenuProps) {
         <ClipboardSettings />
         <button type="button" onClick={() => onSelect("changePassword")}>
           {t("settings.changePassword")}
+        </button>
+      </section>
+      <section className="settings-section">
+        <h2 className="settings-label">{t("settings.data")}</h2>
+        <button type="button" onClick={() => onSelect("exportVault")}>
+          {t("settings.exportVault")}
         </button>
       </section>
       <section className="settings-section">

@@ -55,13 +55,16 @@
   "validation": {
     "passwordMismatch": "Passwords do not match",
     "passwordUnchanged": "The new password must be different from the current one",
-    "currentPasswordIncorrect": "The current password is incorrect"
+    "currentPasswordIncorrect": "The current password is incorrect",
+    "masterPasswordIncorrect": "The master password is incorrect"
   },
   "settings": {
     "title": "Settings",
     "appearance": "Appearance",
     "security": "Security",
     "changePassword": "Change master password",
+    "data": "Data",
+    "exportVault": "Export vault",
     "dangerZone": "Danger zone",
     "deleteAccount": "Delete account"
   },
@@ -95,6 +98,31 @@
     "dialogConfirm": "Delete forever",
     "confirmWord": "DELETE",
     "dialogBody": "Your account, your vault and every saved credential will be erased from the server. Without your master password nobody can recover them."
+  },
+  "exportVault": {
+    "title": "Export vault",
+    "intro": "Download a copy of every credential. The file is built in this browser: nothing decrypted goes through the server.",
+    "format": "Format",
+    "formatEncrypted": "Encrypted JSON (recommended)",
+    "formatEncryptedHint": "Protected by a password you choose now. Suitable as a backup and for a future import into Keylord.",
+    "formatJson": "Unencrypted JSON",
+    "formatJsonHint": "Every field, readable by anyone who has the file. Useful for scripts or to inspect the content.",
+    "formatCsv": "Unencrypted CSV",
+    "formatCsvHint": "Bitwarden CSV layout, accepted by many password managers. Custom fields lose their hidden flag.",
+    "filePassword": "File password",
+    "confirmFilePassword": "Confirm file password",
+    "filePasswordHint": "It only opens this file and is not stored anywhere: if you lose it, the file can no longer be opened. Use one different from your master password.",
+    "passwordTooShort": "The file password must be at least {{min}} characters long",
+    "plainWarning": "The file will contain every password in clear text. Keep it somewhere safe and delete it as soon as you no longer need it.",
+    "csvWarning": "Values are written unchanged: do not open the file in a spreadsheet, which may treat values starting with =, +, - or @ as formulas.",
+    "acknowledgePlain": "I understand the file will not be encrypted",
+    "masterPassword": "Confirm with your master password",
+    "submit": "Export",
+    "empty": "Your vault is empty: there is nothing to export",
+    "done_one": "{{count}} credential exported",
+    "done_other": "{{count}} credentials exported",
+    "skipped_one": "{{count}} unreadable credential was not exported",
+    "skipped_other": "{{count}} unreadable credentials were not exported"
   },
   "vault": {
     "title": "Vault",

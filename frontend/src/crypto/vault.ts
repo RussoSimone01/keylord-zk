@@ -42,8 +42,8 @@ export const KDF_ITERATIONS = 600_000;
  * Intervallo accettato per le iterazioni indicate dal server, uguale a quello del backend.
  * Un server malevolo potrebbe indicarne poche per rendere l'authKey attaccabile offline.
  */
-const KDF_MIN_ITERATIONS = 600_000;
-const KDF_MAX_ITERATIONS = 2_000_000;
+export const KDF_MIN_ITERATIONS = 600_000;
+export const KDF_MAX_ITERATIONS = 2_000_000;
 const SALT_BYTES = 32;
 const IV_BYTES = 12;
 const KEY_BYTES = 32; // 256 bit
@@ -55,7 +55,7 @@ export const MAX_ENCRYPTED_DATA_LENGTH = 16_384;
 // ---------------------------------------------------------------------------
 
 /** Converte un Uint8Array in stringa hex */
-function toHex(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
+export function toHex(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -63,7 +63,7 @@ function toHex(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
 }
 
 /** Converte una stringa hex in Uint8Array */
-function fromHex(hex: string): Uint8Array<ArrayBuffer> {
+export function fromHex(hex: string): Uint8Array<ArrayBuffer> {
   if (hex.length % 2 !== 0) throw new Error("hex string length must be even");
   const out = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
@@ -72,14 +72,21 @@ function fromHex(hex: string): Uint8Array<ArrayBuffer> {
   return out;
 }
 
-/** Converte un Uint8Array in Base64 */
-function toBase64(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
+/** Byte convertiti per volta da toBase64: lo spread in String.fromCharCode ha un limite di argomenti */
+const BASE64_CHUNK_BYTES = 0x8000;
+
+/** Converte un Uint8Array in Base64, a blocchi per reggere anche buffer di molti MB */
+export function toBase64(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
-  return btoa(String.fromCharCode(...bytes));
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += BASE64_CHUNK_BYTES) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + BASE64_CHUNK_BYTES));
+  }
+  return btoa(binary);
 }
 
 /** Converte una stringa Base64 in Uint8Array */
-function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
+export function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 }
 
