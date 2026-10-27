@@ -5,14 +5,16 @@ namespace backend.Validation
     /// </summary>
     public static class VaultLimits
     {
-        // Encrypted payload of a single credential: ample for site, username and password
-        public const int MaxEncryptedDataLength = 8192;
+        // Encrypted payload of a single credential: about 12 KB of JSON once IV, GCM tag and Base64 are removed,
+        // room for long notes, several custom fields or an SSH private key
+        public const int MaxEncryptedDataLength = 16384;
 
         public const int MaxCredentialsPerUser = 2000;
 
 
         // Request body limits: every endpoint but change-password carries at most one credential
         public const long DefaultMaxRequestBodyBytes = 64 * 1024;
-        public const long ChangePasswordMaxRequestBodyBytes = 24 * 1024 * 1024;
+        // A full vault re-encrypted on key rotation: 2,000 payloads of 16,384 characters plus ids, digests and JSON syntax
+        public const long ChangePasswordMaxRequestBodyBytes = 40 * 1024 * 1024;
     }
 }

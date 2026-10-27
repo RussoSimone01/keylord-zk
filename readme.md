@@ -53,7 +53,24 @@ vaultKey (random AES-256 key, generated in the browser at signup)
 - **wrappingKey** is a non-extractable `CryptoKey` derived on demand. It is never persisted and never transmitted; its only job is to encrypt and decrypt the vault key.
 - **vaultKey** is a random key generated at signup. The server stores only its wrapped form, encrypted with the `wrappingKey`, as an `ivBase64:ciphertextBase64` string (`WrappedVaultKey`). After login the client unwraps it into a non-extractable `CryptoKey` held in memory only.
 
-Each credential (site, username, password) is serialized to JSON and encrypted individually with AES-256-GCM, using the `vaultKey` and a fresh random 12-byte IV. The server stores the result as a single `ivBase64:ciphertextBase64` string and has no way to recover its contents.
+Each credential is serialized to JSON and encrypted individually with AES-256-GCM, using the `vaultKey` and a fresh random 12-byte IV. The server stores the result as a single `ivBase64:ciphertextBase64` string and has no way to recover its contents.
+
+The decrypted payload carries a schema version and the entry type, so the type is hidden from the server as well:
+
+```json
+{
+	"v": 1,
+	"type": "login",
+	"name": "GitHub",
+	"notes": "",
+	"fields": [{ "name": "Recovery code", "value": "…", "hidden": true }],
+	"urls": ["https://github.com"],
+	"username": "alice",
+	"password": "…"
+}
+```
+
+A secure note (`"type": "note"`) has the same common fields (`name`, `notes`, `fields`) without the login ones. The client validates every payload after decryption (`frontend/src/crypto/credential.ts`): malformed payloads, unknown types and newer schema versions are listed as unreadable rather than shown or edited, so an older client can never save a newer entry without the fields it does not know. Payloads written before the schema was versioned (`site`, `username`, `password`) are read as logins and stored in the current format the next time they are saved.
 
 At login, the client first fetches the user's salt and iteration count (`GET /api/auth/salt/{username}`), derives the keys locally, then authenticates with the `authKey`. The login response carries the wrapped vault key, which the client unwraps with the `wrappingKey`. Iteration counts outside the accepted range are refused by the client, and unknown usernames receive a deterministic fake salt, so the lookup reveals nothing about which accounts exist.
 
@@ -86,7 +103,8 @@ Reloading the page or duplicating the tab always requires the master password ag
 
 - Signup and login with client-side key derivation
 - Full CRUD on credentials, each encrypted individually with AES-GCM, edited in a side panel that warns before discarding unsaved changes
-- Vault search by site or username
+- Two entry types: logins (name, any number of website addresses, username, password) and secure notes; both support free-text notes and custom fields, optionally hidden like a password
+- Vault search by name, username or website
 - One-click copy of usernames and passwords, with automatic clipboard clearing after a configurable delay (30 seconds by default)
 - Passwords masked with a fixed-length placeholder that does not reveal their length
 - Password generator using `crypto.getRandomValues` with rejection sampling (8–64 characters, configurable character classes, look-alike characters such as `0/O` and `1/l/I` excluded)
@@ -289,7 +307,7 @@ All routes are prefixed with `/api`. Routes marked 🔒 require an `Authorizatio
 | `PUT`    | `/vault/{id}` 🔒           | Replace an encrypted credential                                                                                                                                                        |
 | `DELETE` | `/vault/{id}` 🔒           | Delete a credential                                                                                                                                                                    |
 
-Usernames and emails are unique regardless of letter case, and lookups ignore case as well. New usernames may contain only letters, digits, dots, hyphens and underscores (at most 50 characters). Each credential's encrypted payload must have the `ivBase64:ciphertextBase64` format and at most 8,192 characters, a vault holds at most 2,000 credentials, and request bodies are limited to 64 KB (24 MB for `change-password`).
+Usernames and emails are unique regardless of letter case, and lookups ignore case as well. New usernames may contain only letters, digits, dots, hyphens and underscores (at most 50 characters). Each credential's encrypted payload must have the `ivBase64:ciphertextBase64` format and at most 16,384 characters, a vault holds at most 2,000 credentials, and request bodies are limited to 64 KB (40 MB for `change-password`).
 
 Outside the `/api` prefix, `GET /health` is the health check used by Render.
 
@@ -351,7 +369,7 @@ Rate limiting and lockout logs rely on the client IP. With `ReverseProxy__Enable
 - **AES-256-GCM** with a random IV for every encryption, providing both confidentiality and integrity.
 - **Random vault key**: the password never encrypts the data directly. The server stores the vault key only in wrapped form, so it cannot be opened without the master password.
 - **Key rotation**: protects the data written from that moment on and invalidates whoever knew the previous key, but it cannot make a copy of the database that was already stolen secret again.
-- **Metadata**: zero knowledge hides the contents, not the metadata. The server can see how many credentials a user has, their size and when they change.
+- **Metadata**: zero knowledge hides the contents, not the metadata. The server can see how many credentials a user has, their size and when they change. The entry type is encrypted with the rest of the payload, although very different sizes may still hint at it.
 - **bcrypt** on the `authKey` server-side as an additional layer of defense if the database leaks.
 - **Refresh tokens** are random 32-byte values, stored only as SHA-256 hashes and rotated on every use. Presenting a token that was already revoked, including two concurrent refreshes with the same token, is treated as theft and revokes every session of that user.
 - **Session invalidation**: access tokens carry a fingerprint of the KDF salt and the vault key epoch, checked on every request. A password change, a vault key rotation or an account deletion invalidates every other session immediately, without waiting for token expiry.
@@ -366,7 +384,8 @@ Rate limiting and lockout logs rely on the client IP. With `ReverseProxy__Enable
 ## Roadmap
 
 - [ ] Automated tests (unit and integration)
-- [ ] Additional credential types
+- [ ] Further credential types (payment cards, SSH keys, identities)
+- [ ] Import and export of the vault
 - [ ] Account recovery through single-use recovery codes
 - [ ] Breach checks for stored credentials
 - [ ] Folders for organizing credentials

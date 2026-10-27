@@ -123,6 +123,11 @@
     grid-row: 2;
   }
 
+  /* Entries without a password leave no empty second row */
+  .vault-item-secret:empty {
+    display: none;
+  }
+
   .vault-item-user .icon-button {
     opacity: 1;
   }

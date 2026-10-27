@@ -1,5 +1,5 @@
-import { Pencil, Trash2 } from "lucide-react";
-import type { PlainCredential } from "../crypto/vault";
+import { Pencil, StickyNote, Trash2 } from "lucide-react";
+import type { PlainCredential } from "../crypto/credential";
 import CopyButton from "./CopyButton";
 import SecretText from "./SecretText";
 import "./VaultItem.css";
@@ -13,9 +13,9 @@ interface VaultItemProps {
   onDelete: () => void;
 }
 
-// First letter of the site without scheme or "www."; no remote favicons, which would leak the site list.
-function monogram(site: string) {
-  const letter = site
+// First letter of the name without scheme or "www."; no remote favicons, which would leak the site list.
+function monogram(name: string) {
+  const letter = name
     .replace(/^https?:\/\//, "")
     .replace(/^www\./, "")
     .charAt(0);
@@ -30,6 +30,7 @@ function VaultItem({
   onDelete,
 }: VaultItemProps) {
   const { t } = useTranslation();
+  const isLogin = credential.type === "login";
   return (
     <li
       className={["vault-item", selected && "selected", flash && "flash"]
@@ -38,30 +39,45 @@ function VaultItem({
       data-credential-id={credential.id}
     >
       <span className="vault-monogram" aria-hidden="true">
-        {monogram(credential.site)}
+        {isLogin ? monogram(credential.name) : <StickyNote size={16} />}
       </span>
       <div className="vault-item-id">
-        <div className="vault-item-site" title={credential.site}>
-          {credential.site}
+        <div className="vault-item-site" title={credential.name}>
+          {credential.name}
         </div>
         <div className="vault-item-user">
-          <span className="mono" title={credential.username}>
-            {credential.username}
-          </span>
-          <CopyButton
-            value={credential.username}
-            label={t("vaultItem.copyUsername")}
-          />
+          {/* Second line: the username, else the first address, or the type for notes */}
+          {isLogin && credential.username !== "" ? (
+            <>
+              <span className="mono" title={credential.username}>
+                {credential.username}
+              </span>
+              <CopyButton
+                value={credential.username}
+                label={t("vaultItem.copyUsername")}
+              />
+            </>
+          ) : isLogin ? (
+            <span className="mono" title={credential.urls[0]}>
+              {credential.urls[0]}
+            </span>
+          ) : (
+            <span>{t("vaultItem.secureNote")}</span>
+          )}
         </div>
       </div>
-      <SecretText value={credential.password} className="vault-item-secret" />
+      {isLogin && credential.password !== "" ? (
+        <SecretText value={credential.password} className="vault-item-secret" />
+      ) : (
+        <div className="vault-item-secret" aria-hidden="true" />
+      )}
       <div className="vault-item-actions">
         <button
           type="button"
           className="icon-button"
           onClick={onEdit}
           title={t("common.edit")}
-          aria-label={t("vaultItem.edit", { site: credential.site })}
+          aria-label={t("vaultItem.edit", { name: credential.name })}
         >
           <Pencil size={16} />
         </button>
@@ -70,7 +86,7 @@ function VaultItem({
           className="icon-button danger"
           onClick={onDelete}
           title={t("common.delete")}
-          aria-label={t("vaultItem.delete", { site: credential.site })}
+          aria-label={t("vaultItem.delete", { name: credential.name })}
         >
           <Trash2 size={16} />
         </button>

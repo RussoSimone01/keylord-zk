@@ -38,7 +38,8 @@
   width: 100%;
 }
 
-.vault-field label {
+.vault-field label,
+.vault-field legend {
   font: 500 11px/16px var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -56,19 +57,35 @@
   font-size: 15px;
 }
 
-.vault-field input::placeholder {
+.vault-field textarea {
+  width: 100%;
+  min-height: 76px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: 400 15px/22px var(--font-sans);
+  resize: vertical;
+}
+
+.vault-field input::placeholder,
+.vault-field textarea::placeholder {
   color: var(--text-secondary);
 }
 
-.vault-field input:focus {
+.vault-field input:focus,
+.vault-field textarea:focus {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-color: var(--focus);
 }
 
-/* Username and password values are secrets: set them in mono. */
+/* Usernames, passwords, addresses and custom values are set in mono. */
 .vault-field input#username,
-.vault-field input#password {
+.vault-field input#password,
+.vault-field input[inputmode="url"],
+.vault-field input.mono {
   font-family: var(--font-mono);
 }
 

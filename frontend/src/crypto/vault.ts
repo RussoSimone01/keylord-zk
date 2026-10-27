@@ -23,15 +23,13 @@ export interface DerivedKeys {
   wrappingKey: CryptoKey;
 }
 
-export interface PlainCredential {
-  id?: number;
-  site: string;
-  username: string;
-  password: string;
-}
-
 import type { CredentialBase, ReencryptedCredential } from "../types";
 import { UserFacingError } from "../api/errors";
+import {
+  normalizeCredential,
+  type CredentialData,
+  type PlainCredential,
+} from "./credential";
 export type EncryptedCredential = CredentialBase;
 
 // ---------------------------------------------------------------------------
@@ -49,6 +47,8 @@ const KDF_MAX_ITERATIONS = 2_000_000;
 const SALT_BYTES = 32;
 const IV_BYTES = 12;
 const KEY_BYTES = 32; // 256 bit
+/** Lunghezza massima di encryptedData, uguale a VaultLimits.MaxEncryptedDataLength nel backend */
+export const MAX_ENCRYPTED_DATA_LENGTH = 16_384;
 
 // ---------------------------------------------------------------------------
 // Utility
@@ -273,17 +273,20 @@ export async function createVaultKey(
 // ---------------------------------------------------------------------------
 
 /**
- * Cifra una credenziale con AES-GCM.
+ * Cifra una credenziale con AES-GCM, nella forma canonica dello schema corrente e senza id.
  * Genera un IV casuale per ogni cifratura (mai riutilizzare lo stesso IV con la stessa chiave).
  *
  * @returns EncryptedCredential con formato "ivBase64:ciphertextBase64"
+ * @throws UserFacingError se il risultato supera il limite accettato dal server
  */
 export async function encryptCredential(
-  credential: PlainCredential,
+  credential: CredentialData,
   encryptionKey: CryptoKey,
 ): Promise<EncryptedCredential> {
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
-  const plaintext = new TextEncoder().encode(JSON.stringify(credential));
+  const plaintext = new TextEncoder().encode(
+    JSON.stringify(normalizeCredential(credential)),
+  );
 
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
@@ -291,16 +294,19 @@ export async function encryptCredential(
     plaintext,
   );
 
-  return {
-    encryptedData: `${toBase64(iv)}:${toBase64(ciphertext)}`,
-  };
+  const encryptedData = `${toBase64(iv)}:${toBase64(ciphertext)}`;
+  if (encryptedData.length > MAX_ENCRYPTED_DATA_LENGTH) {
+    throw new UserFacingError("errors.credentialTooLarge");
+  }
+  return { encryptedData };
 }
 
 /**
  * Decifra una credenziale cifrata con AES-GCM.
  *
  * @param encrypted  EncryptedCredential con formato "ivBase64:ciphertextBase64"
- * @throws Se la chiave è sbagliata o i dati sono corrotti (AES-GCM authentication fail)
+ * @throws Se la chiave è sbagliata, i dati sono corrotti (AES-GCM authentication fail)
+ *         o il payload non rispetta lo schema (vedi normalizeCredential)
  */
 export async function decryptCredential(
   encrypted: EncryptedCredential,
@@ -320,9 +326,9 @@ export async function decryptCredential(
     ciphertext,
   );
 
-  // L'id del server prevale su un eventuale id cifrato nel payload da versioni precedenti
+  // La normalizzazione scarta un eventuale id cifrato nel payload: vale quello del server
   return {
-    ...(JSON.parse(new TextDecoder().decode(plaintext)) as PlainCredential),
+    ...normalizeCredential(JSON.parse(new TextDecoder().decode(plaintext))),
     id: encrypted.id,
   };
 }
@@ -416,13 +422,14 @@ async function reencryptCredentials(
       ),
     ),
   );
-  // L'id viaggia in chiaro accanto al payload, non dentro
+  // L'id viaggia in chiaro accanto al payload, non dentro: encryptCredential lo scarta
   return Promise.all(
-    plainCredentials.map(async ({ id, ...plain }) => {
+    plainCredentials.map(async (credential) => {
+      const { id } = credential;
       if (id === undefined) {
         throw new Error("Credenziale senza id");
       }
-      const { encryptedData } = await encryptCredential(plain, newKey);
+      const { encryptedData } = await encryptCredential(credential, newKey);
       return { id, previousDigest: digestById.get(id)!, encryptedData };
     }),
   );

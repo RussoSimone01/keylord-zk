@@ -5,8 +5,15 @@ import {
   decryptVault,
   encryptCredential,
   type EncryptedCredential,
-  type PlainCredential,
 } from "../crypto/vault.ts";
+import {
+  cleanCredential,
+  credentialMatches,
+  emptyCredential,
+  normalizeCredential,
+  sameCredential,
+  type PlainCredential,
+} from "../crypto/credential";
 import { create, deleteCredential, getAll, update } from "../api/vault";
 import { useAuthStore } from "../store/authStore";
 import { getErrorMessage } from "../api/errors";
@@ -23,16 +30,10 @@ import { useMediaQuery } from "../hooks/useMediaQuery";
 import { KeyRound, Plus, Trash2 } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
 
-const EMPTY_DRAFT: CredentialDraft = { site: "", username: "", password: "" };
+const EMPTY_DRAFT: CredentialDraft = emptyCredential("login");
 // Wide enough for the 480px panel beside a list that still shows the full password mask
 const DOCKED_QUERY = "(min-width: 1200px)";
 const FLASH_MS = 1600;
-
-function sameDraft(a: CredentialDraft, b: CredentialDraft) {
-  return (
-    a.site === b.site && a.username === b.username && a.password === b.password
-  );
-}
 
 function Vault() {
   const { t, i18n } = useTranslation();
@@ -81,7 +82,7 @@ function Vault() {
     editingId != null
       ? credentials.find((credential) => credential.id === editingId)
       : undefined;
-  const isDirty = draftKey != null && !sameDraft(draft, initialDraft);
+  const isDirty = draftKey != null && !sameCredential(draft, initialDraft);
 
   useEffect(() => {
     async function loadCredentials() {
@@ -165,14 +166,7 @@ function Vault() {
     if (panelKey === "new") {
       startDraft(EMPTY_DRAFT, panelKey);
     } else if (editingCredential) {
-      startDraft(
-        {
-          site: editingCredential.site,
-          username: editingCredential.username,
-          password: editingCredential.password,
-        },
-        panelKey,
-      );
+      startDraft(normalizeCredential(editingCredential), panelKey);
     } else {
       setSearchParams({}, { replace: true });
     }
@@ -239,24 +233,26 @@ function Vault() {
     setIsSaving(true);
     setPanelError("");
     try {
-      const { encryptedData } = await encryptCredential(draft, encryptionKey);
+      const data = cleanCredential(draft);
+      const { encryptedData } = await encryptCredential(data, encryptionKey);
       let savedId: number | undefined;
       if (panelKey === "new") {
         const { id: newId } = await create({ encryptedData });
         savedId = newId;
-        setCredentials([...credentials, { id: newId, ...draft }]);
+        setCredentials([...credentials, { ...data, id: newId }]);
       } else if (editingId != null) {
         await update(editingId, { encryptedData });
         savedId = editingId;
         setCredentials(
           credentials.map((credential) =>
             credential.id === editingId
-              ? { ...credential, ...draft }
+              ? { ...data, id: editingId }
               : credential,
           ),
         );
       }
-      setInitialDraft(draft);
+      setDraft(data);
+      setInitialDraft(data);
       setFlashId(savedId ?? null);
       closePanel(true);
     } catch (err) {
@@ -320,12 +316,8 @@ function Vault() {
 
   const query = searchQuery.trim().toLowerCase();
   const filteredCredentials = credentials
-    .filter(
-      (c) =>
-        c.site.toLowerCase().includes(query) ||
-        c.username.toLowerCase().includes(query),
-    )
-    .sort((a, b) => a.site.localeCompare(b.site, i18n.language));
+    .filter((c) => credentialMatches(c, query))
+    .sort((a, b) => a.name.localeCompare(b.name, i18n.language));
 
   const panelOpen = panelKey != null && panelKey === draftKey;
 
@@ -485,18 +477,22 @@ function Vault() {
 
       <ConfirmDialog
         open={pendingDelete != null}
-        title={t("vault.deleteTitle", { site: pendingDelete?.site ?? "" })}
+        title={t("vault.deleteTitle", { name: pendingDelete?.name ?? "" })}
         confirmLabel={t("common.delete")}
         busy={isDeleting}
         onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}
       >
         <p>
-          <Trans
-            i18nKey="vault.deleteBody"
-            values={{ username: pendingDelete?.username ?? "" }}
-            components={{ mono: <span className="mono" /> }}
-          />
+          {pendingDelete?.type === "login" && pendingDelete.username !== "" ? (
+            <Trans
+              i18nKey="vault.deleteBody"
+              values={{ username: pendingDelete.username }}
+              components={{ mono: <span className="mono" /> }}
+            />
+          ) : (
+            t("vault.deleteBodyItem")
+          )}
         </p>
       </ConfirmDialog>
     </div>
