@@ -17,6 +17,7 @@ A **zero-knowledge** password manager. All cryptography runs in the browser thro
     - [Why a separate vault key](#why-a-separate-vault-key)
     - [Locking and sessions](#locking-and-sessions)
     - [Vault export](#vault-export)
+    - [Vault import](#vault-import)
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
@@ -121,6 +122,20 @@ Plain exports require an explicit acknowledgment. The encrypted file looks like 
 
 The ciphertext holds `{ "exportedAt": "<ISO 8601>", "items": [ … ] }`, the same body as a plain JSON export. The additional data is the string `keylord-export:1:PBKDF2:SHA-256:<iterations>:<salt>:AES-256-GCM`.
 
+### Vault import
+
+Credentials can be imported from **Settings → Data**. The file is read, compared with the vault and encrypted in the browser (`frontend/src/crypto/import.ts`); the server receives only encrypted payloads. Accepted files:
+
+- **Keylord exports** in all three formats; the encrypted one asks for its file password.
+- **Bitwarden** unencrypted JSON and CSV. Password-protected and account-restricted Bitwarden exports are refused, since their key derivation is not available in WebCrypto.
+- **CSV files of other managers and browsers** (Chrome, Edge, Firefox, Safari, 1Password, LastPass, KeePass, KeePassXC, Proton Pass, Dashlane), recognized by their header columns.
+
+Entries are converted to the credential schema: TOTP secrets become hidden custom fields, an email next to a different username becomes a custom field, and entries without a name are named after their website. Entry types the schema does not have (cards, identities, ...), folders, favorites and attachments are not imported.
+
+Before anything is written, a preview compares the file with the vault. Entries identical to a stored credential are skipped. A login with the same website and username as a stored one, or a note with the same name, is reported as already present, and the user chooses for each one whether to skip it, import it as a copy or replace the stored credential. Entries too large to be stored are listed and skipped, and the import is blocked if it would exceed the vault limit.
+
+The import is written by `POST /api/vault/import` in a single transaction: either every credential is created and replaced, or nothing changes. Each replacement carries the SHA-256 of the stored payload it overwrites, so a credential edited or deleted after the preview makes the server reject the whole import; the client then rebuilds the preview from the current vault.
+
 ## Features
 
 **Vault**
@@ -142,6 +157,7 @@ The ciphertext holds `{ "exportedAt": "<ISO 8601>", "items": [ … ] }`, the sam
 - Lock and unlock with the master password alone, automatic lock after inactivity or when the tab is hidden, and a keyboard shortcut that locks every tab
 - Account deletion with explicit confirmation and master password re-entry, verified by the server
 - Vault export as password-protected JSON, plain JSON or Bitwarden-compatible CSV, after master password re-entry
+- Vault import from Keylord exports, Bitwarden JSON and CSV files of the main password managers and browsers, with a preview where already present entries can be skipped, duplicated or replaced, applied atomically
 - Rotating refresh tokens with reuse detection, expired tokens purged every 6 hours
 - Progressive account lockout after failed password checks
 - Error responses in RFC 9457 format with stable machine-readable codes, translated in the interface
@@ -210,7 +226,7 @@ keylord-zk/
 │   └── src/
 │       ├── api/              → Axios client with token refresh, auth and vault endpoints, error messages
 │       ├── components/       → navbar and user menu, unlock screen, credential panel, settings, ...
-│       ├── crypto/           → vault.ts (key derivation, vault key, AES-GCM), credential.ts (payload schema), export.ts (export files), password.ts (generator, strength)
+│       ├── crypto/           → vault.ts (key derivation, vault key, AES-GCM), credential.ts (payload schema), export.ts and import.ts (export and import files), password.ts (generator, strength)
 │       ├── hooks/            → auto-lock, media queries
 │       ├── i18n/             → i18next setup and the English and Italian translations
 │       ├── lib/              → session handling, cross-tab lock, lock and clipboard settings, clipboard clearing, file download
@@ -329,10 +345,11 @@ All routes are prefixed with `/api`. Routes marked 🔒 require an `Authorizatio
 | `DELETE` | `/auth/account` 🔒         | Delete the account and all its data; requires the authKey in the body                                                                                                                  |
 | `GET`    | `/vault` 🔒                | List the user's encrypted credentials                                                                                                                                                  |
 | `POST`   | `/vault` 🔒                | Store a new encrypted credential                                                                                                                                                       |
+| `POST`   | `/vault/import` 🔒         | Create and overwrite many credentials in one transaction, overwriting only those unchanged since read (by digest); 409 if the vault changed meanwhile or would exceed its limit        |
 | `PUT`    | `/vault/{id}` 🔒           | Replace an encrypted credential                                                                                                                                                        |
 | `DELETE` | `/vault/{id}` 🔒           | Delete a credential                                                                                                                                                                    |
 
-Usernames and emails are unique regardless of letter case, and lookups ignore case as well. New usernames may contain only letters, digits, dots, hyphens and underscores (at most 50 characters). Each credential's encrypted payload must have the `ivBase64:ciphertextBase64` format and at most 16,384 characters, a vault holds at most 2,000 credentials, and request bodies are limited to 64 KB (40 MB for `change-password`).
+Usernames and emails are unique regardless of letter case, and lookups ignore case as well. New usernames may contain only letters, digits, dots, hyphens and underscores (at most 50 characters). Each credential's encrypted payload must have the `ivBase64:ciphertextBase64` format and at most 16,384 characters, a vault holds at most 2,000 credentials, and request bodies are limited to 64 KB (40 MB for `change-password` and `vault/import`).
 
 Outside the `/api` prefix, `GET /health` is the health check used by Render.
 
@@ -404,6 +421,7 @@ Rate limiting and lockout logs rely on the client IP. With `ReverseProxy__Enable
 - **Session storage**: tokens and the vault key live in memory only and are never written to any storage; only the username is kept in `sessionStorage` to prefill the login form. Reloading the page or duplicating the tab therefore requires the master password again, and each tab has its own session.
 - **Local unlock**: a locked vault is reopened by unwrapping the vault key in the browser. Three failed attempts end the session, so further guesses must go through the server and its lockout.
 - **Automatic lock and clipboard clearing**: the vault locks after inactivity or when the tab is hidden, and copied secrets are erased from the clipboard after a delay of at most 2 minutes (30 seconds by default) or as soon as the vault is locked.
+- **Imports**: files are read and encrypted in the browser, so the server never sees their content. Replacements are bound to the stored payload they overwrite by its digest, and the whole import is applied in one transaction, under the same key check as every other vault write.
 - **Exports**: built in the browser and never sent to the server. An encrypted export is as strong as its file password, which can be attacked offline once the file leaves the device; a plain export protects nothing, and the browser may keep it in the downloads folder and history.
 - **Vault writes bound to the key**: credentials are created and updated only if the session's key is still current, checked under a lock shared with the password change and the key rotation, so data encrypted with an old key can never be stored.
 
@@ -411,7 +429,6 @@ Rate limiting and lockout logs rely on the client IP. With `ReverseProxy__Enable
 
 - [ ] Automated tests (unit and integration)
 - [ ] Further credential types (payment cards, SSH keys, identities)
-- [ ] Vault import (Keylord encrypted export, Bitwarden, browser CSV files)
 - [ ] Account recovery through single-use recovery codes
 - [ ] Breach checks for stored credentials
 - [ ] Folders for organizing credentials

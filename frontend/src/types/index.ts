@@ -37,9 +37,21 @@ export interface CredentialResponse extends CredentialBase {
 
 export interface ReencryptedCredential {
   id: number;
-  // SHA-256 (lowercase hex) of the encrypted data that was decrypted and re-encrypted
+  // SHA-256 (lowercase hex) of the stored encrypted data being replaced: a different stored value rejects the write
   previousDigest: string;
   encryptedData: string;
+}
+
+export interface ImportCredentialsRequest {
+  // New credentials, created in this order
+  credentials: CredentialRequest[];
+  // Existing credentials to overwrite, each applied only if its stored content still has previousDigest
+  replacements: ReencryptedCredential[];
+}
+
+export interface ImportCredentialsResponse {
+  // Same order as the credentials of the request
+  created: CredentialResponse[];
 }
 
 export interface ChangePasswordRequest {

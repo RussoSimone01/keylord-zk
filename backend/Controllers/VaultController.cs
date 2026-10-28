@@ -1,6 +1,7 @@
 using backend.DTOs;
 using backend.Extensions;
 using backend.Services.Interfaces;
+using backend.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,13 @@ namespace backend.Controllers
         {
             CredentialResponseDto result = await _vaultService.CreateCredentialAsync(User.GetUserId(), User.GetKeyStamp(), request, cancellationToken);
             return Created($"/api/vault/{result.Id}", result);
+        }
+
+        [HttpPost("import")]
+        [RequestSizeLimit(VaultLimits.ImportMaxRequestBodyBytes)]
+        public async Task<IActionResult> Import(ImportCredentialsRequestDto request, CancellationToken cancellationToken)
+        {
+            return Ok(await _vaultService.ImportCredentialsAsync(User.GetUserId(), User.GetKeyStamp(), request, cancellationToken));
         }
 
         [HttpGet]

@@ -8,7 +8,7 @@ namespace backend.DTOs
         [Range(1, long.MaxValue)]
         public long Id { get; set; }
 
-        // SHA-256 (lowercase hex) of the encrypted data the client decrypted and re-encrypted
+        // SHA-256 (lowercase hex) of the stored encrypted data being replaced: a different stored value rejects the write
         [Required]
         [RegularExpression("^[0-9a-f]{64}$", ErrorMessage = "Previous digest must be a lowercase hex SHA-256")]
         public string PreviousDigest { get; set; } = string.Empty;

@@ -15,6 +15,12 @@ namespace backend.Repositories.Implementations
             await _db.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task AddRangeAsync(IReadOnlyList<Credential> credentials, CancellationToken cancellationToken)
+        {
+            await _db.Credentials.AddRangeAsync(credentials, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task<Credential?> GetByIdAsync(long credentialId, CancellationToken cancellationToken)
         {
             return await _db.Credentials.SingleOrDefaultAsync(c => c.Id == credentialId, cancellationToken);
@@ -38,6 +44,33 @@ namespace backend.Repositories.Implementations
                     .SetProperty(c => c.UpdatedAt, DateTime.UtcNow),
                     cancellationToken
                 );
+        }
+
+        /// <summary>
+        /// Overwrites the encrypted data of some credentials of the user.
+        /// Returns false without writing if any id does not belong to the user,
+        /// or if any credential changed since the client read it (stored digest different from PreviousDigest).
+        /// </summary>
+        public async Task<bool> TryReplaceEncryptedDataAsync(long userId, IReadOnlyDictionary<long, CredentialReplacement> replacementsById, CancellationToken cancellationToken)
+        {
+            List<long> ids = [.. replacementsById.Keys];
+            List<Credential> credentials = await _db.Credentials
+                .Where(c => c.UserId == userId && ids.Contains(c.Id))
+                .ToListAsync(cancellationToken);
+            bool matches = credentials.Count == replacementsById.Count
+                && credentials.All(c => CredentialReplacement.Digest(c.EncryptedData) == replacementsById[c.Id].PreviousDigest);
+            if (!matches)
+            {
+                return false;
+            }
+            DateTime now = DateTime.UtcNow;
+            foreach (Credential credential in credentials)
+            {
+                credential.EncryptedData = replacementsById[credential.Id].EncryptedData;
+                credential.UpdatedAt = now;
+            }
+            await _db.SaveChangesAsync(cancellationToken);
+            return true;
         }
 
         /// <summary>

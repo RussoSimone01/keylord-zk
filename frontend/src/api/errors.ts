@@ -13,7 +13,7 @@ export interface ApiProblem {
 }
 
 // Mirrors VaultLimits.MaxCredentialsPerUser on the backend, used in the "vault full" message
-const VAULT_MAX_CREDENTIALS = 2000;
+export const VAULT_MAX_CREDENTIALS = 2000;
 
 // Client-side error whose message is a translation key, shown to the user once translated
 export class UserFacingError extends Error {

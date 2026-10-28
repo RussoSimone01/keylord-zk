@@ -1,10 +1,23 @@
-import type { CredentialRequest, CredentialResponse } from "../types";
+import type {
+  CredentialRequest,
+  CredentialResponse,
+  ImportCredentialsRequest,
+  ImportCredentialsResponse,
+} from "../types";
 import client from "./client";
 
 export async function create(
   data: CredentialRequest,
 ): Promise<CredentialResponse> {
   const response = await client.post("/vault", data);
+  return response.data;
+}
+
+/** Creates and overwrites credentials in a single transaction on the server */
+export async function importCredentials(
+  data: ImportCredentialsRequest,
+): Promise<ImportCredentialsResponse> {
+  const response = await client.post("/vault/import", data);
   return response.data;
 }
 

@@ -6,7 +6,7 @@ import AutoLockSettings from "./AutoLockSettings";
 import ClipboardSettings from "./ClipboardSettings";
 
 export type SettingsSection =
-  "changePassword" | "exportVault" | "deleteAccount";
+  "changePassword" | "importVault" | "exportVault" | "deleteAccount";
 
 interface SettingsMenuProps {
   onSelect: (selection: SettingsSection) => void;
@@ -38,6 +38,9 @@ function SettingsMenu({ onSelect }: SettingsMenuProps) {
       </section>
       <section className="settings-section">
         <h2 className="settings-label">{t("settings.data")}</h2>
+        <button type="button" onClick={() => onSelect("importVault")}>
+          {t("settings.importVault")}
+        </button>
         <button type="button" onClick={() => onSelect("exportVault")}>
           {t("settings.exportVault")}
         </button>

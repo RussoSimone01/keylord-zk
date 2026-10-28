@@ -26,6 +26,8 @@ namespace backend.Errors
         public static readonly ApiError VaultOutOfSync = new("vault.out_of_sync", StatusCodes.Status409Conflict, "The vault was modified during the password change, please try again");
         public static readonly ApiError VaultFull = new("vault.limit_reached", StatusCodes.Status409Conflict, $"The vault cannot hold more than {VaultLimits.MaxCredentialsPerUser} credentials");
         public static readonly ApiError DuplicateCredentialIds = new("vault.duplicate_credential_ids", StatusCodes.Status400BadRequest, "Each credential must appear only once");
+        public static readonly ApiError ImportEmpty = new("vault.import_empty", StatusCodes.Status400BadRequest, "The import contains no credentials");
+        public static readonly ApiError ImportOutOfSync = new("vault.import_out_of_sync", StatusCodes.Status409Conflict, "The vault was modified during the import, please try again");
 
         // Generic
         public static readonly ApiError ValidationFailed = new("request.validation_failed", StatusCodes.Status400BadRequest, "One or more validation errors occurred");

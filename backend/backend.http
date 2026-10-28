@@ -44,6 +44,18 @@ Authorization: Bearer {{accessToken}}
   "encryptedData": "AAAAAAAAAAAAAAAA:ZXhhbXBsZS1jaXBoZXJ0ZXh0LXdpdGgtZ2NtLXRhZyE="
 }
 
+### Import credentials (new ones and replacements of existing ones, applied atomically)
+POST {{backend_HostAddress}}/api/vault/import
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "credentials": [
+    { "encryptedData": "AAAAAAAAAAAAAAAA:aW1wb3J0ZWQtY2lwaGVydGV4dC13aXRoLWdjbS10YWch" }
+  ],
+  "replacements": []
+}
+
 ### Get all credentials
 GET {{backend_HostAddress}}/api/vault
 Authorization: Bearer {{accessToken}}

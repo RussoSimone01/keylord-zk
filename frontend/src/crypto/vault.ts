@@ -47,6 +47,7 @@ export const KDF_MAX_ITERATIONS = 2_000_000;
 const SALT_BYTES = 32;
 const IV_BYTES = 12;
 const KEY_BYTES = 32; // 256 bit
+const GCM_TAG_BYTES = 16;
 /** Lunghezza massima di encryptedData, uguale a VaultLimits.MaxEncryptedDataLength nel backend */
 export const MAX_ENCRYPTED_DATA_LENGTH = 16_384;
 
@@ -308,6 +309,24 @@ export async function encryptCredential(
   return { encryptedData };
 }
 
+/** Caratteri Base64 (con padding) che codificano il numero di byte indicato */
+function base64Length(bytes: number): number {
+  return 4 * Math.ceil(bytes / 3);
+}
+
+/**
+ * Lunghezza esatta di encryptedData che encryptCredential produrrebbe, calcolata senza cifrare:
+ * IV in Base64, separatore, poi testo cifrato (lungo quanto il JSON) più il tag GCM in Base64.
+ */
+export function encryptedDataLength(credential: CredentialData): number {
+  const plaintextBytes = new TextEncoder().encode(
+    JSON.stringify(normalizeCredential(credential)),
+  ).length;
+  return (
+    base64Length(IV_BYTES) + 1 + base64Length(plaintextBytes + GCM_TAG_BYTES)
+  );
+}
+
 /**
  * Decifra una credenziale cifrata con AES-GCM.
  *
@@ -369,7 +388,9 @@ export async function decryptVault(
 }
 
 /** SHA-256 in hex minuscolo della stringa cifrata, calcolato come fa il server */
-async function digestEncryptedData(encryptedData: string): Promise<string> {
+export async function digestEncryptedData(
+  encryptedData: string,
+): Promise<string> {
   const hash = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(encryptedData),

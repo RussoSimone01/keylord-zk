@@ -57,6 +57,57 @@ namespace backend.Services.Implementations
             await transaction.CommitAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Creates and overwrites credentials in a single transaction: either the whole import is applied or nothing is.
+        /// </summary>
+        public async Task<ImportCredentialsResponseDto> ImportCredentialsAsync(long userId, string keyStamp, ImportCredentialsRequestDto request, CancellationToken cancellationToken)
+        {
+            if (request.Credentials.Length == 0 && request.Replacements.Length == 0)
+            {
+                throw new ApiException(AppErrors.ImportEmpty);
+            }
+            if (request.Replacements.DistinctBy(r => r.Id).Count() != request.Replacements.Length)
+            {
+                throw new ApiException(AppErrors.DuplicateCredentialIds);
+            }
+            Dictionary<long, CredentialReplacement> replacementsById = request.Replacements.ToDictionary(
+                r => r.Id,
+                r => new CredentialReplacement(r.PreviousDigest, r.EncryptedData)
+            );
+
+            // Disposing the transaction without committing rolls it back
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await EnsureCurrentKeyAsync(userId, keyStamp, cancellationToken);
+            int count = await _credentialRepository.CountByUserAsync(userId, cancellationToken);
+            if (count + request.Credentials.Length > VaultLimits.MaxCredentialsPerUser)
+            {
+                throw new ApiException(AppErrors.VaultFull);
+            }
+            // Credentials deleted or edited after the client built the import abort it, so no change is overwritten unseen
+            if (replacementsById.Count > 0 && !await _credentialRepository.TryReplaceEncryptedDataAsync(userId, replacementsById, cancellationToken))
+            {
+                throw new ApiException(AppErrors.ImportOutOfSync);
+            }
+            List<Credential> created = [.. request.Credentials.Select(c => new Credential()
+            {
+                UserId = userId,
+                EncryptedData = c.EncryptedData
+            })];
+            if (created.Count > 0)
+            {
+                await _credentialRepository.AddRangeAsync(created, cancellationToken);
+            }
+            await transaction.CommitAsync(cancellationToken);
+            return new()
+            {
+                Created = created.Select(c => new CredentialResponseDto()
+                {
+                    Id = c.Id,
+                    EncryptedData = c.EncryptedData
+                })
+            };
+        }
+
         public async Task DeleteCredentialAsync(long userId, long credentialId, CancellationToken cancellationToken)
         {
             await GetOwnedCredentialAsync(userId, credentialId, cancellationToken);
