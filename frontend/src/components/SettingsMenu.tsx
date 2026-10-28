@@ -19,41 +19,49 @@ function SettingsMenu({ onSelect }: SettingsMenuProps) {
       <h1>{t("settings.title")}</h1>
       <section className="settings-section">
         <h2 className="settings-label">{t("settings.appearance")}</h2>
-        <div className="settings-field">
-          <span className="settings-field-label">{t("theme.label")}</span>
-          <ThemeSwitcher />
-        </div>
-        <div className="settings-field">
-          <span className="settings-field-label">{t("language.label")}</span>
-          <LanguageSwitcher />
+        <div className="settings-section-body">
+          <div className="settings-field">
+            <span className="settings-field-label">{t("theme.label")}</span>
+            <ThemeSwitcher />
+          </div>
+          <div className="settings-field">
+            <span className="settings-field-label">{t("language.label")}</span>
+            <LanguageSwitcher />
+          </div>
         </div>
       </section>
       <section className="settings-section">
         <h2 className="settings-label">{t("settings.security")}</h2>
-        <AutoLockSettings />
-        <ClipboardSettings />
-        <button type="button" onClick={() => onSelect("changePassword")}>
-          {t("settings.changePassword")}
-        </button>
+        <div className="settings-section-body">
+          <AutoLockSettings />
+          <ClipboardSettings />
+          <button type="button" onClick={() => onSelect("changePassword")}>
+            {t("settings.changePassword")}
+          </button>
+        </div>
       </section>
       <section className="settings-section">
         <h2 className="settings-label">{t("settings.data")}</h2>
-        <button type="button" onClick={() => onSelect("importVault")}>
-          {t("settings.importVault")}
-        </button>
-        <button type="button" onClick={() => onSelect("exportVault")}>
-          {t("settings.exportVault")}
-        </button>
+        <div className="settings-section-body">
+          <button type="button" onClick={() => onSelect("importVault")}>
+            {t("settings.importVault")}
+          </button>
+          <button type="button" onClick={() => onSelect("exportVault")}>
+            {t("settings.exportVault")}
+          </button>
+        </div>
       </section>
       <section className="settings-section">
         <h2 className="settings-label">{t("settings.dangerZone")}</h2>
-        <button
-          type="button"
-          className="settings-danger"
-          onClick={() => onSelect("deleteAccount")}
-        >
-          {t("settings.deleteAccount")}
-        </button>
+        <div className="settings-section-body">
+          <button
+            type="button"
+            className="settings-danger"
+            onClick={() => onSelect("deleteAccount")}
+          >
+            {t("settings.deleteAccount")}
+          </button>
+        </div>
       </section>
     </div>
   );

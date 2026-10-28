@@ -1,5 +1,7 @@
 .auth-container {
+  /* dvh: the visible height on phones, so the browser bars do not add a scrollbar */
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -49,6 +51,26 @@
   padding: var(--space-8);
 }
 
+/* Phones: the card frame is dropped, so the fields use the whole width with the usual page gutter,
+   and the content starts from the top instead of being centered (it stays put when the keyboard opens). */
+@media (max-width: 480px) {
+  .auth-container {
+    justify-content: flex-start;
+    padding: var(--page-top) var(--page-gutter);
+  }
+
+  .auth-brand {
+    margin-bottom: 0;
+  }
+
+  .auth-card {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+}
+
 .auth-card h1 {
   margin: 0 0 var(--space-6);
 }
@@ -82,9 +104,35 @@
   font-family: var(--font-sans);
 }
 
+/* Checkbox with its sentence: body text, not the uppercase field label style. */
+.auth-field label.auth-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: 0;
+  font: 400 14px/20px var(--font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
 .auth-field input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--accent-text);
+}
+
+/* Explanation under a checkbox, aligned with its text */
+.auth-check-hint {
+  display: block;
+  margin-top: var(--space-1);
+  padding-left: calc(16px + var(--space-3));
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-secondary);
 }
 
 .auth-field input:focus {

@@ -1,7 +1,8 @@
+/* Wide column: the list gains room on large monitors, rows keep their grid. */
 .vault-container {
-  max-width: 900px;
+  max-width: calc(var(--content-wide) + 2 * var(--page-gutter));
   margin: 0 auto;
-  padding: var(--space-8) var(--space-6);
+  padding: var(--page-top) var(--page-gutter);
 }
 
 /* The docked panel is fixed to the right edge: the list is centered in the space left of it. */
@@ -11,7 +12,7 @@
 }
 
 .vault-container.with-panel .vault-main {
-  max-width: 900px;
+  max-width: var(--content-wide);
   margin: 0 auto;
 }
 
@@ -48,7 +49,7 @@
 
 .vault-field input {
   width: 100%;
-  height: 38px;
+  height: 40px;
   padding: 0 var(--space-3);
   background: var(--bg);
   border: 1px solid var(--border-strong);
@@ -135,12 +136,6 @@
   max-width: 360px;
   margin: 0 0 var(--space-3);
   color: var(--text-secondary);
-}
-
-@media (max-width: 560px) {
-  .vault-container {
-    padding: var(--space-6) var(--space-4);
-  }
 }
 
 .vault-unreadable {

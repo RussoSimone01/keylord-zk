@@ -224,14 +224,14 @@ function ExportVault({ onBack }: ExportVaultProps) {
                 {kind === "csv" && <p>{t("exportVault.csvWarning")}</p>}
               </div>
               <div className="auth-field">
-                <label htmlFor="acknowledgePlain">
+                <label className="auth-check" htmlFor="acknowledgePlain">
                   <input
                     id="acknowledgePlain"
                     type="checkbox"
                     checked={acknowledged}
                     onChange={(e) => setAcknowledged(e.target.checked)}
                     required
-                  />{" "}
+                  />
                   {t("exportVault.acknowledgePlain")}
                 </label>
               </div>

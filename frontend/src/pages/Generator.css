@@ -1,7 +1,7 @@
 .generator-container {
-  max-width: 500px;
+  max-width: calc(var(--content-narrow) + 2 * var(--page-gutter));
   margin: 0 auto;
-  padding: var(--space-8) var(--space-6);
+  padding: var(--page-top) var(--page-gutter);
 }
 
 .generator-container h1 {

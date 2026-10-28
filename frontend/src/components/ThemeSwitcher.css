@@ -1,6 +1,7 @@
+/* Equal tiles that wrap into tidy rows instead of leaving one theme alone on the last line. */
 .theme-switcher {
-  display: inline-flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   gap: var(--space-1);
   padding: var(--space-1);
   background: var(--bg);

@@ -17,7 +17,13 @@ function Settings() {
   );
 
   return (
-    <div className="settings-container">
+    <div
+      className={
+        activeSection == null
+          ? "settings-container"
+          : "settings-container narrow"
+      }
+    >
       {activeSection == null && <SettingsMenu onSelect={setActiveSection} />}
       {activeSection == "changePassword" && (
         <ChangePassword onBack={() => setActiveSection(null)} />

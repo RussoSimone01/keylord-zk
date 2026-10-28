@@ -1,7 +1,17 @@
+/* The settings list uses the medium width; a single setting page (change password, import, …) the narrow one. */
 .settings-container {
-  max-width: 500px;
+  max-width: calc(var(--content-medium) + 2 * var(--page-gutter));
   margin: 0 auto;
-  padding: var(--space-8) var(--space-6);
+  padding: var(--page-top) var(--page-gutter);
+}
+
+.settings-container.narrow {
+  max-width: calc(var(--content-narrow) + 2 * var(--page-gutter));
+}
+
+/* Setting pages reuse the auth card, filling the column instead of the 440px of login. */
+.settings-container .auth-card {
+  max-width: none;
 }
 
 .settings-container h1 {
@@ -21,8 +31,37 @@
 .settings-section {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--space-2);
+}
+
+.settings-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* Wide screens: section name in a left column, its settings on the right, sections divided by a rule. */
+@media (min-width: 900px) {
+  .settings-menu {
+    gap: var(--space-8);
+  }
+
+  .settings-section {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    column-gap: var(--space-8);
+  }
+
+  .settings-section + .settings-section {
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--border);
+  }
+
+  /* Aligned with the first field label of the section */
+  .settings-section > .settings-label {
+    padding-top: 2px;
+  }
 }
 
 /* Section headings use the mono label style. */
@@ -53,7 +92,7 @@
 
 .settings-select {
   width: 100%;
-  height: 38px;
+  height: 40px;
   padding: 0 var(--space-3);
   background: var(--bg);
   border: 1px solid var(--border-strong);
@@ -82,7 +121,7 @@
   color: var(--text-secondary);
 }
 
-.settings-section > button {
+.settings-section-body > button {
   width: 100%;
   text-align: left;
   padding: var(--space-4);
@@ -91,16 +130,16 @@
   border-radius: var(--radius-md);
 }
 
-.settings-section > button:hover:not(:disabled) {
+.settings-section-body > button:hover:not(:disabled) {
   border-color: var(--accent-text);
   background: var(--surface);
 }
 
-.settings-section > button.settings-danger {
+.settings-section-body > button.settings-danger {
   color: var(--danger);
 }
 
-.settings-section > button.settings-danger:hover:not(:disabled) {
+.settings-section-body > button.settings-danger:hover:not(:disabled) {
   border-color: var(--danger);
   background: var(--danger-soft);
 }
@@ -200,6 +239,22 @@
 .auth-field input.import-file {
   height: auto;
   padding: var(--space-2) var(--space-3);
+}
+
+/* The browser's own "choose file" button, drawn like the app's secondary buttons. */
+.import-file::file-selector-button {
+  margin-right: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font: 500 13px/20px var(--font-sans);
+  cursor: pointer;
+}
+
+.import-file::file-selector-button:hover {
+  background: var(--surface-raised);
 }
 
 .import-summary {

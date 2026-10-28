@@ -167,16 +167,18 @@ function ChangePassword({ onBack }: ChangePasswordProps) {
           </div>
           {authStore.wrappedVaultKey !== null && (
             <div className="auth-field">
-              <label htmlFor="rotateKey">
+              <label className="auth-check" htmlFor="rotateKey">
                 <input
                   id="rotateKey"
                   type="checkbox"
                   checked={rotateKey}
                   onChange={(e) => setRotateKey(e.target.checked)}
-                />{" "}
+                />
                 {t("changePassword.rotateKey")}
               </label>
-              <small>{t("changePassword.rotateKeyHint")}</small>
+              <small className="auth-check-hint">
+                {t("changePassword.rotateKeyHint")}
+              </small>
             </div>
           )}
           <button
